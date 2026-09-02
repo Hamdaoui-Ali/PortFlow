@@ -5,17 +5,35 @@ const relativeJsonPath = z
   .string()
   .regex(/^(?!\/)(?!.*\.\.)(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.json$/);
 
+const datasetEntry = z
+  .object({
+    path: relativeJsonPath,
+    sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  })
+  .strict();
+
 export const manifestSchema = z
   .object({
-    datasets: z.object({
-      overview: z.object({
-        path: relativeJsonPath,
-        sha256: z.string().regex(/^[a-f0-9]{64}$/),
-      }),
-    }),
+    datasets: z
+      .object({
+        overview: datasetEntry,
+        equipment: datasetEntry.optional(),
+        incidents: datasetEntry.optional(),
+        event_replay: datasetEntry.optional(),
+        quality: datasetEntry.optional(),
+      })
+      .strict(),
     generated_at: utcDateTime,
     quality_status: z.literal("PASS"),
-    record_counts: z.object({ telemetry: z.number().int().nonnegative() }),
+    record_counts: z
+      .object({
+        telemetry: z.number().int().nonnegative(),
+        equipment: z.number().int().nonnegative().optional(),
+        incidents: z.number().int().nonnegative().optional(),
+        event_replay: z.number().int().nonnegative().optional(),
+        quality: z.number().int().nonnegative().optional(),
+      })
+      .strict(),
     schema_version: z.literal(1),
     snapshot_id: z.string().min(1),
     source_period_end: utcDateTime,
@@ -53,6 +71,22 @@ const availabilitySchema = z
 export const overviewSchema = z
   .object({
     availability: availabilitySchema,
+    available_intervals: z.number().int().nonnegative().optional(),
+    scheduled_intervals: z.number().int().nonnegative().optional(),
+    active_intervals: z.number().int().nonnegative().optional(),
+    utilization: z.number().min(0).max(1).nullable().optional(),
+    throughput: z.number().int().nonnegative().optional(),
+    average_dwell_minutes: z.number().nonnegative().nullable().optional(),
+    mttr_minutes: z.number().nonnegative().nullable().optional(),
+    mtbf_hours: z.number().nonnegative().nullable().optional(),
+    resolved_incident_count: z.number().int().nonnegative().optional(),
+    repair_minutes: z.number().nonnegative().optional(),
+    qualifying_failure_count: z.number().int().nonnegative().optional(),
+    operating_hours: z.number().nonnegative().optional(),
+    active_incidents: z.number().int().nonnegative().optional(),
+    critical_alarms: z.number().int().nonnegative().optional(),
+    source_period_start: utcDateTime.optional(),
+    source_period_end: utcDateTime.optional(),
     schema_version: z.literal(1),
     terminal_id: z.string().regex(/^TM-\d{3}$/),
   })

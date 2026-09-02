@@ -1,0 +1,1 @@
+[{"equipment_id":"QC-001","incident_id":"inc-000001","opened_at":"2026-09-02T03:00:00Z","resolved_at":"2026-09-02T03:30:00Z","root_cause":"Hydraulic leak","severity":"MAJOR","status":"RESOLVED"},{"equipment_id":"QC-001","incident_id":"inc-000002","opened_at":"2026-09-02T20:00:00Z","resolved_at":null,"root_cause":"Motor overload","severity":"CRITICAL","status":"OPEN"}]

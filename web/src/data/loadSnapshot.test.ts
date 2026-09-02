@@ -81,4 +81,43 @@ describe("loadSnapshot", () => {
       /overview dataset did not match schema version 1/i,
     );
   });
+
+  it("accepts optional R2 dataset entries without breaking the overview loader", async () => {
+    const fullManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: {
+          path: "snapshots/demo-v1/equipment.json",
+          sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        },
+        incidents: {
+          path: "snapshots/demo-v1/incidents.json",
+          sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        },
+        event_replay: {
+          path: "snapshots/demo-v1/event_replay.json",
+          sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        },
+        quality: {
+          path: "snapshots/demo-v1/quality.json",
+          sha256: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        },
+      },
+      record_counts: {
+        telemetry: 288,
+        equipment: 1,
+        incidents: 2,
+        event_replay: 288,
+        quality: 1,
+      },
+    };
+    const fullFetch = (input: string | URL | Request) =>
+      Promise.resolve(Response.json(String(input).endsWith("manifest.json") ? fullManifest : overview));
+
+    const snapshot = await loadSnapshot(fullFetch, "/PortFlow/");
+
+    expect(snapshot.manifest.record_counts.equipment).toBe(1);
+    expect(snapshot.overview.terminal_id).toBe("TM-001");
+  });
 });
