@@ -1,0 +1,98 @@
+:root {
+  color: #10233f;
+  background: #f5f7fa;
+  font-family: "Inter Variable", "Segoe UI", Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-header {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  min-height: 96px;
+  background: #ffffff;
+  border-bottom: 1px solid #d8e0ea;
+}
+
+.brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 24px;
+  border-right: 1px solid #d8e0ea;
+  color: #10233f;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.brand img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.title-region {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px;
+}
+
+.title-region h1 {
+  margin: 0;
+  font-size: clamp(24px, 2.2vw, 32px);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.title-region p {
+  margin: 0;
+  color: #5c6b7e;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (max-width: 899px) {
+  .app-header {
+    display: block;
+    min-height: auto;
+  }
+
+  .brand {
+    min-height: 76px;
+    padding: 18px 20px;
+    border-right: 0;
+    border-bottom: 1px solid #d8e0ea;
+  }
+
+  .title-region {
+    display: block;
+    padding: 24px 20px;
+  }
+
+  .title-region p {
+    margin-top: 14px;
+  }
+}
