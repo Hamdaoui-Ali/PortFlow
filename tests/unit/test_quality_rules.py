@@ -1,6 +1,5 @@
-from tests.unit.factories import references, valid_telemetry_row
-
 from portflow.quality.rules import validate_row
+from tests.unit.factories import references, valid_telemetry_row
 
 
 def test_bad_load_gets_range_invalid() -> None:

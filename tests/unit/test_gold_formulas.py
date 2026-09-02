@@ -1,7 +1,7 @@
 import pytest
-from tests.unit.factories import load_case
 
 from portflow.analytics.formulas import calculate_fixture_case
+from tests.unit.factories import load_case
 
 
 @pytest.mark.parametrize(

@@ -5,10 +5,10 @@ from pathlib import Path
 
 import duckdb
 import pytest
-from tests.integration.test_gold import prepare_silver, run_dbt
 
 from portflow.export.models import PublicSnapshotMetadata
 from portflow.export.writer import ExportValidationError, write_public_snapshot
+from tests.integration.test_gold import prepare_silver, run_dbt
 
 
 def source_metadata() -> PublicSnapshotMetadata:
