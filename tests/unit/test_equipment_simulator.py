@@ -49,3 +49,11 @@ def test_state_controls_availability_and_measurement_ranges() -> None:
         if event.state is EquipmentState.WARNING:
             assert event.available is True
             assert event.temperature_c >= 65.0
+
+
+def test_seeded_daily_profile_has_plausible_equipment_availability() -> None:
+    """Catch transition weights that make the demo asset unrealistically unreliable."""
+    events = generate_telemetry(**(generator_arguments() | {"count": 288}))
+    availability = sum(event.available for event in events) / len(events)
+
+    assert 0.94 <= availability <= 0.96

@@ -13,23 +13,23 @@ TRANSITIONS: dict[EquipmentState, tuple[Transition, ...]] = {
         (1.00, EquipmentState.IDLE),
     ),
     EquipmentState.ACTIVE: (
-        (0.55, EquipmentState.ACTIVE),
-        (0.70, EquipmentState.IDLE),
-        (0.88, EquipmentState.WARNING),
+        (0.72, EquipmentState.ACTIVE),
+        (0.85, EquipmentState.IDLE),
+        (0.98, EquipmentState.WARNING),
         (1.00, EquipmentState.UNAVAILABLE),
     ),
     EquipmentState.WARNING: (
-        (0.35, EquipmentState.ACTIVE),
-        (0.55, EquipmentState.WARNING),
-        (0.85, EquipmentState.UNAVAILABLE),
+        (0.70, EquipmentState.ACTIVE),
+        (0.85, EquipmentState.WARNING),
+        (0.95, EquipmentState.UNAVAILABLE),
         (1.00, EquipmentState.MAINTENANCE),
     ),
     EquipmentState.UNAVAILABLE: (
-        (0.70, EquipmentState.MAINTENANCE),
+        (0.80, EquipmentState.MAINTENANCE),
         (1.00, EquipmentState.UNAVAILABLE),
     ),
     EquipmentState.MAINTENANCE: (
-        (0.75, EquipmentState.ACTIVE),
+        (0.90, EquipmentState.ACTIVE),
         (1.00, EquipmentState.MAINTENANCE),
     ),
 }

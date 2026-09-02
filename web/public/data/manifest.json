@@ -1,0 +1,1 @@
+{"datasets":{"overview":{"path":"snapshots/demo-v1/overview.json","sha256":"bade3c35d55a0cde1700b25438160935f33fe7991543647c46c2260fb3ce7853"}},"generated_at":"2026-09-02T23:55:02Z","quality_status":"PASS","record_counts":{"telemetry":288},"schema_version":1,"snapshot_id":"demo-v1","source_period_end":"2026-09-02T23:55:00Z","source_period_start":"2026-09-02T00:00:00Z"}
