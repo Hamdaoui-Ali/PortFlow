@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: fct_equipment_telemetry
+    description: "One row per accepted telemetry event_id."
+    columns:
+      - name: event_id
+        tests: [not_null, unique]
+      - name: equipment_id
+        tests: [not_null]
+      - name: terminal_id
+        tests: [not_null]
+      - name: state
+        tests:
+          - accepted_values:
+              values: [IDLE, ACTIVE, WARNING, UNAVAILABLE, MAINTENANCE]
+      - name: available
+        tests: [not_null]
+
+  - name: fct_incidents
+    description: "One row per incident_id."
+    columns:
+      - name: incident_id
+        tests: [not_null, unique]
+      - name: equipment_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_equipment_telemetry')
+              field: equipment_id
+      - name: status
+        tests:
+          - accepted_values:
+              values: [OPEN, RESOLVED]
+
+  - name: fct_movements
+    description: "One row per movement_id."
+    columns:
+      - name: movement_id
+        tests: [not_null, unique]
+      - name: terminal_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_equipment_telemetry')
+              field: terminal_id
+      - name: movement_type
+        tests:
+          - accepted_values:
+              values: [GATE_IN, GATE_OUT, LOAD, DISCHARGE]
+
+  - name: overview_kpis
+    description: "One row per terminal_id and source-period boundary."
+    columns:
+      - name: terminal_id
+        tests: [not_null, unique]
+      - name: source_period_start
+        tests: [not_null]
+      - name: source_period_end
+        tests: [not_null]
+      - name: availability
+        tests: [not_null]

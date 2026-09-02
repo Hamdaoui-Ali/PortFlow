@@ -1,4 +1,7 @@
-from datetime import UTC, datetime, timedelta
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 from portflow.quality.rules import ReferenceSet
 
@@ -31,3 +34,8 @@ def references() -> ReferenceSet:
         terminal_ids=frozenset({"TM-001"}),
         equipment_ids=frozenset({"QC-001"}),
     )
+
+
+def load_case(name: str) -> dict[str, Any]:
+    path = Path(__file__).parents[1] / "fixtures" / "kpi_cases" / f"{name}.json"
+    return json.loads(path.read_text(encoding="utf-8"))

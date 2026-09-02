@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: silver_parquet
+    description: "Validated Silver Parquet is the local Gold model source."
+    meta:
+      storage: parquet
+      path_env: PORTFLOW_SILVER_DIR
