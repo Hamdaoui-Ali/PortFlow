@@ -20,7 +20,12 @@
 
 ## Current next action
 
-Start **PF-001**. It has no dependency and prevents the project from making an unsupported permanent-$0 claim.
+Start **PF-014**. R2 is complete; the next release adds the first operator workflow on top of the trusted static snapshot.
+
+## Completed checkpoints
+
+- **R1 first public slice:** `9423cbb`, `f2ba319`, `e004d02`, `3ceaef0`, and `e53641a`, with the approved design and plan in `docs/superpowers/`.
+- **R2 trusted local pipeline:** `8deb3b4`, `ab35b6a`, `e290238`, `0572fc0`, `16c9e69`, and `f6c7226` (with dbt artifact hygiene in `d625750`).
 
 ## R0 — Verified constraints
 

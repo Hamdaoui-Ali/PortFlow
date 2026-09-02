@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-python -m uv run pytest
+python -m uv run pytest tests/unit
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 python -m uv run ruff check .
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

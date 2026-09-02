@@ -13,6 +13,22 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      PORTFLOW_DATABASE_URL: postgresql://portflow:portflow@localhost:5432/portflow
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: portflow
+          POSTGRES_PASSWORD: portflow
+          POSTGRES_DB: portflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U portflow -d portflow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -37,11 +53,6 @@ jobs:
           python -m uv sync --extra dev --frozen
           npm --prefix web ci
 
-      - name: Verify deterministic snapshot
-        run: |
-          python -m uv run python scripts/generate_first_snapshot.py
-          git diff --exit-code -- web/public/data
-
-      - name: Run quality gate
+      - name: Run R2 quality gate
         shell: pwsh
-        run: ./scripts/verify.ps1
+        run: ./scripts/verify_r2.ps1

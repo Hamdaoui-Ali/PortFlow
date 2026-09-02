@@ -20,22 +20,22 @@ No repository secret, payment card, public API, or runtime server is required.
 1. Merge the reviewed release commit to main.
 2. Open **Actions > Publish PortFlow** and confirm both build and deploy are green.
 3. Open **Settings > Pages** or the workflow's github-pages environment to copy the published URL.
-4. Confirm that index.html, hashed CSS and JavaScript, data/manifest.json, the overview snapshot, and brand/portflow-mark.png return HTTP 200.
+4. Confirm that index.html, hashed CSS and JavaScript, data/manifest.json, the versioned snapshot datasets, and brand/portflow-mark.png return HTTP 200.
 5. Confirm the page says **Simulated terminal operations data** and displays equipment availability as 94.4%.
 
 The expected project path is /PortFlow/. The Pages build fails if compiled asset or snapshot requests do not use that base path.
 
 ## Local release-equivalent check
 
-    python -m uv run python scripts/generate_first_snapshot.py
-    git diff --exit-code -- web/public/data
-    ./scripts/verify.ps1
-    $env:VITE_BASE_PATH = "/PortFlow/"
-    npm --prefix web run build
-    npm --prefix web run verify:pages
-    Remove-Item Env:VITE_BASE_PATH
+    docker compose up -d --wait postgres
+    python -m uv sync --extra dev --frozen
+    npm --prefix web ci
+    ./scripts/verify_r2.ps1
+    docker compose down
 
-Every command must exit 0. The generated snapshot command must leave no Git diff.
+Every command must exit 0. PostgreSQL is disposable local/CI state; it is never exposed to the browser.
+The public website is static HTML, CSS, JavaScript, and committed JSON. If a pipeline stage fails,
+the previous manifest and snapshot remain in place.
 
 ## Rollback
 
