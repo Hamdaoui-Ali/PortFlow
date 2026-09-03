@@ -10,7 +10,7 @@ import {
   HardHat,
   PlaySquare,
 } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { createContext, type ReactNode, useContext, useMemo, useState } from "react";
 
 import { APP_NAME } from "./constants";
 
@@ -36,6 +36,17 @@ const rangeOptions = [
 
 interface AppShellProps {
   children: ReactNode;
+}
+
+export interface AppFilters {
+  terminal: string;
+  range: string;
+}
+
+const AppFiltersContext = createContext<AppFilters>({ terminal: "all", range: "24h" });
+
+export function useAppFilters(): AppFilters {
+  return useContext(AppFiltersContext);
 }
 
 function readFilter(name: string, fallback: string): string {
@@ -74,8 +85,11 @@ export function AppShell({ children }: AppShellProps) {
     updateFilters(selectedTerminal, value);
   };
 
+  const filters = { terminal: selectedTerminal, range: selectedRange };
+
   return (
-    <div className="app-frame">
+    <AppFiltersContext.Provider value={filters}>
+      <div className="app-frame">
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <aside className="desktop-sidebar" aria-label="Sidebar">
         <a className="brand" href="#overview" aria-label={APP_NAME}>
@@ -126,7 +140,8 @@ export function AppShell({ children }: AppShellProps) {
         </main>
         <div className="mobile-navigation"><Navigation variant="mobile" /></div>
       </div>
-    </div>
+      </div>
+    </AppFiltersContext.Provider>
   );
 }
 
