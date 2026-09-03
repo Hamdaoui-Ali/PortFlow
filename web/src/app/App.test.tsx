@@ -93,6 +93,7 @@ describe("App", () => {
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Terminal throughput trend" })).toBeInTheDocument();
     expect(screen.getByText("Trend data unavailable")).toBeInTheDocument();
+    expect(screen.getAllByRole("group", { name: /About/ })).toHaveLength(6);
   });
 
   it("renders the availability trend when replay data is present", async () => {

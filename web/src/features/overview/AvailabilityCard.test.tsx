@@ -9,8 +9,8 @@ describe("AvailabilityCard", () => {
 
     expect(screen.getByText("94.4%")).toBeInTheDocument();
     expect(
-      screen.getByText(/available intervals divided by scheduled intervals/i),
-    ).toBeInTheDocument();
+      screen.getAllByText(/available intervals divided by scheduled intervals/i),
+    ).toHaveLength(2);
     expect(screen.getByText(/2 September 2026/i)).toBeInTheDocument();
     expect(screen.getByText(/23:55 UTC/i)).toBeInTheDocument();
   });
