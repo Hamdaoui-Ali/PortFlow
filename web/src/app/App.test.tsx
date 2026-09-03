@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { App } from "./App";
 
@@ -31,6 +31,10 @@ const snapshot = {
 };
 
 describe("App", () => {
+  afterEach(() => {
+    window.history.replaceState({}, "", "/");
+  });
+
   it("provides skip navigation and the approved product sections", () => {
     render(<App loadData={() => new Promise(() => undefined)} />);
 
@@ -66,7 +70,37 @@ describe("App", () => {
   it("renders the validated availability snapshot", async () => {
     render(<App loadData={() => Promise.resolve(snapshot)} />);
 
-    expect(await screen.findByText("94.4%")).toBeInTheDocument();
+    expect(await screen.findAllByText("94.4%")).toHaveLength(2);
+  });
+
+  it("renders the overview KPI rail from validated snapshot fields", async () => {
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      overview: {
+        ...snapshot.overview,
+        active_incidents: 1,
+        average_dwell_minutes: 63.75,
+        mttr_minutes: 30,
+        throughput: 4,
+      },
+    })} />);
+
+    expect(await screen.findByText("4 moves")).toBeInTheDocument();
+    expect(screen.getByText("63.8 min")).toBeInTheDocument();
+    expect(screen.getByText("30 min")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Terminal throughput trend" })).toBeInTheDocument();
+    expect(screen.getByText("Trend data unavailable")).toBeInTheDocument();
+  });
+
+  it("shows an honest unavailable state when filters do not match the snapshot", async () => {
+    window.history.replaceState({}, "", "/");
+    render(<App loadData={() => Promise.resolve(snapshot)} />);
+
+    fireEvent.change(screen.getByLabelText("Terminal"), { target: { value: "TM-002" } });
+
+    expect(await screen.findByText("Snapshot unavailable for selected filters")).toBeInTheDocument();
+    expect(screen.queryByText("94.4%")).not.toBeInTheDocument();
   });
 
   it("shows an explicit error without fabricating a KPI", async () => {
