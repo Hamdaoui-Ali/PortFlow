@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-014**. R2 is complete; the next release adds the first operator workflow on top of the trusted static snapshot.
+Start **PF-015**. PF-014 is complete; the next task completes the operator overview on top of the trusted static snapshot.
 
 ## Completed checkpoints
 
