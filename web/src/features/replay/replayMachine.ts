@@ -72,6 +72,35 @@ export function replayReducer(state: ReplayState, action: ReplayAction): ReplayS
     case "SET_SPEED":
       return { ...state, speed: action.speed };
     case "TICK":
-      return state;
+      if (state.status !== "playing" || !Number.isFinite(action.deltaMs) || action.deltaMs < 0) {
+        return state;
+      }
+
+      if (state.virtualTime === null) {
+        return state;
+      }
+
+      const nextVirtualTime = state.virtualTime + action.deltaMs * state.speed;
+      const reachedEvents = state.events.slice(state.currentIndex + 1).filter(
+        (event) => Date.parse(event.event_timestamp) <= nextVirtualTime,
+      );
+
+      if (reachedEvents.length === 0) {
+        return { ...state, virtualTime: nextVirtualTime };
+      }
+
+      const appliedEvents = [...state.appliedEvents, ...reachedEvents];
+      const currentIndex = state.currentIndex + reachedEvents.length;
+      const reachedFinalEvent = currentIndex === state.events.length - 1;
+
+      return {
+        ...state,
+        status: reachedFinalEvent ? "complete" : "playing",
+        currentIndex,
+        virtualTime: reachedFinalEvent
+          ? Date.parse(state.events[currentIndex].event_timestamp)
+          : nextVirtualTime,
+        appliedEvents,
+      };
   }
 }
