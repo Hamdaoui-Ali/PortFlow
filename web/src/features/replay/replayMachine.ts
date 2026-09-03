@@ -57,17 +57,23 @@ export function replayReducer(state: ReplayState, action: ReplayAction): ReplayS
   }
 
   switch (action.type) {
-    case "START":
+    case "START": {
       if (state.events.length === 0) {
         return state.status === "complete" ? state : { ...state, status: "complete" };
       }
+      const initialVirtualTime = Date.parse(state.events[0].event_timestamp);
+      const initialEvents = state.events.filter(
+        (event) => Date.parse(event.event_timestamp) === initialVirtualTime,
+      );
+      const currentIndex = initialEvents.length - 1;
       return {
         ...state,
-        status: state.events.length === 1 ? "complete" : "playing",
-        currentIndex: 0,
-        virtualTime: Date.parse(state.events[0].event_timestamp),
-        appliedEvents: [state.events[0]],
+        status: currentIndex === state.events.length - 1 ? "complete" : "playing",
+        currentIndex,
+        virtualTime: initialVirtualTime,
+        appliedEvents: initialEvents,
       };
+    }
     case "PAUSE":
       return state.status === "playing" ? { ...state, status: "paused" } : state;
     case "RESUME":

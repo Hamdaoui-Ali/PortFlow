@@ -13,8 +13,8 @@ const event = (event_id: string, event_timestamp: string): ReplayEventV1 => ({
 
 const events = [
   event("event-2", "2026-09-02T02:00:00+02:00"),
-  event("event-3", "2026-09-02T00:00:00Z"),
-  event("event-1", "2026-09-02T00:00:00Z"),
+  event("event-3", "2026-09-02T00:00:05Z"),
+  event("event-1", "2026-09-02T00:00:05Z"),
 ];
 
 const captureArrays = (state: ReturnType<typeof createReplayState>) => ({
@@ -90,6 +90,41 @@ describe("replay machine reducer", () => {
     expect(started.status).toBe("playing");
     expect(started.currentIndex).toBe(0);
     expect(started.appliedEvents).toEqual([started.events[0]]);
+  });
+
+  it("applies every event at the initial timestamp before playing later events", () => {
+    const tiedEvents = [
+      event("event-1", "2026-09-02T00:00:00Z"),
+      event("event-2", "2026-09-02T02:00:00+02:00"),
+      event("event-3", "2026-09-02T00:00:05Z"),
+    ];
+
+    const started = replayReducer(createReplayState(tiedEvents), { type: "START" });
+
+    expect(started.status).toBe("playing");
+    expect(started.currentIndex).toBe(1);
+    expect(started.appliedEvents.map(({ event_id }) => event_id)).toEqual([
+      "event-1",
+      "event-2",
+    ]);
+  });
+
+  it("completes an all-equal-timestamp replay on start without duplicates", () => {
+    const tiedEvents = [
+      event("event-1", "2026-09-02T00:00:00Z"),
+      event("event-2", "2026-09-02T00:00:00Z"),
+      event("event-3", "2026-09-02T00:00:00Z"),
+    ];
+
+    const started = replayReducer(createReplayState(tiedEvents), { type: "START" });
+
+    expect(started.status).toBe("complete");
+    expect(started.currentIndex).toBe(2);
+    expect(started.appliedEvents.map(({ event_id }) => event_id)).toEqual([
+      "event-1",
+      "event-2",
+      "event-3",
+    ]);
   });
 
   it("immediately completes when starting a replay with one event", () => {
