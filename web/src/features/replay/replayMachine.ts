@@ -48,6 +48,10 @@ export function createReplayState(
 }
 
 export function replayReducer(state: ReplayState, action: ReplayAction): ReplayState {
+  if (action === null || typeof action !== "object" || !("type" in action)) {
+    return state;
+  }
+
   switch (action.type) {
     case "START":
       if (state.events.length === 0) {
@@ -70,9 +74,12 @@ export function replayReducer(state: ReplayState, action: ReplayAction): ReplayS
         reducedMotion: state.reducedMotion,
       });
     case "SET_SPEED":
+      if (action.speed !== 0.5 && action.speed !== 1 && action.speed !== 2 && action.speed !== 4) {
+        return state;
+      }
       return { ...state, speed: action.speed };
     case "TICK":
-      if (state.status !== "playing" || !Number.isFinite(action.deltaMs) || action.deltaMs < 0) {
+      if (state.status !== "playing" || !Number.isFinite(action.deltaMs) || action.deltaMs <= 0) {
         return state;
       }
 
@@ -102,5 +109,7 @@ export function replayReducer(state: ReplayState, action: ReplayAction): ReplayS
           : nextVirtualTime,
         appliedEvents,
       };
+    default:
+      return state;
   }
 }

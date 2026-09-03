@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ReplayEventV1 } from "../../data/schema";
-import { createReplayState, replayReducer } from "./replayMachine";
+import { createReplayState, replayReducer, type ReplayAction } from "./replayMachine";
 
 const event = (event_id: string, event_timestamp: string): ReplayEventV1 => ({
   available: true,
@@ -16,6 +16,23 @@ const events = [
   event("event-3", "2026-09-02T00:00:00Z"),
   event("event-1", "2026-09-02T00:00:00Z"),
 ];
+
+const captureArrays = (state: ReturnType<typeof createReplayState>) => ({
+  events: state.events,
+  eventsContents: [...state.events],
+  appliedEvents: state.appliedEvents,
+  appliedEventsContents: [...state.appliedEvents],
+});
+
+const expectArraysUnchanged = (
+  state: ReturnType<typeof createReplayState>,
+  snapshot: ReturnType<typeof captureArrays>,
+) => {
+  expect(state.events).toBe(snapshot.events);
+  expect(state.events).toEqual(snapshot.eventsContents);
+  expect(state.appliedEvents).toBe(snapshot.appliedEvents);
+  expect(state.appliedEvents).toEqual(snapshot.appliedEventsContents);
+};
 
 describe("replay machine initialization", () => {
   it("creates an idle state with stable chronological ordering", () => {
@@ -77,6 +94,29 @@ describe("replay machine reducer", () => {
     expect(restarted.status).toBe("playing");
     expect(restarted.currentIndex).toBe(0);
     expect(restarted.appliedEvents).toEqual([restarted.events[0]]);
+  });
+
+  it("leaves input and prior-state arrays unchanged across START, TICK, and RESET", () => {
+    const input = [...events];
+    const inputSnapshot = [...input];
+    const initial = createReplayState(input);
+    const initialArrays = captureArrays(initial);
+    const started = replayReducer(initial, { type: "START" });
+
+    expect(input).toEqual(inputSnapshot);
+    expectArraysUnchanged(initial, initialArrays);
+
+    const startedArrays = captureArrays(started);
+    const ticked = replayReducer(started, { type: "TICK", deltaMs: 1_000 });
+
+    expect(input).toEqual(inputSnapshot);
+    expectArraysUnchanged(started, startedArrays);
+
+    const tickedArrays = captureArrays(ticked);
+    replayReducer(ticked, { type: "RESET" });
+
+    expect(input).toEqual(inputSnapshot);
+    expectArraysUnchanged(ticked, tickedArrays);
   });
 
   it("changes speed and reset preserves speed and reduced-motion policy", () => {
@@ -180,6 +220,31 @@ describe("replay machine reducer", () => {
     expect(negative).toEqual(started);
     expect(complete.status).toBe("complete");
     expect(completeTick).toEqual(complete);
+  });
+
+  it("returns the prior state for malformed actions and invalid speeds", () => {
+    const initial = createReplayState(events);
+    const malformedActions = [
+      null,
+      {},
+      { type: "UNKNOWN" },
+      { type: "SET_SPEED" },
+      { type: "SET_SPEED", speed: 3 },
+      { type: "SET_SPEED", speed: "fast" },
+    ] as unknown as ReplayAction[];
+
+    for (const action of malformedActions) {
+      expect(() => replayReducer(initial, action)).not.toThrow();
+      expect(replayReducer(initial, action)).toBe(initial);
+    }
+  });
+
+  it("returns the prior state for zero and non-finite ticks", () => {
+    const started = replayReducer(createReplayState(events), { type: "START" });
+
+    for (const deltaMs of [0, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(replayReducer(started, { type: "TICK", deltaMs })).toBe(started);
+    }
   });
 
   it("scales advancement by speed while preserving event order", () => {
