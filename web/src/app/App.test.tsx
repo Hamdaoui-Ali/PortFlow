@@ -75,6 +75,40 @@ describe("App", () => {
     expect(await screen.findAllByText("94.4%")).toHaveLength(2);
   });
 
+  it("renders the equipment fleet for the equipment hash route", async () => {
+    window.history.replaceState({}, "", "/#equipment");
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      equipment: {
+        status: "ready" as const,
+        records: [{
+          alarm_count: 3,
+          availability: 0.9444444444444444,
+          available: true,
+          current_state: "ACTIVE",
+          downtime_minutes: 80,
+          equipment_id: "QC-001",
+          mtbf_hours: 24,
+          mttr_minutes: 30,
+          terminal_id: "TM-001",
+          utilization: 0.7426470588235294,
+        }],
+      },
+    })} />);
+
+    expect(await screen.findByRole("heading", { name: "Equipment fleet" }))
+      .toBeInTheDocument();
+    expect(screen.queryByText("Terminal throughput (moves)")).not.toBeInTheDocument();
+  });
+
+  it("falls back to Overview for an unknown hash route", async () => {
+    window.history.replaceState({}, "", "/#not-a-portflow-route");
+    render(<App loadData={() => Promise.resolve(snapshot)} />);
+
+    expect(await screen.findByText("Terminal throughput (moves)")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Equipment fleet" })).not.toBeInTheDocument();
+  });
+
   it("renders the overview KPI rail from validated snapshot fields", async () => {
     render(<App loadData={() => Promise.resolve({
       ...snapshot,

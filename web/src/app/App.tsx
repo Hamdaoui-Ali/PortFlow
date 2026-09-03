@@ -7,6 +7,7 @@ import type { SnapshotV1 } from "../data/schema";
 import { AvailabilityCard } from "../features/overview/AvailabilityCard";
 import { OverviewKpiRail } from "../features/overview/OverviewKpiRail";
 import { AvailabilityTrend } from "../features/overview/AvailabilityTrend";
+import { EquipmentPage } from "../features/equipment/EquipmentPage";
 import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
 
 interface AppProps {
@@ -19,8 +20,11 @@ type SnapshotState =
   | { status: "error"; kind: SnapshotFailureKind }
   | { status: "stale"; kind: SnapshotFailureKind; snapshot: SnapshotV1 };
 
+type AppRoute = "equipment" | "overview";
+
 export function App({ loadData = loadSnapshot }: AppProps) {
   const [snapshotState, setSnapshotState] = useState<SnapshotState>({ status: "loading" });
+  const [route, setRoute] = useState<AppRoute>(readRoute);
 
   useEffect(() => {
     let active = true;
@@ -44,14 +48,20 @@ export function App({ loadData = loadSnapshot }: AppProps) {
     };
   }, [loadData]);
 
+  useEffect(() => {
+    const updateRoute = () => setRoute(readRoute());
+    window.addEventListener("hashchange", updateRoute);
+    return () => window.removeEventListener("hashchange", updateRoute);
+  }, []);
+
   return (
     <AppShell>
-      <OverviewContent snapshotState={snapshotState} />
+      <AppContent route={route} snapshotState={snapshotState} />
     </AppShell>
   );
 }
 
-function OverviewContent({ snapshotState }: { snapshotState: SnapshotState }) {
+function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: SnapshotState }) {
   const filters = useAppFilters();
 
   if (snapshotState.status === "loading") {
@@ -73,6 +83,19 @@ function OverviewContent({ snapshotState }: { snapshotState: SnapshotState }) {
       <p>{failureDescription(snapshotState.kind)} New data will appear when the published snapshot recovers.</p>
     </div>
   ) : null;
+
+  if (route === "equipment") {
+    return (
+      <>
+        {staleNotice}
+        <EquipmentPage
+          dataset={snapshot.equipment ?? { status: "absent" }}
+          filters={filters}
+        />
+      </>
+    );
+  }
+
   if (!matchesFilters(snapshot, filters)) {
     return <>
       {staleNotice}
@@ -109,6 +132,10 @@ function OverviewContent({ snapshotState }: { snapshotState: SnapshotState }) {
       />
     </>
   );
+}
+
+function readRoute(): AppRoute {
+  return window.location.hash === "#equipment" ? "equipment" : "overview";
 }
 
 function failureHeading(kind: SnapshotFailureKind): string {
