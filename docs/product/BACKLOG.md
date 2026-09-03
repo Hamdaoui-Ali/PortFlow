@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-015**. PF-014 is complete; the next task completes the operator overview on top of the trusted static snapshot.
+Start **PF-017**. PF-015 and PF-016 are complete; the next task adds auditable definitions and methodology for every displayed KPI.
 
 ## Completed checkpoints
 
