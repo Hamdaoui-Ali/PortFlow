@@ -1,4 +1,10 @@
-import { manifestSchema, overviewSchema, replaySchema, type SnapshotV1 } from "./schema";
+import {
+  equipmentSchema,
+  manifestSchema,
+  overviewSchema,
+  replaySchema,
+  type SnapshotV1,
+} from "./schema";
 import { SnapshotLoadError } from "./errors";
 
 export type SnapshotFetch = (
@@ -51,9 +57,37 @@ export async function loadSnapshot(
     throw new SnapshotLoadError("empty");
   }
 
+  const equipmentEntry = manifestResult.data.datasets.equipment;
+  let equipment: SnapshotV1["equipment"] = { status: "absent" };
+  if (equipmentEntry) {
+    try {
+      const equipmentResponse = await fetcher(`${dataBase}${equipmentEntry.path}`);
+      if (!equipmentResponse.ok) {
+        equipment = { status: "unavailable" };
+      } else {
+        let equipmentPayload: unknown;
+        try {
+          equipmentPayload = await equipmentResponse.json();
+        } catch {
+          equipment = { status: "malformed" };
+        }
+        if (equipmentPayload !== undefined) {
+          const equipmentResult = equipmentSchema.safeParse(equipmentPayload);
+          equipment = !equipmentResult.success
+            ? { status: "malformed" }
+            : equipmentResult.data.length === 0
+              ? { status: "empty" }
+              : { status: "ready", records: equipmentResult.data };
+        }
+      }
+    } catch {
+      equipment = { status: "unavailable" };
+    }
+  }
+
   const replayEntry = manifestResult.data.datasets.event_replay;
   if (!replayEntry) {
-    return { manifest: manifestResult.data, overview: overviewResult.data };
+    return { manifest: manifestResult.data, overview: overviewResult.data, equipment };
   }
 
   try {
@@ -62,10 +96,10 @@ export async function loadSnapshot(
       await readJson(replayResponse, "Event replay dataset"),
     );
     return replayResult.success
-      ? { manifest: manifestResult.data, overview: overviewResult.data, event_replay: replayResult.data }
-      : { manifest: manifestResult.data, overview: overviewResult.data };
+      ? { manifest: manifestResult.data, overview: overviewResult.data, event_replay: replayResult.data, equipment }
+      : { manifest: manifestResult.data, overview: overviewResult.data, equipment };
   } catch {
-    return { manifest: manifestResult.data, overview: overviewResult.data };
+    return { manifest: manifestResult.data, overview: overviewResult.data, equipment };
   }
 }
 

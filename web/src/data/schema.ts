@@ -105,12 +105,38 @@ export const replayEventSchema = z
 
 export const replaySchema = z.array(replayEventSchema);
 
+export const equipmentRecordSchema = z
+  .object({
+    alarm_count: z.number().int().nonnegative(),
+    availability: z.number().min(0).max(1),
+    available: z.boolean(),
+    current_state: z.string().min(1),
+    downtime_minutes: z.number().nonnegative(),
+    equipment_id: z.string().min(1),
+    mtbf_hours: z.number().nonnegative(),
+    mttr_minutes: z.number().nonnegative(),
+    terminal_id: z.string().regex(/^TM-\d{3}$/),
+    utilization: z.number().min(0).max(1),
+  })
+  .strict();
+
+export const equipmentSchema = z.array(equipmentRecordSchema);
+
 export type ManifestV1 = z.infer<typeof manifestSchema>;
 export type OverviewV1 = z.infer<typeof overviewSchema>;
 export type ReplayEventV1 = z.infer<typeof replayEventSchema>;
+export type EquipmentRecordV1 = z.infer<typeof equipmentRecordSchema>;
+
+export type EquipmentDatasetState =
+  | { status: "absent" }
+  | { status: "ready"; records: EquipmentRecordV1[] }
+  | { status: "unavailable" }
+  | { status: "malformed" }
+  | { status: "empty" };
 
 export interface SnapshotV1 {
   manifest: ManifestV1;
   overview: OverviewV1;
   event_replay?: ReplayEventV1[];
+  equipment?: EquipmentDatasetState;
 }

@@ -28,6 +28,21 @@ const overview = {
   terminal_id: "TM-001",
 };
 
+const equipment = [
+  {
+    alarm_count: 3,
+    availability: 0.9444444444444444,
+    available: true,
+    current_state: "ACTIVE",
+    downtime_minutes: 80,
+    equipment_id: "QC-001",
+    mtbf_hours: 24,
+    mttr_minutes: 30,
+    terminal_id: "TM-001",
+    utilization: 0.7426470588235294,
+  },
+];
+
 function successfulFetch(input: string | URL | Request): Promise<Response> {
   const url = String(input);
   if (url.endsWith("manifest.json")) {
@@ -45,6 +60,112 @@ describe("loadSnapshot", () => {
 
     expect(snapshot.manifest.snapshot_id).toBe("demo-v1");
     expect(snapshot.overview.availability.value).toBe(0.9444444444444444);
+  });
+
+  it("reports an absent equipment dataset when the manifest has no equipment entry", async () => {
+    const snapshot = await loadSnapshot(successfulFetch, "/PortFlow/");
+
+    expect(snapshot.equipment).toEqual({ status: "absent" });
+  });
+
+  it("loads and validates equipment records without rejecting the overview", async () => {
+    const equipmentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: {
+          path: "snapshots/demo-v1/equipment.json",
+          sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        },
+      },
+      record_counts: { telemetry: 288, equipment: 1 },
+    };
+    const equipmentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? equipmentManifest :
+          url.endsWith("equipment.json") ? equipment : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(equipmentFetch, "/PortFlow/");
+
+    expect(snapshot.equipment).toEqual({ status: "ready", records: equipment });
+    expect(snapshot.overview).toEqual(overview);
+  });
+
+  it("reports an unavailable equipment dataset when its fetch fails", async () => {
+    const equipmentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: {
+          path: "snapshots/demo-v1/equipment.json",
+          sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        },
+      },
+    };
+    const equipmentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(equipmentManifest));
+      if (url.endsWith("equipment.json")) return Promise.reject(new Error("network down"));
+      return Promise.resolve(Response.json(overview));
+    };
+
+    const snapshot = await loadSnapshot(equipmentFetch, "/PortFlow/");
+
+    expect(snapshot.equipment).toEqual({ status: "unavailable" });
+    expect(snapshot.overview).toEqual(overview);
+  });
+
+  it("reports a malformed equipment dataset when a record shape is invalid", async () => {
+    const equipmentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: {
+          path: "snapshots/demo-v1/equipment.json",
+          sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        },
+      },
+    };
+    const equipmentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? equipmentManifest :
+          url.endsWith("equipment.json") ? [{ ...equipment[0], unexpected: true }] : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(equipmentFetch, "/PortFlow/");
+
+    expect(snapshot.equipment).toEqual({ status: "malformed" });
+    expect(snapshot.overview).toEqual(overview);
+  });
+
+  it("reports an empty equipment dataset when the validated array has no records", async () => {
+    const equipmentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: {
+          path: "snapshots/demo-v1/equipment.json",
+          sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        },
+      },
+    };
+    const equipmentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? equipmentManifest :
+          url.endsWith("equipment.json") ? [] : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(equipmentFetch, "/PortFlow/");
+
+    expect(snapshot.equipment).toEqual({ status: "empty" });
+    expect(snapshot.overview).toEqual(overview);
   });
 
   it("rejects an unsupported manifest schema version", async () => {
