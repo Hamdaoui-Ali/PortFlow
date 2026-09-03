@@ -113,6 +113,7 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Live Demo" })).toBeInTheDocument();
     expect(screen.getByText("Simulation — not live operational data")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start replay" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Live Demo" })[0]).toHaveAttribute("aria-current", "page");
   });
 
   it("distinguishes missing and empty replay datasets honestly", async () => {
@@ -122,6 +123,21 @@ describe("App", () => {
 
     rerender(<App loadData={() => Promise.resolve({ ...snapshot, event_replay: [] })} />);
     expect(await screen.findByText("Replay has no events")).toBeInTheDocument();
+    expect(screen.getByText("Simulation — not live operational data")).toBeInTheDocument();
+  });
+
+  it("keeps the stale snapshot notice above the Live Demo", async () => {
+    window.history.replaceState({}, "", "/#live-demo");
+    const { rerender } = render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      event_replay: [
+        { available: true, equipment_id: "QC-001", event_id: "evt-1", event_timestamp: "2026-09-02T00:00:00Z", state: "ACTIVE", terminal_id: "TM-001" },
+      ],
+    })} />);
+    expect(await screen.findByRole("heading", { name: "Live Demo" })).toBeInTheDocument();
+
+    rerender(<App loadData={() => Promise.reject(new Error("network down"))} />);
+    expect(await screen.findByRole("status", { name: "Showing last valid snapshot" })).toBeInTheDocument();
     expect(screen.getByText("Simulation — not live operational data")).toBeInTheDocument();
   });
 

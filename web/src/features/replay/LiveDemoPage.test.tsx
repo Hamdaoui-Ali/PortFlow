@@ -120,4 +120,20 @@ describe("LiveDemoPage", () => {
     expect(screen.getByText("2 of 3 events")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Replay activity" })).toHaveTextContent("evt-2");
   });
+
+  it("completes once and stops timer work after the final event", () => {
+    vi.useFakeTimers();
+    render(<LiveDemoPage events={events} overview={overview} />);
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Replay speed" }), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Start replay" }));
+    act(() => vi.advanceTimersByTime(5_000));
+    act(() => vi.advanceTimersByTime(5_000));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Replay complete");
+    expect(screen.getByText("3 of 3 events")).toBeInTheDocument();
+    expect(vi.getTimerCount()).toBe(0);
+    fireEvent.click(screen.getByRole("button", { name: "Reset replay" }));
+    expect(screen.getByRole("combobox", { name: "Replay speed" })).toHaveValue("2");
+  });
 });
