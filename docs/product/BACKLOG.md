@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-019**. PF-018 is complete; the next task adds incident exploration with terminal and severity filters, trend and root-cause analysis, recurring faults, and lifecycle detail.
+Start **PF-020**. PF-019 is complete; the next task adds deterministic browser replay state with start, pause, resume, reset, speed, virtual time, and reduced-motion behavior.
 
 ## Completed checkpoints
 
