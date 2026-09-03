@@ -1,0 +1,8 @@
+portflow:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('PORTFLOW_GOLD_DB', 'data/gold/portflow.duckdb') }}"
+      schema: main
+      threads: 1

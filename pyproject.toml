@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "portflow"
+version = "0.1.0"
+description = "A permanent-$0 terminal-operations data product"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "dbt-duckdb>=1.9,<2",
+  "duckdb>=1.2,<2",
+  "jsonschema>=4.23,<5",
+  "polars>=1.25,<2",
+  "psycopg[binary]>=3.2,<4",
+  "pyarrow>=19,<21",
+  "pydantic>=2.11,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.15,<2",
+  "pytest>=8.3,<10",
+  "pyyaml>=6.0,<7",
+  "ruff>=0.11,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/portflow"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["portflow"]

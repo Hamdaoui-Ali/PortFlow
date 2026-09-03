@@ -458,7 +458,7 @@ Serialize JSON with sorted keys, UTF-8, compact separators, and a terminal newli
 Run the generator twice and compare repository state:
 
 ```powershell
-python scripts/generate_first_snapshot.py
+python -m uv run python scripts/generate_first_snapshot.py
 git diff --exit-code -- web/public/data
 python -m pytest tests/unit/test_availability.py tests/integration/test_first_snapshot.py -v
 ```
@@ -583,7 +583,7 @@ Trigger on pull requests and pushes to `main`. Check out code, install Python 3.
 Run:
 
 ```powershell
-python scripts/generate_first_snapshot.py
+python -m uv run python scripts/generate_first_snapshot.py
 git diff --exit-code -- web/public/data
 pwsh ./scripts/verify.ps1
 ```
@@ -637,7 +637,7 @@ git commit -m "ci: publish tested PortFlow site to Pages"
 From a clean clone or isolated worktree, install locked dependencies and run:
 
 ```powershell
-python scripts/generate_first_snapshot.py
+python -m uv run python scripts/generate_first_snapshot.py
 pwsh ./scripts/verify.ps1
 git diff --exit-code
 ```

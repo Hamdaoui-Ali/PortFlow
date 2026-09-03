@@ -1,0 +1,18 @@
+{
+  "include": ["availability", "utilization", "mttr_minutes", "mtbf_hours"],
+  "telemetry": [
+    {"available": true, "state": "ACTIVE", "event_timestamp": "2026-09-02T00:00:00Z"},
+    {"available": true, "state": "IDLE", "event_timestamp": "2026-09-02T00:05:00Z"},
+    {"available": true, "state": "ACTIVE", "event_timestamp": "2026-09-02T00:10:00Z"},
+    {"available": false, "state": "UNAVAILABLE", "event_timestamp": "2026-09-02T00:15:00Z"}
+  ],
+  "incidents": [
+    {
+      "opened_at": "2026-09-02T01:00:00Z",
+      "resolved_at": "2026-09-02T01:30:00Z",
+      "status": "RESOLVED"
+    }
+  ],
+  "operating_hours": 8.0,
+  "qualifying_failure_count": 2
+}

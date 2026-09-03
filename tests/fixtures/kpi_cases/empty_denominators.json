@@ -1,0 +1,7 @@
+{
+  "include": ["availability", "utilization", "mttr_minutes", "mtbf_hours"],
+  "telemetry": [],
+  "incidents": [],
+  "operating_hours": 0.0,
+  "qualifying_failure_count": 0
+}

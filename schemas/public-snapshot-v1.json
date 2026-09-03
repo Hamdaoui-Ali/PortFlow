@@ -1,0 +1,228 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "datasets",
+    "generated_at",
+    "quality_status",
+    "record_counts",
+    "schema_version",
+    "snapshot_id",
+    "source_period_end",
+    "source_period_start"
+  ],
+  "properties": {
+    "datasets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overview", "equipment", "incidents", "event_replay", "quality"],
+      "properties": {
+        "overview": {"$ref": "#/$defs/dataset_entry"},
+        "equipment": {"$ref": "#/$defs/dataset_entry"},
+        "incidents": {"$ref": "#/$defs/dataset_entry"},
+        "event_replay": {"$ref": "#/$defs/dataset_entry"},
+        "quality": {"$ref": "#/$defs/dataset_entry"}
+      }
+    },
+    "generated_at": {"$ref": "#/$defs/utc_datetime"},
+    "quality_status": {"const": "PASS"},
+    "record_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["telemetry", "equipment", "incidents", "event_replay", "quality"],
+      "properties": {
+        "telemetry": {"type": "integer", "minimum": 0},
+        "equipment": {"type": "integer", "minimum": 0},
+        "incidents": {"type": "integer", "minimum": 0},
+        "event_replay": {"type": "integer", "minimum": 0},
+        "quality": {"type": "integer", "minimum": 1}
+      }
+    },
+    "schema_version": {"const": 1},
+    "snapshot_id": {"type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9._-]+$"},
+    "source_period_end": {"$ref": "#/$defs/utc_datetime"},
+    "source_period_start": {"$ref": "#/$defs/utc_datetime"}
+  },
+  "$defs": {
+    "utc_datetime": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "dataset_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*\\.\\.)(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+\\.json$"
+        },
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available_intervals", "scheduled_intervals", "value"],
+      "properties": {
+        "available_intervals": {"type": "integer", "minimum": 0},
+        "scheduled_intervals": {"type": "integer", "minimum": 0},
+        "value": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"scheduled_intervals": {"const": 0}}},
+          "then": {"properties": {"value": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"scheduled_intervals": {"minimum": 1}}},
+          "then": {"properties": {"value": {"type": "number"}}}
+        }
+      ]
+    },
+    "overview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "terminal_id",
+        "source_period_start",
+        "source_period_end",
+        "available_intervals",
+        "scheduled_intervals",
+        "active_intervals",
+        "availability",
+        "utilization",
+        "throughput",
+        "average_dwell_minutes",
+        "mttr_minutes",
+        "mtbf_hours",
+        "resolved_incident_count",
+        "repair_minutes",
+        "qualifying_failure_count",
+        "operating_hours",
+        "active_incidents",
+        "critical_alarms"
+      ],
+      "properties": {
+        "schema_version": {"const": 1},
+        "terminal_id": {"type": "string", "pattern": "^TM-[0-9]{3}$"},
+        "source_period_start": {"$ref": "#/$defs/utc_datetime"},
+        "source_period_end": {"$ref": "#/$defs/utc_datetime"},
+        "available_intervals": {"type": "integer", "minimum": 0},
+        "scheduled_intervals": {"type": "integer", "minimum": 0},
+        "active_intervals": {"type": "integer", "minimum": 0},
+        "availability": {"$ref": "#/$defs/availability"},
+        "utilization": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "throughput": {"type": "integer", "minimum": 0},
+        "average_dwell_minutes": {"type": ["number", "null"], "minimum": 0},
+        "mttr_minutes": {"type": ["number", "null"], "minimum": 0},
+        "mtbf_hours": {"type": ["number", "null"], "minimum": 0},
+        "resolved_incident_count": {"type": "integer", "minimum": 0},
+        "repair_minutes": {"type": "number", "minimum": 0},
+        "qualifying_failure_count": {"type": "integer", "minimum": 0},
+        "operating_hours": {"type": "number", "minimum": 0},
+        "active_incidents": {"type": "integer", "minimum": 0},
+        "critical_alarms": {"type": "integer", "minimum": 0}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"available_intervals": {"const": 0}}},
+          "then": {"properties": {"utilization": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"resolved_incident_count": {"const": 0}}},
+          "then": {"properties": {"mttr_minutes": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"qualifying_failure_count": {"const": 0}}},
+          "then": {"properties": {"mtbf_hours": {"type": "null"}}}
+        }
+      ]
+    },
+    "equipment": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/equipment_item"}
+    },
+    "incidents": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/incident_item"}
+    },
+    "event_replay": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/event_item"}
+    },
+    "equipment_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "equipment_id",
+        "terminal_id",
+        "current_state",
+        "available",
+        "availability",
+        "utilization",
+        "alarm_count",
+        "downtime_minutes",
+        "mttr_minutes",
+        "mtbf_hours"
+      ],
+      "properties": {
+        "equipment_id": {"type": "string", "pattern": "^[A-Z]{2,4}-[0-9]{3}$"},
+        "terminal_id": {"type": "string", "pattern": "^TM-[0-9]{3}$"},
+        "current_state": {
+          "type": "string",
+          "enum": ["IDLE", "ACTIVE", "WARNING", "UNAVAILABLE", "MAINTENANCE"]
+        },
+        "available": {"type": "boolean"},
+        "availability": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "utilization": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "alarm_count": {"type": "integer", "minimum": 0},
+        "downtime_minutes": {"type": "number", "minimum": 0},
+        "mttr_minutes": {"type": ["number", "null"], "minimum": 0},
+        "mtbf_hours": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "incident_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["incident_id", "equipment_id", "severity", "status", "opened_at", "resolved_at", "root_cause"],
+      "properties": {
+        "incident_id": {"type": "string", "pattern": "^inc-[0-9]{6}$"},
+        "equipment_id": {"type": "string", "pattern": "^[A-Z]{2,4}-[0-9]{3}$"},
+        "severity": {"type": "string", "enum": ["MINOR", "MAJOR", "CRITICAL"]},
+        "status": {"type": "string", "enum": ["OPEN", "RESOLVED"]},
+        "opened_at": {"$ref": "#/$defs/utc_datetime"},
+        "resolved_at": {"type": ["string", "null"], "pattern": "Z$"},
+        "root_cause": {"type": "string", "minLength": 1}
+      }
+    },
+    "event_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "equipment_id", "terminal_id", "event_timestamp", "state", "available"],
+      "properties": {
+        "event_id": {"type": "string", "pattern": "^evt-[0-9]{6}-[0-9]{6}$"},
+        "equipment_id": {"type": "string", "pattern": "^[A-Z]{2,4}-[0-9]{3}$"},
+        "terminal_id": {"type": "string", "pattern": "^TM-[0-9]{3}$"},
+        "event_timestamp": {"$ref": "#/$defs/utc_datetime"},
+        "state": {"type": "string", "enum": ["IDLE", "ACTIVE", "WARNING", "UNAVAILABLE", "MAINTENANCE"]},
+        "available": {"type": "boolean"}
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bronze_rows", "silver_rows", "quarantine_rows", "reason_counts", "dbt_test_status"],
+      "properties": {
+        "bronze_rows": {"type": "integer", "minimum": 0},
+        "silver_rows": {"type": "integer", "minimum": 0},
+        "quarantine_rows": {"type": "integer", "minimum": 0},
+        "reason_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "dbt_test_status": {"const": "PASS"}
+      }
+    }
+  }
+}
