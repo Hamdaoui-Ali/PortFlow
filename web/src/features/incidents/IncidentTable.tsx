@@ -76,7 +76,7 @@ export function IncidentTable({
               return (
                 <tr key={record.incident_id}>
                   <th scope="row">
-                    <a href={`?incident=${encodeURIComponent(record.incident_id)}#incidents`} onClick={(event) => { event.preventDefault(); onSelect(record.incident_id); }}>
+                    <a id={`incident-link-${record.incident_id}`} href={`?incident=${encodeURIComponent(record.incident_id)}#incidents`} onClick={(event) => { event.preventDefault(); onSelect(record.incident_id); }}>
                       {record.incident_id}
                     </a>
                     <span className="table-subtext">{record.equipment_id} · {record.terminal_id}</span>

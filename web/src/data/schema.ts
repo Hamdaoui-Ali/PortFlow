@@ -134,7 +134,7 @@ export const incidentRecordSchema = z
     terminal_id: z.string().regex(/^TM-\d{3}$/),
   })
   .superRefine((incident, context) => {
-    if (incident.resolved_at && incident.resolved_at < incident.opened_at) {
+    if (incident.resolved_at && Date.parse(incident.resolved_at) < Date.parse(incident.opened_at)) {
       context.addIssue({ code: "custom", message: "resolved_at cannot precede opened_at" });
     }
     if ((incident.status === "RESOLVED") !== (incident.resolved_at !== null)) {

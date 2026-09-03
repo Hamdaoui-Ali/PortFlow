@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { AppFilters } from "../../app/AppShell";
 import type { IncidentDatasetState } from "../../data/schema";
@@ -24,6 +24,8 @@ const incidentUrlKeys = ["search", "severity", "sort", "direction", "incident"] 
 
 export function IncidentPage({ dataset, filters }: IncidentPageProps) {
   const [urlState, setUrlState] = useState(() => readIncidentUrlState(window.location.search));
+  const returnFocusId = useRef<string | null>(null);
+  const selectedFromThisPage = useRef(false);
 
   useEffect(() => {
     const restore = () => setUrlState(readIncidentUrlState(window.location.search));
@@ -35,6 +37,13 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
     writeIncidentLocation(urlState, "replace");
   }, [filters.range, filters.terminal, urlState]);
 
+  useEffect(() => {
+    if (!urlState.incidentId && returnFocusId.current) {
+      document.getElementById(`incident-link-${returnFocusId.current}`)?.focus();
+      returnFocusId.current = null;
+    }
+  }, [urlState.incidentId]);
+
   if (dataset.status !== "ready") return <IncidentDatasetMessage status={dataset.status} />;
   if (filters.range !== "24h") {
     return <div className="data-state data-state-warning" role="status"><h2>Incidents unavailable for selected filters</h2><p>The published incident snapshot covers the last 24 hours only.</p></div>;
@@ -42,7 +51,13 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
 
   const selectedRecord = urlState.incidentId ? dataset.records.find((record) => record.incident_id === urlState.incidentId) : undefined;
   const update = (next: IncidentUrlState, mode: "push" | "replace") => { writeIncidentLocation(next, mode); setUrlState(next); };
-  const back = () => update({ ...urlState, incidentId: null }, "push");
+  const back = () => {
+    if (selectedFromThisPage.current && window.history.state?.incidentDetail) {
+      window.history.back();
+      return;
+    }
+    update({ ...urlState, incidentId: null }, "replace");
+  };
 
   if (urlState.incidentId && !selectedRecord) {
     return <div className="data-state data-state-warning" role="status"><h2>Incident not found</h2><p>The selected incident is not present in this published snapshot.</p><button type="button" onClick={back}>Back to incident list</button></div>;
@@ -81,7 +96,11 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
         onQueryChange={(query) => update({ ...urlState, query }, "replace")}
         onSeverityChange={(severity) => update({ ...urlState, severity }, "replace")}
         onSortChange={updateSort}
-        onSelect={(incidentId) => update({ ...urlState, incidentId }, "push")}
+        onSelect={(incidentId) => {
+          returnFocusId.current = incidentId;
+          selectedFromThisPage.current = true;
+          update({ ...urlState, incidentId }, "push");
+        }}
       />
       {records.length === 0 ? <div className="data-state data-state-warning" role="status"><h3>No incidents match these filters</h3><p>Adjust the incident search, severity, or global terminal filter.</p></div> : null}
     </section>
@@ -112,5 +131,6 @@ function writeIncidentLocation(state: IncidentUrlState, mode: "push" | "replace"
   const location = `${window.location.pathname}${query ? `?${query}` : ""}#incidents`;
   const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
   if (location === current) return;
-  if (mode === "push") window.history.pushState({}, "", location); else window.history.replaceState({}, "", location);
+  if (mode === "push") window.history.pushState({ incidentDetail: Boolean(state.incidentId) }, "", location);
+  else window.history.replaceState({}, "", location);
 }

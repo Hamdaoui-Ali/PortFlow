@@ -1,16 +1,19 @@
+import { useEffect, useRef } from "react";
 import type { IncidentRecordV1 } from "../../data/schema";
 import { incidentDurationMinutes } from "./incidentData";
 import { formatDuration } from "./IncidentTable";
 
 export function IncidentDetail({ record, onBack }: { record: IncidentRecordV1; onBack: () => void }) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const duration = incidentDurationMinutes(record);
+  useEffect(() => headingRef.current?.focus(), [record.incident_id]);
   return (
     <article className="incident-detail" aria-labelledby="incident-detail-title">
       <button type="button" className="back-link" onClick={onBack}>← Back to incident list</button>
       <header className="detail-header">
         <div>
           <p className="section-kicker">Incident lifecycle</p>
-          <h2 id="incident-detail-title">Incident {record.incident_id}</h2>
+          <h2 id="incident-detail-title" ref={headingRef} tabIndex={-1}>Incident {record.incident_id}</h2>
           <p>{record.equipment_id} at {record.terminal_id}</p>
         </div>
         <span className={`severity-pill severity-${record.severity.toLowerCase()}`}>{record.severity}</span>

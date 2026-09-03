@@ -48,9 +48,11 @@ export function sortIncidents(
       if (leftValue === rightValue) return left.index - right.index;
       if (leftValue === null) return 1;
       if (rightValue === null) return -1;
-      const comparison = typeof leftValue === "number" && typeof rightValue === "number"
-        ? leftValue - rightValue
-        : String(leftValue).localeCompare(String(rightValue));
+      const comparison = column === "opened_at"
+        ? Date.parse(String(leftValue)) - Date.parse(String(rightValue))
+        : typeof leftValue === "number" && typeof rightValue === "number"
+          ? leftValue - rightValue
+          : String(leftValue).localeCompare(String(rightValue));
       return direction === "asc" ? comparison : -comparison;
     })
     .map(({ record }) => record);
@@ -69,7 +71,7 @@ export function getIncidentMetrics(records: IncidentRecordV1[]) {
 export function getIncidentTrend(records: IncidentRecordV1[]) {
   const counts = new Map<string, number>();
   for (const record of records) {
-    const date = record.opened_at.slice(0, 10);
+    const date = new Date(record.opened_at).toISOString().slice(0, 10);
     counts.set(date, (counts.get(date) ?? 0) + 1);
   }
   return [...counts.entries()]
@@ -81,6 +83,7 @@ export function getRootCauseCounts(records: IncidentRecordV1[]) {
   const counts = new Map<string, number>();
   for (const record of records) counts.set(record.root_cause, (counts.get(record.root_cause) ?? 0) + 1);
   return [...counts.entries()]
+    .filter(([, count]) => count > 1)
     .sort(([leftCause, leftCount], [rightCause, rightCount]) => rightCount - leftCount || leftCause.localeCompare(rightCause))
     .map(([rootCause, count]) => ({ rootCause, count }));
 }

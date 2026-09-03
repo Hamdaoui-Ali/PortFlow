@@ -471,4 +471,66 @@ describe("loadSnapshot", () => {
     expect(snapshot.incidents).toEqual({ status: "malformed" });
     expect(snapshot.overview).toEqual(overview);
   });
+
+  it("rejects incident lifecycles whose offset timestamps resolve before opening", async () => {
+    const incidentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        incidents: {
+          path: "snapshots/demo-v1/incidents.json",
+          sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        },
+      },
+    };
+    const invalidIncident = [{
+      ...incidents[0],
+      opened_at: "2026-09-02T23:30:00-02:00",
+      resolved_at: "2026-09-03T00:00:00Z",
+    }];
+    const incidentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? incidentManifest :
+          url.endsWith("incidents.json") ? invalidIncident : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(incidentFetch, "/PortFlow/");
+
+    expect(snapshot.incidents).toEqual({ status: "malformed" });
+  });
+
+  it("starts equipment and incident optional loads concurrently", async () => {
+    const fullManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: { path: "equipment.json", sha256: "a".repeat(64) },
+        incidents: { path: "incidents.json", sha256: "b".repeat(64) },
+      },
+    };
+    let equipmentRequested = false;
+    let incidentsRequested = false;
+    let releaseEquipment!: (response: Response) => void;
+    let releaseIncidents!: (response: Response) => void;
+    const concurrentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(fullManifest));
+      if (url.endsWith("overview.json")) return Promise.resolve(Response.json(overview));
+      if (url.endsWith("equipment.json")) {
+        equipmentRequested = true;
+        return new Promise<Response>((resolve) => { releaseEquipment = resolve; });
+      }
+      incidentsRequested = true;
+      return new Promise<Response>((resolve) => { releaseIncidents = resolve; });
+    };
+
+    const snapshotPromise = loadSnapshot(concurrentFetch, "/PortFlow/");
+    await vi.waitFor(() => expect(equipmentRequested).toBe(true));
+    expect(incidentsRequested).toBe(true);
+    releaseEquipment(Response.json(equipment));
+    releaseIncidents(Response.json(incidents));
+    await expect(snapshotPromise).resolves.toMatchObject({ overview });
+  });
 });

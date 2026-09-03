@@ -81,9 +81,13 @@ describe("IncidentPage", () => {
     fireEvent.click(await screen.findByRole("link", { name: "inc-000001" }));
     expect(screen.getByRole("heading", { name: "Incident inc-000001" })).toBeInTheDocument();
     expect(screen.getByText("30 minutes")).toBeInTheDocument();
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Incident inc-000001" }));
 
     fireEvent.click(screen.getByRole("button", { name: /Back to incident list/ }));
-    expect(screen.getByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
+    expect(document.activeElement).toBe(screen.getByRole("link", { name: "inc-000001" }));
+    window.history.back();
+    expect(window.history.state?.incidentDetail).toBeUndefined();
   });
 
   it.each([

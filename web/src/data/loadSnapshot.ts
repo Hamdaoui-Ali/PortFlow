@@ -133,30 +133,16 @@ export async function loadSnapshot(
   }
 
   const equipmentEntry = manifestResult.data.datasets.equipment;
-  let equipment: SnapshotV1["equipment"] = { status: "absent" };
-  if (equipmentEntry) {
-    try {
-      equipment = await withTimeout(
-        loadEquipmentDataset(fetcher, `${dataBase}${equipmentEntry.path}`),
-        OPTIONAL_DATASET_TIMEOUT_MS,
-      );
-    } catch {
-      equipment = { status: "unavailable" };
-    }
-  }
-
   const incidentsEntry = manifestResult.data.datasets.incidents;
-  let incidents: SnapshotV1["incidents"] = { status: "absent" };
-  if (incidentsEntry) {
-    try {
-      incidents = await withTimeout(
-        loadIncidentDataset(fetcher, `${dataBase}${incidentsEntry.path}`),
-        OPTIONAL_DATASET_TIMEOUT_MS,
-      );
-    } catch {
-      incidents = { status: "unavailable" };
-    }
-  }
+  const equipmentPromise = equipmentEntry
+    ? withTimeout(loadEquipmentDataset(fetcher, `${dataBase}${equipmentEntry.path}`), OPTIONAL_DATASET_TIMEOUT_MS)
+        .catch(() => ({ status: "unavailable" } as const))
+    : Promise.resolve({ status: "absent" } as const);
+  const incidentsPromise = incidentsEntry
+    ? withTimeout(loadIncidentDataset(fetcher, `${dataBase}${incidentsEntry.path}`), OPTIONAL_DATASET_TIMEOUT_MS)
+        .catch(() => ({ status: "unavailable" } as const))
+    : Promise.resolve({ status: "absent" } as const);
+  const [equipment, incidents] = await Promise.all([equipmentPromise, incidentsPromise]);
 
   const replayEntry = manifestResult.data.datasets.event_replay;
   if (!replayEntry) {
