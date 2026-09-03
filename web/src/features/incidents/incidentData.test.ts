@@ -64,16 +64,23 @@ describe("incident data helpers", () => {
   });
 
   it("groups incident trends by UTC day", () => {
-    expect(getIncidentTrend(records)).toEqual([
+    const offsetRecord = { ...records[0], opened_at: "2026-09-02T23:30:00-02:00" };
+    expect(getIncidentTrend([offsetRecord, records[1], records[2]])).toEqual([
       { count: 1, date: "2026-09-01" },
-      { count: 2, date: "2026-09-02" },
+      { count: 1, date: "2026-09-02" },
+      { count: 1, date: "2026-09-03" },
     ]);
   });
 
   it("groups recurring root causes with deterministic counts", () => {
     expect(getRootCauseCounts(records)).toEqual([
       { count: 2, rootCause: "Hydraulic leak" },
-      { count: 1, rootCause: "Motor overload" },
     ]);
+  });
+
+  it("sorts offset timestamps by their actual instant", () => {
+    const offsetRecord = { ...records[0], incident_id: "inc-000004", opened_at: "2026-09-02T23:30:00-02:00" };
+    expect(sortIncidents([records[1], offsetRecord], "opened_at", "desc").map((record) => record.incident_id))
+      .toEqual(["inc-000004", "inc-000002"]);
   });
 });

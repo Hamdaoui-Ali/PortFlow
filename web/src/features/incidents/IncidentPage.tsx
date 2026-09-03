@@ -39,7 +39,8 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
 
   useEffect(() => {
     if (!urlState.incidentId && returnFocusId.current) {
-      document.getElementById(`incident-link-${returnFocusId.current}`)?.focus();
+      const returnTarget = document.getElementById(`incident-link-${returnFocusId.current}`);
+      (returnTarget ?? document.getElementById("incident-page-title"))?.focus();
       returnFocusId.current = null;
     }
   }, [urlState.incidentId]);
@@ -75,7 +76,7 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
     <section className="incident-page" aria-labelledby="incident-page-title">
       <header className="incident-page-header">
         <p className="section-kicker">Reliability analysis</p>
-        <h2 id="incident-page-title">Incident exploration</h2>
+        <h2 id="incident-page-title" tabIndex={-1}>Incident exploration</h2>
         <p>Trace recurring faults from terminal patterns to one incident lifecycle.</p>
       </header>
       <section className="incident-metric-grid" aria-label="Incident summary">
@@ -85,7 +86,7 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
       </section>
       <section className="incident-analysis-grid" aria-label="Incident analysis">
         <AnalysisList title="Incident trend" items={trend.map((item) => ({ label: item.date, value: String(item.count) }))} empty="No trend data for these filters." />
-        <AnalysisList title="Recurring root causes" items={causes.map((item) => ({ label: item.rootCause, value: String(item.count) }))} empty="No root causes for these filters." />
+        <AnalysisList title="Recurring root causes" items={causes.map((item) => ({ label: item.rootCause, value: String(item.count) }))} empty="No recurring root causes for these filters." />
       </section>
       <IncidentTable
         records={records}
