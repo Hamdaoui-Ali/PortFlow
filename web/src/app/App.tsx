@@ -8,6 +8,7 @@ import { AvailabilityCard } from "../features/overview/AvailabilityCard";
 import { OverviewKpiRail } from "../features/overview/OverviewKpiRail";
 import { AvailabilityTrend } from "../features/overview/AvailabilityTrend";
 import { EquipmentPage } from "../features/equipment/EquipmentPage";
+import { IncidentPage } from "../features/incidents/IncidentPage";
 import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
 
 interface AppProps {
@@ -20,7 +21,7 @@ type SnapshotState =
   | { status: "error"; kind: SnapshotFailureKind }
   | { status: "stale"; kind: SnapshotFailureKind; snapshot: SnapshotV1 };
 
-type AppRoute = "equipment" | "overview";
+type AppRoute = "equipment" | "incidents" | "overview";
 
 export function App({ loadData = loadSnapshot }: AppProps) {
   const [snapshotState, setSnapshotState] = useState<SnapshotState>({ status: "loading" });
@@ -96,6 +97,15 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
     );
   }
 
+  if (route === "incidents") {
+    return (
+      <>
+        {staleNotice}
+        <IncidentPage dataset={snapshot.incidents ?? { status: "absent" }} filters={filters} />
+      </>
+    );
+  }
+
   if (!matchesFilters(snapshot, filters)) {
     return <>
       {staleNotice}
@@ -135,7 +145,9 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
 }
 
 function readRoute(): AppRoute {
-  return window.location.hash === "#equipment" ? "equipment" : "overview";
+  if (window.location.hash === "#equipment") return "equipment";
+  if (window.location.hash === "#incidents") return "incidents";
+  return "overview";
 }
 
 function failureHeading(kind: SnapshotFailureKind): string {
