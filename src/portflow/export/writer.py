@@ -273,6 +273,10 @@ def _write_bytes(path: Path, payload: bytes) -> None:
     path.write_bytes(payload)
 
 
+def _canonical_line_endings(payload: bytes) -> bytes:
+    return payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
 def write_public_snapshot(
     output_dir: Path,
     gold_db: Path,
@@ -360,7 +364,10 @@ def write_public_snapshot(
                 new_hash = dataset_entries[dataset_name]["sha256"]
                 if (
                     not old_path.exists()
-                    or hashlib.sha256(old_path.read_bytes()).hexdigest() != new_hash
+                    or hashlib.sha256(
+                        _canonical_line_endings(old_path.read_bytes())
+                    ).hexdigest()
+                    != new_hash
                 ):
                     raise ExportValidationError(
                         "immutable snapshot already exists with different content"

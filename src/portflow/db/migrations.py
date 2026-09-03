@@ -15,7 +15,8 @@ def apply_migrations(connection: psycopg.Connection, migrations_dir: Path) -> No
     migration_paths = sorted(migrations_dir.glob("*.sql"))
     for migration_path in migration_paths:
         sql_bytes = migration_path.read_bytes()
-        checksum = hashlib.sha256(sql_bytes).hexdigest()
+        canonical_sql_bytes = sql_bytes.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        checksum = hashlib.sha256(canonical_sql_bytes).hexdigest()
         with connection.transaction():
             schema_table_row = connection.execute(
                 "select to_regclass('public.schema_migrations')"

@@ -55,6 +55,19 @@ def test_export_contains_all_datasets_and_verified_hashes(
     assert manifest["quality_status"] == "PASS"
 
 
+def test_repeated_export_accepts_line_ending_variants(
+    tmp_path: Path,
+    gold_db: Path,
+) -> None:
+    output_dir = tmp_path / "public" / "data"
+    write_public_snapshot(output_dir, gold_db, source_metadata())
+    snapshot_dir = output_dir / "snapshots" / "demo-v2"
+    for dataset_path in snapshot_dir.glob("*.json"):
+        dataset_path.write_bytes(dataset_path.read_bytes().replace(b"\n", b"\r\n"))
+
+    write_public_snapshot(output_dir, gold_db, source_metadata())
+
+
 def test_export_rejects_gold_export_mismatch(tmp_path: Path, gold_db: Path) -> None:
     corrupt_gold_db(gold_db, overview_availability=0.1)
     with pytest.raises(ExportValidationError, match="Gold-to-export reconciliation"):

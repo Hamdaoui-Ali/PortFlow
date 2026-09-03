@@ -17,6 +17,25 @@ def test_migrations_are_idempotent(database_url: str, migrations_dir: Path) -> N
     assert count == 1
 
 
+def test_migration_checksum_is_line_ending_invariant(
+    database_url: str, migrations_dir: Path, tmp_path: Path
+) -> None:
+    source_path = migrations_dir / "001_operational_schema.sql"
+    source_bytes = source_path.read_bytes()
+    if b"\r\n" in source_bytes:
+        alternate_bytes = source_bytes.replace(b"\r\n", b"\n")
+    else:
+        alternate_bytes = source_bytes.replace(b"\n", b"\r\n")
+
+    alternate_dir = tmp_path / "migrations"
+    alternate_dir.mkdir()
+    (alternate_dir / source_path.name).write_bytes(alternate_bytes)
+
+    with psycopg.connect(database_url) as connection:
+        apply_migrations(connection, migrations_dir)
+        apply_migrations(connection, alternate_dir)
+
+
 def test_foreign_key_and_value_checks_reject_invalid_rows(database_url: str) -> None:
     with psycopg.connect(database_url) as connection:
         with pytest.raises(psycopg.errors.ForeignKeyViolation):
