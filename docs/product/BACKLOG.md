@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-020**. PF-019 is complete; the next task adds deterministic browser replay state with start, pause, resume, reset, speed, virtual time, and reduced-motion behavior.
+Start **PF-021**. PF-020 is complete; the next task connects the deterministic replay state to accessible controls, activity, and changing KPIs.
 
 ## Completed checkpoints
 
