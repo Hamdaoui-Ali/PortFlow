@@ -112,12 +112,26 @@ describe("loadSnapshot", () => {
         quality: 1,
       },
     };
-    const fullFetch = (input: string | URL | Request) =>
-      Promise.resolve(Response.json(String(input).endsWith("manifest.json") ? fullManifest : overview));
+    const replay = [{
+      available: true,
+      equipment_id: "QC-001",
+      event_id: "evt-1",
+      event_timestamp: "2026-09-02T00:00:00Z",
+      state: "ACTIVE",
+      terminal_id: "TM-001",
+    }];
+    const fullFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? fullManifest :
+          url.endsWith("event_replay.json") ? replay : overview,
+      ));
+    };
 
     const snapshot = await loadSnapshot(fullFetch, "/PortFlow/");
 
     expect(snapshot.manifest.record_counts.equipment).toBe(1);
     expect(snapshot.overview.terminal_id).toBe("TM-001");
+    expect(snapshot.event_replay).toHaveLength(1);
   });
 });

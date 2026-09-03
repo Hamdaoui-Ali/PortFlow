@@ -93,6 +93,20 @@ describe("App", () => {
     expect(screen.getByText("Trend data unavailable")).toBeInTheDocument();
   });
 
+  it("renders the availability trend when replay data is present", async () => {
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      event_replay: [
+        { available: true, equipment_id: "QC-001", event_id: "evt-1", event_timestamp: "2026-09-02T00:00:00Z", state: "ACTIVE", terminal_id: "TM-001" },
+        { available: false, equipment_id: "QC-001", event_id: "evt-2", event_timestamp: "2026-09-02T00:05:00Z", state: "UNAVAILABLE", terminal_id: "TM-001" },
+      ],
+    })} />);
+
+    expect(await screen.findByRole("img", { name: /Hourly availability trend/ })).toBeInTheDocument();
+    expect(screen.getByText("Hourly availability ranged from 50.0% to 50.0%.")).toBeInTheDocument();
+    expect(screen.getByText("00:00")).toBeInTheDocument();
+  });
+
   it("shows an honest unavailable state when filters do not match the snapshot", async () => {
     window.history.replaceState({}, "", "/");
     render(<App loadData={() => Promise.resolve(snapshot)} />);
