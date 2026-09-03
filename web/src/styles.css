@@ -73,6 +73,12 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .analysis-empty { display: grid; align-content: center; gap: 6px; min-height: 124px; padding-left: 20px; border-left: 3px solid var(--border); color: var(--muted); font-size: 13px; line-height: 1.45; }
 .analysis-empty strong { color: var(--ink); font-size: 14px; }
 .analysis-empty-line { width: 100%; height: 1px; margin-bottom: 4px; background: repeating-linear-gradient(90deg, var(--border) 0 8px, transparent 8px 14px); }
+.availability-trend { min-width: 0; }
+.trend-chart { display: flex; height: 124px; align-items: end; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.trend-point { display: grid; min-width: 0; height: 100%; flex: 1; align-items: end; justify-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
+.trend-bar-track { display: flex; width: 100%; max-width: 22px; height: 100%; align-items: end; background: var(--pale-blue); }
+.trend-bar { width: 100%; min-height: 2px; background: var(--teal); }
+.trend-summary { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .mobile-navigation { display: none; }
 .skip-link { position: fixed; z-index: 5; top: 8px; left: 8px; padding: 10px 14px; color: white; background: var(--cobalt); border-radius: 7px; transform: translateY(-140%); transition: transform 120ms ease; }
 .skip-link:focus { transform: translateY(0); }
@@ -95,6 +101,7 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .kpi-item:nth-child(n+3) { border-top: 1px solid var(--border); }
   .kpi-value { font-size: clamp(25px, 8vw, 34px); }
   .overview-analysis { grid-template-columns: 1fr; gap: 24px; margin: 36px 0; }
+  .trend-chart { gap: 6px; }
   .availability-panel { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 26px 0; }
   .availability-icon { width: 42px; height: 42px; }
   .mobile-navigation { position: fixed; z-index: 4; right: 0; bottom: 0; left: 0; display: block; background: var(--surface); border-top: 1px solid var(--border); }

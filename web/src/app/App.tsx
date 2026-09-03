@@ -4,6 +4,7 @@ import { loadSnapshot, type SnapshotFetch } from "../data/loadSnapshot";
 import type { SnapshotV1 } from "../data/schema";
 import { AvailabilityCard } from "../features/overview/AvailabilityCard";
 import { OverviewKpiRail } from "../features/overview/OverviewKpiRail";
+import { AvailabilityTrend } from "../features/overview/AvailabilityTrend";
 import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
 
 interface AppProps {
@@ -73,11 +74,15 @@ function OverviewContent({ snapshotState }: { snapshotState: SnapshotState }) {
           <h2>Terminal throughput (moves)</h2>
           <p className="analysis-summary">The current public snapshot contains a period total, not a time-series breakdown.</p>
         </div>
-        <div className="analysis-empty" role="status">
-          <span className="analysis-empty-line" aria-hidden="true" />
-          <strong>Trend data unavailable</strong>
-          <span>Use the period total above while the next snapshot is generated.</span>
-        </div>
+        {snapshot.event_replay?.length ? (
+          <AvailabilityTrend events={snapshot.event_replay} />
+        ) : (
+          <div className="analysis-empty" role="status">
+            <span className="analysis-empty-line" aria-hidden="true" />
+            <strong>Trend data unavailable</strong>
+            <span>Use the period total above while the next snapshot is generated.</span>
+          </div>
+        )}
       </section>
       <AvailabilityCard
         value={snapshot.overview.availability.value}
