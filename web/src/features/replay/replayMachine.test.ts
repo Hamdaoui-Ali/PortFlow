@@ -63,6 +63,23 @@ describe("replay machine initialization", () => {
 
     expect(input).toEqual(events);
   });
+
+  it("defaults an invalid runtime initial speed to one", () => {
+    const tickEvents = [
+      event("event-1", "2026-09-02T00:00:00Z"),
+      event("event-2", "2026-09-02T00:00:05Z"),
+    ];
+    const initial = createReplayState(
+      tickEvents,
+      { speed: 3 } as unknown as Parameters<typeof createReplayState>[1],
+    );
+    const started = replayReducer(initial, { type: "START" });
+    const afterTwoSeconds = replayReducer(started, { type: "TICK", deltaMs: 2_000 });
+
+    expect(initial.speed).toBe(1);
+    expect(afterTwoSeconds.status).toBe("playing");
+    expect(afterTwoSeconds.currentIndex).toBe(0);
+  });
 });
 
 describe("replay machine reducer", () => {

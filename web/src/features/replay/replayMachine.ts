@@ -3,6 +3,10 @@ import type { ReplayEventV1 } from "../../data/schema";
 export type ReplayStatus = "idle" | "playing" | "paused" | "complete";
 export type ReplaySpeed = 0.5 | 1 | 2 | 4;
 
+function isReplaySpeed(speed: unknown): speed is ReplaySpeed {
+  return speed === 0.5 || speed === 1 || speed === 2 || speed === 4;
+}
+
 export interface ReplayState {
   status: ReplayStatus;
   events: ReplayEventV1[];
@@ -42,7 +46,7 @@ export function createReplayState(
       ? null
       : Date.parse(normalizedEvents[0].event_timestamp),
     appliedEvents: [],
-    speed: options.speed ?? 1,
+    speed: isReplaySpeed(options.speed) ? options.speed : 1,
     reducedMotion: options.reducedMotion ?? false,
   };
 }
@@ -74,7 +78,7 @@ export function replayReducer(state: ReplayState, action: ReplayAction): ReplayS
         reducedMotion: state.reducedMotion,
       });
     case "SET_SPEED":
-      if (action.speed !== 0.5 && action.speed !== 1 && action.speed !== 2 && action.speed !== 4) {
+      if (!isReplaySpeed(action.speed)) {
         return state;
       }
       return { ...state, speed: action.speed };
