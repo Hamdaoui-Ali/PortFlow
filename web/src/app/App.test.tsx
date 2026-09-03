@@ -114,6 +114,8 @@ describe("App", () => {
     expect(screen.getByText("Simulation — not live operational data")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start replay" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Live Demo" })[0]).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("main")).not.toHaveAttribute("aria-live");
+    expect(screen.getByRole("list", { name: "Replay activity" })).not.toHaveAttribute("aria-live");
   });
 
   it("distinguishes missing and empty replay datasets honestly", async () => {

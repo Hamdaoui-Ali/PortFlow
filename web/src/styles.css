@@ -247,10 +247,10 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .detail-grid > div:nth-child(2n) { border-right: 0; }
   .detail-grid > div:nth-last-child(-n+3) { border-bottom: 1px solid var(--border); }
   .detail-grid > div:nth-last-child(-n+2) { border-bottom: 0; }
-  .replay-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .replay-kpi-strip { grid-template-columns: 1fr; }
   .replay-kpi-card, .replay-kpi-card:first-child, .replay-kpi-card:last-child { padding: 18px 14px; border-right: 1px solid var(--border); }
-  .replay-kpi-card:nth-child(2n) { border-right: 0; }
-  .replay-kpi-card:nth-child(n+3) { border-top: 1px solid var(--border); }
+  .replay-kpi-card { border-right: 0; border-top: 1px solid var(--border); }
+  .replay-kpi-card:first-child { border-top: 0; }
   .replay-activity-feed li { display: grid; }
   .mobile-navigation { position: fixed; z-index: 4; right: 0; bottom: 0; left: 0; display: block; background: var(--surface); border-top: 1px solid var(--border); }
   .primary-navigation-mobile { justify-content: space-around; padding: 5px 3px 7px; }

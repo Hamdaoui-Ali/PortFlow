@@ -53,11 +53,7 @@ export function LiveDemoPage({ events, overview }: LiveDemoPageProps) {
 
   return (
     <LiveDemoFrame>
-      <section className="live-demo-intro" aria-labelledby="live-demo-title">
-        <p className="section-kicker">Controlled simulation</p>
-        <h2 id="live-demo-title" tabIndex={-1}>Live Demo</h2>
-        <p>Step through a published terminal replay and watch the selected equipment state change over time.</p>
-      </section>
+      <div className="replay-status" role="status" aria-live="polite">{statusText}</div>
       <ReplayControls
         status={state.status}
         speed={state.speed}
@@ -67,7 +63,6 @@ export function LiveDemoPage({ events, overview }: LiveDemoPageProps) {
         onReset={() => dispatch({ type: "RESET" })}
         onSpeedChange={(speed: ReplaySpeed) => dispatch({ type: "SET_SPEED", speed })}
       />
-      <div className="replay-status" role="status" aria-live="polite">{statusText}</div>
       <ReplayKpiStrip model={model} />
       <ReplayActivityFeed events={state.appliedEvents} />
     </LiveDemoFrame>
@@ -77,6 +72,11 @@ export function LiveDemoPage({ events, overview }: LiveDemoPageProps) {
 function LiveDemoFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="live-demo-page">
+      <section className="live-demo-intro" aria-labelledby="live-demo-title">
+        <p className="section-kicker">Controlled simulation</p>
+        <h2 id="live-demo-title" tabIndex={-1}>Live Demo</h2>
+        <p>Step through a published terminal replay and watch the selected equipment state change over time.</p>
+      </section>
       <ReplayDisclosure />
       {children}
     </div>

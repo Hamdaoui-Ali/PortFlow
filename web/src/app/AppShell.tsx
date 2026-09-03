@@ -135,7 +135,7 @@ export function AppShell({ children }: AppShellProps) {
             <p className="filter-summary">Filters apply across operational views <ChevronRight size={15} aria-hidden="true" /></p>
           </div>
         </header>
-        <main id="main-content" className="content" tabIndex={-1} aria-live="polite">
+        <main id="main-content" className="content" tabIndex={-1}>
           {children}
         </main>
         <div className="mobile-navigation"><Navigation variant="mobile" /></div>
