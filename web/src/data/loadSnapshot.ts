@@ -7,6 +7,24 @@ import {
 } from "./schema";
 import { SnapshotLoadError } from "./errors";
 
+export const OPTIONAL_DATASET_TIMEOUT_MS = 5000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error("Optional equipment dataset timed out")), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      },
+    );
+  });
+}
+
 export type SnapshotFetch = (
   input: string | URL | Request,
   init?: RequestInit,
@@ -61,7 +79,10 @@ export async function loadSnapshot(
   let equipment: SnapshotV1["equipment"] = { status: "absent" };
   if (equipmentEntry) {
     try {
-      const equipmentResponse = await fetcher(`${dataBase}${equipmentEntry.path}`);
+      const equipmentResponse = await withTimeout(
+        Promise.resolve().then(() => fetcher(`${dataBase}${equipmentEntry.path}`)),
+        OPTIONAL_DATASET_TIMEOUT_MS,
+      );
       if (!equipmentResponse.ok) {
         equipment = { status: "unavailable" };
       } else {

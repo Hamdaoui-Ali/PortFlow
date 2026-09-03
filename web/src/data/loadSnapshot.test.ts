@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { loadSnapshot } from "./loadSnapshot";
 
@@ -94,6 +94,39 @@ describe("loadSnapshot", () => {
     expect(snapshot.overview).toEqual(overview);
   });
 
+  it("accepts nullable equipment metrics when the values are unavailable", async () => {
+    const equipmentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: {
+          path: "snapshots/demo-v1/equipment.json",
+          sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        },
+      },
+      record_counts: { telemetry: 288, equipment: 1 },
+    };
+    const nullableEquipment = [{
+      ...equipment[0],
+      availability: null,
+      downtime_minutes: null,
+      mtbf_hours: null,
+      mttr_minutes: null,
+      utilization: null,
+    }];
+    const equipmentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? equipmentManifest :
+          url.endsWith("equipment.json") ? nullableEquipment : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(equipmentFetch, "/PortFlow/");
+
+    expect(snapshot.equipment).toEqual({ status: "ready", records: nullableEquipment });
+  });
+
   it("reports an unavailable equipment dataset when its fetch fails", async () => {
     const equipmentManifest = {
       ...manifest,
@@ -116,6 +149,90 @@ describe("loadSnapshot", () => {
 
     expect(snapshot.equipment).toEqual({ status: "unavailable" });
     expect(snapshot.overview).toEqual(overview);
+  });
+
+  it("reports an unavailable equipment dataset for a non-success response", async () => {
+    const equipmentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: {
+          path: "snapshots/demo-v1/equipment.json",
+          sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        },
+      },
+    };
+    const equipmentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(equipmentManifest));
+      if (url.endsWith("equipment.json")) return Promise.resolve(new Response(null, { status: 503 }));
+      return Promise.resolve(Response.json(overview));
+    };
+
+    const snapshot = await loadSnapshot(equipmentFetch, "/PortFlow/");
+
+    expect(snapshot.equipment).toEqual({ status: "unavailable" });
+    expect(snapshot.overview).toEqual(overview);
+  });
+
+  it("reports a malformed equipment dataset for invalid JSON", async () => {
+    const equipmentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        equipment: {
+          path: "snapshots/demo-v1/equipment.json",
+          sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        },
+      },
+    };
+    const equipmentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(equipmentManifest));
+      if (url.endsWith("equipment.json")) {
+        return Promise.resolve(new Response("not-json", {
+          headers: { "content-type": "application/json" },
+        }));
+      }
+      return Promise.resolve(Response.json(overview));
+    };
+
+    const snapshot = await loadSnapshot(equipmentFetch, "/PortFlow/");
+
+    expect(snapshot.equipment).toEqual({ status: "malformed" });
+    expect(snapshot.overview).toEqual(overview);
+  });
+
+  it("times out a hanging optional equipment fetch without blocking the overview", async () => {
+    vi.useFakeTimers();
+    try {
+      const equipmentManifest = {
+        ...manifest,
+        datasets: {
+          ...manifest.datasets,
+          equipment: {
+            path: "snapshots/demo-v1/equipment.json",
+            sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          },
+        },
+      };
+      const equipmentFetch = (input: string | URL | Request) => {
+        const url = String(input);
+        if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(equipmentManifest));
+        if (url.endsWith("equipment.json")) return new Promise<Response>(() => {});
+        return Promise.resolve(Response.json(overview));
+      };
+
+      const snapshotPromise = loadSnapshot(equipmentFetch, "/PortFlow/");
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(5000);
+      const snapshot = await snapshotPromise;
+
+      expect(snapshot.equipment).toEqual({ status: "unavailable" });
+      expect(snapshot.overview).toEqual(overview);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("reports a malformed equipment dataset when a record shape is invalid", async () => {

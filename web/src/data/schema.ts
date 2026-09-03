@@ -108,15 +108,15 @@ export const replaySchema = z.array(replayEventSchema);
 export const equipmentRecordSchema = z
   .object({
     alarm_count: z.number().int().nonnegative(),
-    availability: z.number().min(0).max(1),
+    availability: z.number().min(0).max(1).nullable(),
     available: z.boolean(),
     current_state: z.string().min(1),
-    downtime_minutes: z.number().nonnegative(),
+    downtime_minutes: z.number().nonnegative().nullable(),
     equipment_id: z.string().min(1),
-    mtbf_hours: z.number().nonnegative(),
-    mttr_minutes: z.number().nonnegative(),
+    mtbf_hours: z.number().nonnegative().nullable(),
+    mttr_minutes: z.number().nonnegative().nullable(),
     terminal_id: z.string().regex(/^TM-\d{3}$/),
-    utilization: z.number().min(0).max(1),
+    utilization: z.number().min(0).max(1).nullable(),
   })
   .strict();
 
