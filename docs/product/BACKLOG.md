@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-021**. PF-020 is complete; the next task connects the deterministic replay state to accessible controls, activity, and changing KPIs.
+Start **PF-022**. PF-021 is complete; the next task exposes freshness, reconciliation, rejects, and quality outcomes.
 
 ## Completed checkpoints
 
