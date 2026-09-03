@@ -58,6 +58,16 @@ describe("replay machine reducer", () => {
     expect(started.appliedEvents).toEqual([started.events[0]]);
   });
 
+  it("immediately completes when starting a replay with one event", () => {
+    const onlyEvent = event("event-only", "2026-09-02T00:00:00Z");
+
+    const started = replayReducer(createReplayState([onlyEvent]), { type: "START" });
+
+    expect(started.status).toBe("complete");
+    expect(started.currentIndex).toBe(0);
+    expect(started.appliedEvents).toEqual([started.events[0]]);
+  });
+
   it("always restarts from the first event", () => {
     const initial = createReplayState(events);
     const started = replayReducer(initial, { type: "START" });

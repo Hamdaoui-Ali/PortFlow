@@ -55,7 +55,7 @@ export function replayReducer(state: ReplayState, action: ReplayAction): ReplayS
       }
       return {
         ...state,
-        status: "playing",
+        status: state.events.length === 1 ? "complete" : "playing",
         currentIndex: 0,
         virtualTime: Date.parse(state.events[0].event_timestamp),
         appliedEvents: [state.events[0]],
