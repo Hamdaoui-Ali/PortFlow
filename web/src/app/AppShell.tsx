@@ -146,10 +146,11 @@ export function AppShell({ children }: AppShellProps) {
 }
 
 function Navigation({ variant }: { variant: "desktop" | "mobile" }) {
+  const activeHref = window.location.hash || "#overview";
   return (
     <nav className={`primary-navigation primary-navigation-${variant}`} aria-label="Primary navigation">
-      {navItems.map(({ label, href, icon: Icon }, index) => (
-        <a key={label} className={index === 0 ? "nav-link nav-link-active" : "nav-link"} href={href} aria-current={index === 0 ? "page" : undefined}>
+      {navItems.map(({ label, href, icon: Icon }) => (
+        <a key={label} className={href === activeHref ? "nav-link nav-link-active" : "nav-link"} href={href} aria-current={href === activeHref ? "page" : undefined}>
           <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
           <span>{label}</span>
         </a>

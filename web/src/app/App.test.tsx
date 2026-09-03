@@ -101,6 +101,30 @@ describe("App", () => {
     expect(screen.queryByText("Terminal throughput (moves)")).not.toBeInTheDocument();
   });
 
+  it("renders the Live Demo for the live-demo hash route", async () => {
+    window.history.replaceState({}, "", "/#live-demo");
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      event_replay: [
+        { available: true, equipment_id: "QC-001", event_id: "evt-1", event_timestamp: "2026-09-02T00:00:00Z", state: "ACTIVE", terminal_id: "TM-001" },
+      ],
+    })} />);
+
+    expect(await screen.findByRole("heading", { name: "Live Demo" })).toBeInTheDocument();
+    expect(screen.getByText("Simulation — not live operational data")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start replay" })).toBeInTheDocument();
+  });
+
+  it("distinguishes missing and empty replay datasets honestly", async () => {
+    window.history.replaceState({}, "", "/#live-demo");
+    const { rerender } = render(<App loadData={() => Promise.resolve(snapshot)} />);
+    expect(await screen.findByText("Replay dataset not published")).toBeInTheDocument();
+
+    rerender(<App loadData={() => Promise.resolve({ ...snapshot, event_replay: [] })} />);
+    expect(await screen.findByText("Replay has no events")).toBeInTheDocument();
+    expect(screen.getByText("Simulation — not live operational data")).toBeInTheDocument();
+  });
+
   it("falls back to Overview for an unknown hash route", async () => {
     window.history.replaceState({}, "", "/#not-a-portflow-route");
     render(<App loadData={() => Promise.resolve(snapshot)} />);
