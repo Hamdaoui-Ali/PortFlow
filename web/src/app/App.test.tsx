@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { App } from "./App";
+import { snapshotCache } from "../data/cache";
 
 const snapshot = {
   manifest: {
@@ -33,6 +34,7 @@ const snapshot = {
 describe("App", () => {
   afterEach(() => {
     window.history.replaceState({}, "", "/");
+    snapshotCache.clear();
   });
 
   it("provides skip navigation and the approved product sections", () => {
@@ -122,5 +124,17 @@ describe("App", () => {
 
     expect(await screen.findByText("Operational snapshot unavailable")).toBeInTheDocument();
     expect(screen.queryByText("0.0%")).not.toBeInTheDocument();
+  });
+
+  it("retains the last valid snapshot when the next load fails", async () => {
+    const firstLoad = () => Promise.resolve(snapshot);
+    const { rerender } = render(<App loadData={firstLoad} />);
+
+    expect(await screen.findAllByText("94.4%")).toHaveLength(2);
+
+    rerender(<App loadData={() => Promise.reject(new Error("network down"))} />);
+
+    expect(await screen.findByRole("status", { name: "Showing last valid snapshot" })).toBeInTheDocument();
+    expect(screen.getAllByText("94.4%")).toHaveLength(2);
   });
 });
