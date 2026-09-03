@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-017**. PF-015 and PF-016 are complete; the next task adds auditable definitions and methodology for every displayed KPI.
+Start **PF-019**. PF-018 is complete; the next task adds incident exploration with terminal and severity filters, trend and root-cause analysis, recurring faults, and lifecycle detail.
 
 ## Completed checkpoints
 
