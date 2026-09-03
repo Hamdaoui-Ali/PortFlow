@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { App } from "./App";
@@ -31,6 +31,29 @@ const snapshot = {
 };
 
 describe("App", () => {
+  it("provides skip navigation and the approved product sections", () => {
+    render(<App loadData={() => new Promise(() => undefined)} />);
+
+    expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute(
+      "href",
+      "#main-content",
+    );
+    expect(screen.getAllByRole("navigation", { name: "Primary navigation" })).toHaveLength(2);
+    for (const label of ["Overview", "Equipment", "Incidents", "Live Demo", "Data Health"]) {
+      expect(screen.getAllByRole("link", { name: label })).toHaveLength(2);
+    }
+  });
+
+  it("updates the global filters in the URL", () => {
+    window.history.replaceState({}, "", "/");
+    render(<App loadData={() => new Promise(() => undefined)} />);
+
+    fireEvent.change(screen.getByLabelText("Terminal"), { target: { value: "TM-002" } });
+    fireEvent.change(screen.getByLabelText("Date range"), { target: { value: "7d" } });
+
+    expect(window.location.search).toBe("?terminal=TM-002&range=7d");
+  });
+
   it("identifies the control tower and simulated data source", () => {
     render(<App loadData={() => new Promise(() => undefined)} />);
 
