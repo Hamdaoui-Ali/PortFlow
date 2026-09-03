@@ -61,6 +61,15 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .kpi-item:first-child { padding-left: 0; }
 .kpi-item:last-child { padding-right: 0; border-right: 0; }
 .kpi-label { display: flex; min-height: 38px; align-items: start; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 700; line-height: 1.35; }
+.kpi-definition { position: relative; margin-left: auto; color: inherit; font-size: 11px; font-weight: 600; }
+.kpi-definition summary { display: flex; min-height: 24px; align-items: center; gap: 3px; cursor: pointer; list-style: none; }
+.kpi-definition summary::-webkit-details-marker { display: none; }
+.kpi-definition summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.kpi-definition-content { position: absolute; z-index: 2; top: 28px; right: 0; width: min(280px, 72vw); padding: 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(16, 35, 63, .08); font-size: 11px; font-weight: 500; }
+.kpi-definition-content p { margin: 0 0 8px; line-height: 1.4; }
+.kpi-definition-content p:last-child { margin-bottom: 0; }
+.kpi-definition-content strong { display: block; color: var(--muted); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.availability-panel h2 .kpi-definition { display: inline-block; vertical-align: middle; margin-left: 6px; color: var(--muted); font-size: 11px; font-weight: 600; }
 .kpi-item-teal .kpi-label, .kpi-item-teal .kpi-value { color: var(--teal); }
 .kpi-item-cobalt .kpi-label, .kpi-item-cobalt .kpi-value { color: var(--cobalt); }
 .kpi-item-amber .kpi-label, .kpi-item-amber .kpi-value { color: #b87900; }

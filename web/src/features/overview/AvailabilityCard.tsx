@@ -1,4 +1,5 @@
 import { CircleCheck } from "lucide-react";
+import { KpiDefinition } from "../../components/KpiDefinition";
 
 interface AvailabilityCardProps {
   value: number | null;
@@ -33,7 +34,7 @@ export function AvailabilityCard({ value, generatedAt }: AvailabilityCardProps) 
         <CircleCheck strokeWidth={1.75} />
       </div>
       <div>
-        <h2 id="availability-title">Equipment availability</h2>
+        <h2 id="availability-title">Equipment availability <KpiDefinition kpiId="availability" /></h2>
         <p className="availability-value">{displayValue}</p>
         <p className="availability-definition">
           Available intervals divided by scheduled intervals in the selected period.

@@ -7,12 +7,15 @@ import {
 } from "lucide-react";
 
 import type { OverviewV1 } from "../../data/schema";
+import { KpiDefinition } from "../../components/KpiDefinition";
+import type { KpiId } from "../../content/kpis";
 
 interface OverviewKpiRailProps {
   overview: OverviewV1;
 }
 
 type Kpi = {
+  id: KpiId;
   label: string;
   value: string;
   detail: string;
@@ -32,6 +35,7 @@ function formatMinutes(value: number | null | undefined): string {
 export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
   const kpis: Kpi[] = [
     {
+      id: "throughput",
       label: "Throughput",
       value: formatNumber(overview.throughput, " moves"),
       detail: "Completed movements",
@@ -39,6 +43,7 @@ export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
       tone: "cobalt",
     },
     {
+      id: "availability",
       label: "Equipment availability",
       value: overview.availability.value === null ? "Unavailable" : `${(overview.availability.value * 100).toFixed(1)}%`,
       detail: "Available ÷ scheduled intervals",
@@ -46,6 +51,7 @@ export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
       tone: "teal",
     },
     {
+      id: "average-dwell",
       label: "Average dwell time",
       value: formatMinutes(overview.average_dwell_minutes),
       detail: "Mean completed stay",
@@ -53,6 +59,7 @@ export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
       tone: "cobalt",
     },
     {
+      id: "mttr",
       label: "MTTR",
       value: formatMinutes(overview.mttr_minutes),
       detail: "Mean repair duration",
@@ -60,6 +67,7 @@ export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
       tone: "amber",
     },
     {
+      id: "active-incidents",
       label: "Active incidents",
       value: formatNumber(overview.active_incidents),
       detail: "Open at period end",
@@ -70,9 +78,9 @@ export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
 
   return (
     <section className="kpi-rail" aria-label="Overview KPIs">
-      {kpis.map(({ label, value, detail, icon: Icon, tone }) => (
+      {kpis.map(({ id, label, value, detail, icon: Icon, tone }) => (
         <div className={`kpi-item kpi-item-${tone}`} key={label}>
-          <div className="kpi-label"><Icon size={17} strokeWidth={1.8} aria-hidden="true" />{label}</div>
+          <div className="kpi-label"><Icon size={17} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span><KpiDefinition kpiId={id} /></div>
           <p className="kpi-value">{value}</p>
           <p className="kpi-detail">{detail}</p>
         </div>
