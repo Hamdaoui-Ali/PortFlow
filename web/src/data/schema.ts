@@ -92,10 +92,25 @@ export const overviewSchema = z
   })
   .strict();
 
+export const replayEventSchema = z
+  .object({
+    available: z.boolean(),
+    equipment_id: z.string().min(1),
+    event_id: z.string().min(1),
+    event_timestamp: utcDateTime,
+    state: z.string().min(1),
+    terminal_id: z.string().regex(/^TM-\d{3}$/),
+  })
+  .strict();
+
+export const replaySchema = z.array(replayEventSchema);
+
 export type ManifestV1 = z.infer<typeof manifestSchema>;
 export type OverviewV1 = z.infer<typeof overviewSchema>;
+export type ReplayEventV1 = z.infer<typeof replayEventSchema>;
 
 export interface SnapshotV1 {
   manifest: ManifestV1;
   overview: OverviewV1;
+  event_replay?: ReplayEventV1[];
 }

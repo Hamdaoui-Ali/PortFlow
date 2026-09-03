@@ -1,4 +1,4 @@
-import { manifestSchema, overviewSchema, type SnapshotV1 } from "./schema";
+import { manifestSchema, overviewSchema, replaySchema, type SnapshotV1 } from "./schema";
 
 export type SnapshotFetch = (
   input: string | URL | Request,
@@ -37,5 +37,20 @@ export async function loadSnapshot(
     throw new Error("Overview dataset did not match schema version 1");
   }
 
-  return { manifest: manifestResult.data, overview: overviewResult.data };
+  const replayEntry = manifestResult.data.datasets.event_replay;
+  if (!replayEntry) {
+    return { manifest: manifestResult.data, overview: overviewResult.data };
+  }
+
+  try {
+    const replayResponse = await fetcher(`${dataBase}${replayEntry.path}`);
+    const replayResult = replaySchema.safeParse(
+      await readJson(replayResponse, "Event replay dataset"),
+    );
+    return replayResult.success
+      ? { manifest: manifestResult.data, overview: overviewResult.data, event_replay: replayResult.data }
+      : { manifest: manifestResult.data, overview: overviewResult.data };
+  } catch {
+    return { manifest: manifestResult.data, overview: overviewResult.data };
+  }
 }
