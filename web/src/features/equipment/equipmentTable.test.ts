@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { EquipmentRecordV1 } from "../../data/schema";
-import { filterEquipment, sortEquipment } from "./equipmentTable";
+import { filterEquipment, sortEquipment } from "./equipmentTableData";
 
 const records: EquipmentRecordV1[] = [
   {

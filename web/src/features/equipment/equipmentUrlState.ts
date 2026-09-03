@@ -1,4 +1,4 @@
-import type { EquipmentSortColumn, SortDirection } from "./equipmentTable";
+import type { EquipmentSortColumn, SortDirection } from "./equipmentTableData";
 
 export interface EquipmentUrlState {
   query: string;
