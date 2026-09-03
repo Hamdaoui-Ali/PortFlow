@@ -1,9 +1,11 @@
 import {
   equipmentSchema,
+  incidentsSchema,
   manifestSchema,
   overviewSchema,
   replaySchema,
   type EquipmentDatasetState,
+  type IncidentDatasetState,
   type SnapshotV1,
 } from "./schema";
 import { SnapshotLoadError } from "./errors";
@@ -12,7 +14,7 @@ export const OPTIONAL_DATASET_TIMEOUT_MS = 5000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timeoutId = setTimeout(() => reject(new Error("Optional equipment dataset timed out")), timeoutMs);
+    const timeoutId = setTimeout(() => reject(new Error("Optional dataset timed out")), timeoutMs);
     promise.then(
       (value) => {
         clearTimeout(timeoutId);
@@ -50,6 +52,31 @@ async function loadEquipmentDataset(
   if (!result.success) {
     return { status: "malformed" };
   }
+  return result.data.length === 0
+    ? { status: "empty" }
+    : { status: "ready", records: result.data };
+}
+
+async function loadIncidentDataset(
+  fetcher: SnapshotFetch,
+  url: string,
+): Promise<IncidentDatasetState> {
+  let response: Response;
+  try {
+    response = await fetcher(url);
+  } catch {
+    return { status: "unavailable" };
+  }
+  if (!response.ok) return { status: "unavailable" };
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    return { status: "malformed" };
+  }
+  const result = incidentsSchema.safeParse(payload);
+  if (!result.success) return { status: "malformed" };
   return result.data.length === 0
     ? { status: "empty" }
     : { status: "ready", records: result.data };
@@ -118,9 +145,22 @@ export async function loadSnapshot(
     }
   }
 
+  const incidentsEntry = manifestResult.data.datasets.incidents;
+  let incidents: SnapshotV1["incidents"] = { status: "absent" };
+  if (incidentsEntry) {
+    try {
+      incidents = await withTimeout(
+        loadIncidentDataset(fetcher, `${dataBase}${incidentsEntry.path}`),
+        OPTIONAL_DATASET_TIMEOUT_MS,
+      );
+    } catch {
+      incidents = { status: "unavailable" };
+    }
+  }
+
   const replayEntry = manifestResult.data.datasets.event_replay;
   if (!replayEntry) {
-    return { manifest: manifestResult.data, overview: overviewResult.data, equipment };
+    return { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents };
   }
 
   try {
@@ -129,10 +169,10 @@ export async function loadSnapshot(
       await readJson(replayResponse, "Event replay dataset"),
     );
     return replayResult.success
-      ? { manifest: manifestResult.data, overview: overviewResult.data, event_replay: replayResult.data, equipment }
-      : { manifest: manifestResult.data, overview: overviewResult.data, equipment };
+      ? { manifest: manifestResult.data, overview: overviewResult.data, event_replay: replayResult.data, equipment, incidents }
+      : { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents };
   } catch {
-    return { manifest: manifestResult.data, overview: overviewResult.data, equipment };
+    return { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents };
   }
 }
 

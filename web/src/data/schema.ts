@@ -122,14 +122,45 @@ export const equipmentRecordSchema = z
 
 export const equipmentSchema = z.array(equipmentRecordSchema);
 
+export const incidentRecordSchema = z
+  .object({
+    equipment_id: z.string().min(1),
+    incident_id: z.string().regex(/^inc-\d{6}$/),
+    opened_at: utcDateTime,
+    resolved_at: utcDateTime.nullable(),
+    root_cause: z.string().min(1),
+    severity: z.enum(["MINOR", "MAJOR", "CRITICAL"]),
+    status: z.enum(["OPEN", "RESOLVED"]),
+    terminal_id: z.string().regex(/^TM-\d{3}$/),
+  })
+  .superRefine((incident, context) => {
+    if (incident.resolved_at && incident.resolved_at < incident.opened_at) {
+      context.addIssue({ code: "custom", message: "resolved_at cannot precede opened_at" });
+    }
+    if ((incident.status === "RESOLVED") !== (incident.resolved_at !== null)) {
+      context.addIssue({ code: "custom", message: "status and resolved_at must agree" });
+    }
+  })
+  .strict();
+
+export const incidentsSchema = z.array(incidentRecordSchema);
+
 export type ManifestV1 = z.infer<typeof manifestSchema>;
 export type OverviewV1 = z.infer<typeof overviewSchema>;
 export type ReplayEventV1 = z.infer<typeof replayEventSchema>;
 export type EquipmentRecordV1 = z.infer<typeof equipmentRecordSchema>;
+export type IncidentRecordV1 = z.infer<typeof incidentRecordSchema>;
 
 export type EquipmentDatasetState =
   | { status: "absent" }
   | { status: "ready"; records: EquipmentRecordV1[] }
+  | { status: "unavailable" }
+  | { status: "malformed" }
+  | { status: "empty" };
+
+export type IncidentDatasetState =
+  | { status: "absent" }
+  | { status: "ready"; records: IncidentRecordV1[] }
   | { status: "unavailable" }
   | { status: "malformed" }
   | { status: "empty" };
@@ -139,4 +170,5 @@ export interface SnapshotV1 {
   overview: OverviewV1;
   event_replay?: ReplayEventV1[];
   equipment?: EquipmentDatasetState;
+  incidents?: IncidentDatasetState;
 }

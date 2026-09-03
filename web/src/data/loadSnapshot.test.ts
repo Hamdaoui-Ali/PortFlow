@@ -43,6 +43,19 @@ const equipment = [
   },
 ];
 
+const incidents = [
+  {
+    equipment_id: "QC-001",
+    incident_id: "inc-000001",
+    opened_at: "2026-09-02T03:00:00Z",
+    resolved_at: "2026-09-02T03:30:00Z",
+    root_cause: "Hydraulic leak",
+    severity: "MAJOR",
+    status: "RESOLVED",
+    terminal_id: "TM-001",
+  },
+];
+
 function successfulFetch(input: string | URL | Request): Promise<Response> {
   const url = String(input);
   if (url.endsWith("manifest.json")) {
@@ -407,5 +420,55 @@ describe("loadSnapshot", () => {
     expect(snapshot.manifest.record_counts.equipment).toBe(1);
     expect(snapshot.overview.terminal_id).toBe("TM-001");
     expect(snapshot.event_replay).toHaveLength(1);
+  });
+
+  it("loads and validates incident records as an optional dataset", async () => {
+    const incidentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        incidents: {
+          path: "snapshots/demo-v1/incidents.json",
+          sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        },
+      },
+      record_counts: { telemetry: 288, incidents: 1 },
+    };
+    const incidentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? incidentManifest :
+          url.endsWith("incidents.json") ? incidents : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(incidentFetch, "/PortFlow/");
+
+    expect(snapshot.incidents).toEqual({ status: "ready", records: incidents });
+  });
+
+  it("isolates malformed incident data from a valid overview", async () => {
+    const incidentManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        incidents: {
+          path: "snapshots/demo-v1/incidents.json",
+          sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        },
+      },
+    };
+    const incidentFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? incidentManifest :
+          url.endsWith("incidents.json") ? [{ ...incidents[0], unexpected: true }] : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(incidentFetch, "/PortFlow/");
+
+    expect(snapshot.incidents).toEqual({ status: "malformed" });
+    expect(snapshot.overview).toEqual(overview);
   });
 });
