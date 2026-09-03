@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
 import { loadSnapshot, type SnapshotFetch } from "../data/loadSnapshot";
+import { snapshotCache } from "../data/cache";
+import { SnapshotLoadError, type SnapshotFailureKind } from "../data/errors";
 import type { SnapshotV1 } from "../data/schema";
 import { AvailabilityCard } from "../features/overview/AvailabilityCard";
 import { OverviewKpiRail } from "../features/overview/OverviewKpiRail";
@@ -14,7 +16,8 @@ interface AppProps {
 type SnapshotState =
   | { status: "loading" }
   | { status: "ready"; snapshot: SnapshotV1 }
-  | { status: "error" };
+  | { status: "error"; kind: SnapshotFailureKind }
+  | { status: "stale"; kind: SnapshotFailureKind; snapshot: SnapshotV1 };
 
 export function App({ loadData = loadSnapshot }: AppProps) {
   const [snapshotState, setSnapshotState] = useState<SnapshotState>({ status: "loading" });
@@ -23,10 +26,18 @@ export function App({ loadData = loadSnapshot }: AppProps) {
     let active = true;
     void loadData()
       .then((snapshot) => {
-        if (active) setSnapshotState({ status: "ready", snapshot });
+        if (active) {
+          snapshotCache.set(snapshot);
+          setSnapshotState({ status: "ready", snapshot });
+        }
       })
-      .catch(() => {
-        if (active) setSnapshotState({ status: "error" });
+      .catch((error: unknown) => {
+        if (!active) return;
+        const kind = error instanceof SnapshotLoadError ? error.kind : "unavailable";
+        const cached = snapshotCache.get();
+        setSnapshotState(cached
+          ? { status: "stale", kind, snapshot: cached.snapshot }
+          : { status: "error", kind });
       });
     return () => {
       active = false;
@@ -49,24 +60,32 @@ function OverviewContent({ snapshotState }: { snapshotState: SnapshotState }) {
   if (snapshotState.status === "error") {
     return (
       <div className="data-state data-state-error" role="alert">
-        <h2>Operational snapshot unavailable</h2>
-        <p>PortFlow could not validate the published data.</p>
+        <h2>{failureHeading(snapshotState.kind)}</h2>
+        <p>{failureDescription(snapshotState.kind)}</p>
       </div>
     );
   }
 
   const { snapshot } = snapshotState;
+  const staleNotice = snapshotState.status === "stale" ? (
+    <div className="data-state data-state-warning stale-notice" role="status" aria-label="Showing last valid snapshot">
+      <h2>Showing last valid snapshot</h2>
+      <p>{failureDescription(snapshotState.kind)} New data will appear when the published snapshot recovers.</p>
+    </div>
+  ) : null;
   if (!matchesFilters(snapshot, filters)) {
-    return (
+    return <>
+      {staleNotice}
       <div className="data-state data-state-warning" role="status">
         <h2>Snapshot unavailable for selected filters</h2>
         <p>This published snapshot covers Casablanca Terminal and the last 24 hours only.</p>
       </div>
-    );
+    </>;
   }
 
   return (
     <>
+      {staleNotice}
       <OverviewKpiRail overview={snapshot.overview} />
       <section className="overview-analysis" aria-label="Terminal throughput trend">
         <div>
@@ -90,6 +109,18 @@ function OverviewContent({ snapshotState }: { snapshotState: SnapshotState }) {
       />
     </>
   );
+}
+
+function failureHeading(kind: SnapshotFailureKind): string {
+  if (kind === "malformed") return "Published snapshot malformed";
+  if (kind === "empty") return "Published snapshot empty";
+  return "Operational snapshot unavailable";
+}
+
+function failureDescription(kind: SnapshotFailureKind): string {
+  if (kind === "malformed") return "PortFlow could not validate the published data format.";
+  if (kind === "empty") return "The published snapshot contains no scheduled operational intervals.";
+  return "PortFlow could not reach the published data.";
 }
 
 function matchesFilters(snapshot: SnapshotV1, filters: AppFilters): boolean {
