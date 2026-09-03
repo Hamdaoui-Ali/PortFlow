@@ -1,4 +1,5 @@
 import { manifestSchema, overviewSchema, replaySchema, type SnapshotV1 } from "./schema";
+import { SnapshotLoadError } from "./errors";
 
 export type SnapshotFetch = (
   input: string | URL | Request,
@@ -21,20 +22,33 @@ export async function loadSnapshot(
   baseUrl = import.meta.env.BASE_URL,
 ): Promise<SnapshotV1> {
   const dataBase = `${withTrailingSlash(baseUrl)}data/`;
-  const manifestResponse = await fetcher(`${dataBase}manifest.json`, { cache: "no-cache" });
+  let manifestResponse: Response;
+  try {
+    manifestResponse = await fetcher(`${dataBase}manifest.json`, { cache: "no-cache" });
+  } catch {
+    throw new SnapshotLoadError("unavailable");
+  }
   const manifestResult = manifestSchema.safeParse(
-    await readJson(manifestResponse, "Manifest"),
+    await readJsonOrUnavailable(manifestResponse, "Manifest"),
   );
   if (!manifestResult.success) {
-    throw new Error("Manifest did not match schema version 1");
+    throw new SnapshotLoadError("malformed", "Manifest did not match schema version 1");
   }
 
-  const overviewResponse = await fetcher(`${dataBase}${manifestResult.data.datasets.overview.path}`);
+  let overviewResponse: Response;
+  try {
+    overviewResponse = await fetcher(`${dataBase}${manifestResult.data.datasets.overview.path}`);
+  } catch {
+    throw new SnapshotLoadError("unavailable");
+  }
   const overviewResult = overviewSchema.safeParse(
-    await readJson(overviewResponse, "Overview dataset"),
+    await readJsonOrUnavailable(overviewResponse, "Overview dataset"),
   );
   if (!overviewResult.success) {
-    throw new Error("Overview dataset did not match schema version 1");
+    throw new SnapshotLoadError("malformed", "Overview dataset did not match schema version 1");
+  }
+  if (overviewResult.data.availability.scheduled_intervals === 0) {
+    throw new SnapshotLoadError("empty");
   }
 
   const replayEntry = manifestResult.data.datasets.event_replay;
@@ -52,5 +66,13 @@ export async function loadSnapshot(
       : { manifest: manifestResult.data, overview: overviewResult.data };
   } catch {
     return { manifest: manifestResult.data, overview: overviewResult.data };
+  }
+}
+
+async function readJsonOrUnavailable(response: Response, label: string): Promise<unknown> {
+  try {
+    return await readJson(response, label);
+  } catch {
+    throw new SnapshotLoadError("unavailable");
   }
 }
