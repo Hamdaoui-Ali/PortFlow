@@ -235,6 +235,42 @@ describe("loadSnapshot", () => {
     }
   });
 
+  it("times out a hanging optional equipment response parser without blocking the overview", async () => {
+    vi.useFakeTimers();
+    try {
+      const equipmentManifest = {
+        ...manifest,
+        datasets: {
+          ...manifest.datasets,
+          equipment: {
+            path: "snapshots/demo-v1/equipment.json",
+            sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          },
+        },
+      };
+      const hangingJsonResponse = {
+        ok: true,
+        json: () => new Promise<unknown>(() => {}),
+      } as Response;
+      const equipmentFetch = (input: string | URL | Request) => {
+        const url = String(input);
+        if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(equipmentManifest));
+        if (url.endsWith("equipment.json")) return Promise.resolve(hangingJsonResponse);
+        return Promise.resolve(Response.json(overview));
+      };
+
+      const snapshotPromise = loadSnapshot(equipmentFetch, "/PortFlow/");
+      await vi.runAllTicks();
+      await vi.advanceTimersByTimeAsync(5000);
+      const snapshot = await snapshotPromise;
+
+      expect(snapshot.equipment).toEqual({ status: "unavailable" });
+      expect(snapshot.overview).toEqual(overview);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("reports a malformed equipment dataset when a record shape is invalid", async () => {
     const equipmentManifest = {
       ...manifest,

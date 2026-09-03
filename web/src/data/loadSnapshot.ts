@@ -3,6 +3,7 @@ import {
   manifestSchema,
   overviewSchema,
   replaySchema,
+  type EquipmentDatasetState,
   type SnapshotV1,
 } from "./schema";
 import { SnapshotLoadError } from "./errors";
@@ -23,6 +24,35 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
       },
     );
   });
+}
+
+async function loadEquipmentDataset(
+  fetcher: SnapshotFetch,
+  url: string,
+): Promise<EquipmentDatasetState> {
+  let response: Response;
+  try {
+    response = await fetcher(url);
+  } catch {
+    return { status: "unavailable" };
+  }
+  if (!response.ok) {
+    return { status: "unavailable" };
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    return { status: "malformed" };
+  }
+  const result = equipmentSchema.safeParse(payload);
+  if (!result.success) {
+    return { status: "malformed" };
+  }
+  return result.data.length === 0
+    ? { status: "empty" }
+    : { status: "ready", records: result.data };
 }
 
 export type SnapshotFetch = (
@@ -79,28 +109,10 @@ export async function loadSnapshot(
   let equipment: SnapshotV1["equipment"] = { status: "absent" };
   if (equipmentEntry) {
     try {
-      const equipmentResponse = await withTimeout(
-        Promise.resolve().then(() => fetcher(`${dataBase}${equipmentEntry.path}`)),
+      equipment = await withTimeout(
+        loadEquipmentDataset(fetcher, `${dataBase}${equipmentEntry.path}`),
         OPTIONAL_DATASET_TIMEOUT_MS,
       );
-      if (!equipmentResponse.ok) {
-        equipment = { status: "unavailable" };
-      } else {
-        let equipmentPayload: unknown;
-        try {
-          equipmentPayload = await equipmentResponse.json();
-        } catch {
-          equipment = { status: "malformed" };
-        }
-        if (equipmentPayload !== undefined) {
-          const equipmentResult = equipmentSchema.safeParse(equipmentPayload);
-          equipment = !equipmentResult.success
-            ? { status: "malformed" }
-            : equipmentResult.data.length === 0
-              ? { status: "empty" }
-              : { status: "ready", records: equipmentResult.data };
-        }
-      }
     } catch {
       equipment = { status: "unavailable" };
     }
