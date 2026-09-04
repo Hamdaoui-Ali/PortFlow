@@ -137,6 +137,16 @@ describe("App", () => {
     expect(screen.queryByText("Snapshot unavailable for selected filters")).not.toBeInTheDocument();
   });
 
+  it("keeps Overview usable when optional quality loading fails", async () => {
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      quality: { status: "unavailable" as const },
+    })} />);
+
+    expect(await screen.findAllByText("94.4%")).toHaveLength(2);
+    expect(screen.getByText("Terminal throughput (moves)")).toBeInTheDocument();
+  });
+
   it("distinguishes missing and empty replay datasets honestly", async () => {
     window.history.replaceState({}, "", "/#live-demo");
     const { rerender } = render(<App loadData={() => Promise.resolve(snapshot)} />);

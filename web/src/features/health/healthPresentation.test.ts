@@ -3,7 +3,21 @@ import { describe, expect, it } from "vitest";
 import type { ManifestV1, QualityDatasetState } from "../../data/schema";
 import { deriveHealthViewModel, STALE_AFTER_MS } from "./healthPresentation";
 
-const manifest = { generated_at: "2026-09-04T00:00:00Z", snapshot_id: "demo-v2" } as ManifestV1;
+const manifest = {
+  datasets: {
+    overview: {
+      path: "snapshots/demo-v2/overview.json",
+      sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    },
+  },
+  generated_at: "2026-09-04T00:00:00Z",
+  quality_status: "PASS",
+  record_counts: { telemetry: 305 },
+  schema_version: 1,
+  snapshot_id: "demo-v2",
+  source_period_end: "2026-09-04T00:00:00Z",
+  source_period_start: "2026-09-03T00:00:00Z",
+} as const satisfies ManifestV1;
 const readyQuality = {
   status: "ready",
   data: {
@@ -60,8 +74,8 @@ describe("deriveHealthViewModel", () => {
     expect(result.reconciliation.valid).toBe(false);
   });
 
-  it("reports invalid rejection totals", () => {
-    const quality = { ...readyQuality, data: { ...readyQuality.data, bronze_rows: 307, quarantine_rows: 2, reason_counts: { RANGE_INVALID: 1 } } };
+  it("reports invalid rejection totals when reason counts exceed quarantine", () => {
+    const quality = { ...readyQuality, data: { ...readyQuality.data, bronze_rows: 307, quarantine_rows: 2, reason_counts: { RANGE_INVALID: 3 } } };
     const result = deriveHealthViewModel(manifest, quality, now("2026-09-04T01:00:00Z"));
     expect(result.status).toBe("invalid");
     expect(result.message).toBe("Rejection totals do not reconcile: rejection reason counts must equal quarantine rows.");

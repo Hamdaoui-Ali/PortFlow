@@ -1,13 +1,24 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ManifestV1, QualityDatasetState } from "../../data/schema";
 import { DataHealthPage } from "./DataHealthPage";
 
 const manifest = {
+  datasets: {
+    overview: {
+      path: "snapshots/demo-v2/overview.json",
+      sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    },
+  },
   generated_at: "2026-09-04T00:00:00Z",
+  quality_status: "PASS",
+  record_counts: { telemetry: 305 },
+  schema_version: 1,
   snapshot_id: "demo-v2",
-} as ManifestV1;
+  source_period_end: "2026-09-04T00:00:00Z",
+  source_period_start: "2026-09-03T00:00:00Z",
+} as const satisfies ManifestV1;
 
 const healthyQuality = {
   status: "ready",
@@ -51,6 +62,17 @@ describe("DataHealthPage", () => {
     expect(screen.getByRole("table", { name: /rejection reasons/i })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Reason" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Rejected records" })).toBeInTheDocument();
+    const kpiRail = screen.getByRole("region", { name: "Data Health KPIs" });
+    for (const label of ["Snapshot age", "Bronze records", "Silver records", "Quarantined records", "Rejected records"]) {
+      expect(within(kpiRail).getByText(label)).toBeInTheDocument();
+    }
+  });
+
+  it("uses singular hour grammar at one hour", () => {
+    vi.setSystemTime(new Date("2026-09-04T01:00:00Z"));
+    renderPage(healthyQuality);
+
+    expect(screen.getByText("1 hour")).toBeInTheDocument();
   });
 
   it("explains stale evidence and exposes generated metadata and threshold", () => {
@@ -73,6 +95,37 @@ describe("DataHealthPage", () => {
     expect(screen.getByText("PASS")).toBeInTheDocument();
     expect(screen.getByRole("main")).not.toHaveAttribute("aria-live");
     expect(screen.getByRole("table")).not.toHaveAttribute("aria-live");
+  });
+
+  it("renders invalid status and explanation as text independent of color", () => {
+    renderPage(invalidQuality);
+
+    expect(screen.getByRole("heading", { name: "Invalid" })).toBeInTheDocument();
+    expect(screen.getByText(/Layer counts do not reconcile:/)).toBeVisible();
+  });
+
+  it("renders a non-empty rejection reason row", () => {
+    renderPage({
+      status: "ready",
+      data: {
+        bronze_rows: 306,
+        silver_rows: 305,
+        quarantine_rows: 1,
+        reason_counts: { RANGE_INVALID: 1 },
+        dbt_test_status: "PASS",
+      },
+    });
+
+    const row = screen.getByRole("row", { name: "RANGE_INVALID 1" });
+    expect(row).toBeInTheDocument();
+    expect(screen.queryByText("No rejected records")).not.toBeInTheDocument();
+  });
+
+  it("links to the UI specification and source documentation", () => {
+    renderPage(healthyQuality);
+
+    expect(screen.getByRole("link", { name: "PortFlow UI specification" })).toHaveAttribute("href", "/docs/design/PORTFLOW_UI_SPEC.md");
+    expect(screen.getByRole("link", { name: "PortFlow source repository" })).toHaveAttribute("href", "https://github.com/Hamdaoui-Ali/PortFlow");
   });
 
   it.each(["absent", "unavailable", "malformed", "empty"] as const)("explains missing quality state: %s", (status) => {

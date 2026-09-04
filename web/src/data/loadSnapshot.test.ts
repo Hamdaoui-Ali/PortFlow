@@ -193,6 +193,61 @@ describe("loadSnapshot", () => {
     });
   });
 
+  it.each(["bronze_rows", "silver_rows", "quarantine_rows"] as const)("rejects a negative quality %s value", async (field) => {
+    const qualityManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        quality: {
+          path: "snapshots/demo-v1/quality.json",
+          sha256: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        },
+      },
+    };
+    const qualityFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? qualityManifest :
+          url.endsWith("quality.json") ? { ...quality, [field]: -1 } : overview,
+      ));
+    };
+
+    await expect(loadSnapshot(qualityFetch, "/PortFlow/")).resolves.toMatchObject({
+      quality: { status: "malformed" },
+    });
+  });
+
+  it("reports a timed-out quality dataset as unavailable without rejecting overview", async () => {
+    vi.useFakeTimers();
+    const qualityManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        quality: {
+          path: "snapshots/demo-v1/quality.json",
+          sha256: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        },
+      },
+    };
+    const qualityFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(qualityManifest));
+      if (url.endsWith("quality.json")) return new Promise<Response>(() => undefined);
+      return Promise.resolve(Response.json(overview));
+    };
+
+    try {
+      const pending = loadSnapshot(qualityFetch, "/PortFlow/");
+      await vi.runAllTimersAsync();
+      await expect(pending).resolves.toMatchObject({
+        overview,
+        quality: { status: "unavailable" },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("reports an empty quality dataset when it is an empty array", async () => {
     const qualityManifest = {
       ...manifest,
