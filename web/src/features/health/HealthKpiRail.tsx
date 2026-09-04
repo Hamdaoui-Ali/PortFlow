@@ -10,8 +10,11 @@ function displayCount(value: number | null): string {
 
 export function HealthKpiRail({ model }: HealthKpiRailProps) {
   const ageHours = Math.floor(model.snapshotAgeMs / (60 * 60 * 1000));
+  const ageLabel = model.status === "stale"
+    ? "Over 24 hours"
+    : `${ageHours} ${ageHours === 1 ? "hour" : "hours"}`;
   const kpis = [
-    ["Snapshot age", `${ageHours} ${ageHours === 1 ? "hour" : "hours"}`],
+    ["Snapshot age", ageLabel],
     ["Bronze records", displayCount(model.counts.bronze)],
     ["Silver records", displayCount(model.counts.silver)],
     ["Quarantined records", displayCount(model.counts.quarantine)],

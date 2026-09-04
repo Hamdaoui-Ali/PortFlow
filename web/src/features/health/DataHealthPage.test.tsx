@@ -81,6 +81,8 @@ describe("DataHealthPage", () => {
 
     expect(screen.getByText("Stale")).toBeInTheDocument();
     expect(screen.getByText("Data is healthy but stale.")).toBeInTheDocument();
+    expect(screen.getByText("Over 24 hours")).toBeInTheDocument();
+    expect(screen.queryByText("24 hours")).not.toBeInTheDocument();
     expect(screen.getByText(/Generated/)).toBeInTheDocument();
     expect(document.querySelector('time[datetime="2026-09-04T00:00:00Z"]')).toBeInTheDocument();
     expect(screen.getByText("Stale after 24 hours")).toBeInTheDocument();
@@ -124,7 +126,7 @@ describe("DataHealthPage", () => {
   it("links to the UI specification and source documentation", () => {
     renderPage(healthyQuality);
 
-    expect(screen.getByRole("link", { name: "PortFlow UI specification" })).toHaveAttribute("href", "/docs/design/PORTFLOW_UI_SPEC.md");
+    expect(screen.getByRole("link", { name: "PortFlow UI specification" })).toHaveAttribute("href", "https://github.com/Hamdaoui-Ali/PortFlow/blob/main/docs/design/PORTFLOW_UI_SPEC.md");
     expect(screen.getByRole("link", { name: "PortFlow source repository" })).toHaveAttribute("href", "https://github.com/Hamdaoui-Ali/PortFlow");
   });
 
@@ -135,5 +137,7 @@ describe("DataHealthPage", () => {
     expect(screen.getByText(`Quality evidence is ${status}.`)).toBeInTheDocument();
     expect(screen.getByText("Pipeline status")).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+    expect(screen.getByText("Rejection evidence unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("No rejected records")).not.toBeInTheDocument();
   });
 });

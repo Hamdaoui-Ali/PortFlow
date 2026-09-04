@@ -42,7 +42,7 @@ export function HealthEvidence({ model }: { model: HealthViewModel }) {
         <p>{model.rules.staleAfter}</p>
         <p>{model.rules.layerCounts}</p>
         <p>{model.rules.rejectionTotals}</p>
-        <p><a href="/docs/design/PORTFLOW_UI_SPEC.md">PortFlow UI specification</a></p>
+        <p><a href="https://github.com/Hamdaoui-Ali/PortFlow/blob/main/docs/design/PORTFLOW_UI_SPEC.md">PortFlow UI specification</a></p>
         <p><a href="https://github.com/Hamdaoui-Ali/PortFlow">PortFlow source repository</a></p>
       </details>
     </>

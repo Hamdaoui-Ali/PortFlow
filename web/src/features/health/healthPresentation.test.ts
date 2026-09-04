@@ -96,6 +96,6 @@ describe("deriveHealthViewModel", () => {
     expect(result.message).toBe(`Quality evidence is ${status}.`);
     expect(result.pipelineStatus).toBe("Unavailable");
     expect(result.counts).toEqual({ bronze: null, silver: null, quarantine: null, rejected: null });
-    expect(result.rejections).toEqual({ rows: [], emptyMessage: "No rejected records." });
+    expect(result.rejections).toEqual({ rows: [], emptyMessage: "Rejection evidence unavailable." });
   });
 });

@@ -40,6 +40,7 @@ const rules = {
 };
 
 const emptyRejections = { rows: [], emptyMessage: "No rejected records." };
+const unavailableRejections = { rows: [], emptyMessage: "Rejection evidence unavailable." };
 
 function snapshotAgeMs(manifest: ManifestV1, now: Date): number {
   return Math.max(0, now.getTime() - Date.parse(manifest.generated_at));
@@ -54,7 +55,7 @@ function unavailableModel(manifest: ManifestV1, now: Date, status: QualityDatase
     staleAfterMs: STALE_AFTER_MS,
     pipelineStatus: "Unavailable",
     counts: { bronze: null, silver: null, quarantine: null, rejected: null },
-    rejections: emptyRejections,
+    rejections: unavailableRejections,
     reconciliation: { valid: false, layers: "Layer reconciliation is unavailable.", reasons: "Rejection reconciliation is unavailable." },
     rules,
   };
