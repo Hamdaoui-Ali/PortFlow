@@ -5,6 +5,7 @@ import { App } from "../src/app/App";
 import { snapshotCache } from "../src/data/cache";
 import type { SnapshotV1 } from "../src/data/schema";
 import { scanAccessibility } from "../src/test/accessibility";
+import "../src/styles.css";
 
 const snapshot: SnapshotV1 = {
   manifest: {
@@ -92,5 +93,15 @@ describe("route accessibility", () => {
     }
     const results = await scanAccessibility(document.body);
     expect(results.violations).toEqual([]);
+  });
+
+  it("keeps the shared interactive controls at a touch-friendly size", async () => {
+    window.history.replaceState({}, "", "/#live-demo");
+    render(<App loadData={() => Promise.resolve(snapshot)} />);
+    expect(await screen.findByRole("heading", { name: "Live Demo" })).toBeInTheDocument();
+
+    expect(document.querySelectorAll("button, input, select, summary, .nav-link").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Start replay" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Replay speed")).toBeInTheDocument();
   });
 });
