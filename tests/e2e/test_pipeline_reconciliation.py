@@ -7,9 +7,6 @@ from typing import Any
 
 from portflow.pipeline import run_local_pipeline
 
-pytest_plugins = ("tests.integration.conftest",)
-
-
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
