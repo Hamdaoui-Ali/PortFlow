@@ -293,9 +293,9 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .replay-kpi-card:first-child { border-top: 0; }
   .replay-activity-feed li { display: grid; }
   .health-kpi-rail { grid-template-columns: 1fr; }
-  .health-kpi, .health-kpi:first-child, .health-kpi:last-child { padding: 18px 14px; border-right: 1px solid var(--border); }
-  .health-kpi:nth-child(2n) { border-right: 0; }
-  .health-kpi:nth-child(n+3) { border-top: 1px solid var(--border); }
+  .health-kpi, .health-kpi:first-child, .health-kpi:last-child { padding: 18px 14px; border-right: 0; }
+  .health-kpi + .health-kpi { border-top: 1px solid var(--border); }
+  .health-kpi:first-child { border-top: 0; }
   .health-evidence-grid { grid-template-columns: 1fr; gap: 0; }
   .mobile-navigation { position: fixed; z-index: 4; right: 0; bottom: 0; left: 0; display: block; background: var(--surface); border-top: 1px solid var(--border); }
   .primary-navigation-mobile { justify-content: space-around; padding: 5px 3px 7px; }
