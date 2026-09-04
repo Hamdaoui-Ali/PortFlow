@@ -11,6 +11,8 @@
   --pale-blue: #edf4ff;
   --cobalt: #064fc4;
   --teal: #079a98;
+  --warning: #b87900;
+  --danger: #d92332;
   --focus: #064fc4;
 }
 
@@ -209,8 +211,8 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .health-status-heading { display: flex; align-items: center; gap: 9px; }
 .health-status-heading h2 { margin: 0; font-size: 20px; }
 .health-status-healthy { color: var(--teal); }
-.health-status-stale { color: #b87900; }
-.health-status-invalid { color: #d92332; }
+.health-status-stale { color: var(--warning); }
+.health-status-invalid { color: var(--danger); }
 .health-status p { max-width: 680px; margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
 .health-kpi-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 1180px; margin-bottom: 42px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .health-kpi { min-width: 0; display: grid; gap: 12px; padding: 20px; border-right: 1px solid var(--border); }
@@ -290,7 +292,7 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .replay-kpi-card { border-right: 0; border-top: 1px solid var(--border); }
   .replay-kpi-card:first-child { border-top: 0; }
   .replay-activity-feed li { display: grid; }
-  .health-kpi-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .health-kpi-rail { grid-template-columns: 1fr; }
   .health-kpi, .health-kpi:first-child, .health-kpi:last-child { padding: 18px 14px; border-right: 1px solid var(--border); }
   .health-kpi:nth-child(2n) { border-right: 0; }
   .health-kpi:nth-child(n+3) { border-top: 1px solid var(--border); }
