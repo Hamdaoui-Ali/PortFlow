@@ -75,6 +75,21 @@ describe("route accessibility", () => {
     render(<App loadData={() => Promise.resolve(snapshot)} />);
 
     expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
+    if (route === "overview") {
+      expect(screen.getByRole("img", { name: /hourly availability trend/i })).toBeInTheDocument();
+    }
+    if (route === "equipment") {
+      expect(screen.getByRole("table", { name: "Equipment fleet" })).toBeInTheDocument();
+    }
+    if (route === "incidents") {
+      expect(screen.getByRole("table", { name: /incident/i })).toBeInTheDocument();
+    }
+    if (route === "live-demo") {
+      expect(screen.getByRole("button", { name: /pause replay|start replay/i })).toBeInTheDocument();
+    }
+    if (route === "data-health") {
+      expect(screen.getByRole("table", { name: /rejection reasons/i })).toBeInTheDocument();
+    }
     const results = await scanAccessibility(document.body);
     expect(results.violations).toEqual([]);
   });
