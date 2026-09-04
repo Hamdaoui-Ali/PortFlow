@@ -145,11 +145,22 @@ export const incidentRecordSchema = z
 
 export const incidentsSchema = z.array(incidentRecordSchema);
 
+export const qualitySchema = z
+  .object({
+    bronze_rows: z.number().int().nonnegative(),
+    silver_rows: z.number().int().nonnegative(),
+    quarantine_rows: z.number().int().nonnegative(),
+    reason_counts: z.record(z.string().min(1), z.number().int().nonnegative()),
+    dbt_test_status: z.literal("PASS"),
+  })
+  .strict();
+
 export type ManifestV1 = z.infer<typeof manifestSchema>;
 export type OverviewV1 = z.infer<typeof overviewSchema>;
 export type ReplayEventV1 = z.infer<typeof replayEventSchema>;
 export type EquipmentRecordV1 = z.infer<typeof equipmentRecordSchema>;
 export type IncidentRecordV1 = z.infer<typeof incidentRecordSchema>;
+export type QualityV1 = z.infer<typeof qualitySchema>;
 
 export type EquipmentDatasetState =
   | { status: "absent" }
@@ -165,10 +176,18 @@ export type IncidentDatasetState =
   | { status: "malformed" }
   | { status: "empty" };
 
+export type QualityDatasetState =
+  | { status: "absent" }
+  | { status: "ready"; data: QualityV1 }
+  | { status: "unavailable" }
+  | { status: "malformed" }
+  | { status: "empty" };
+
 export interface SnapshotV1 {
   manifest: ManifestV1;
   overview: OverviewV1;
   event_replay?: ReplayEventV1[];
   equipment?: EquipmentDatasetState;
   incidents?: IncidentDatasetState;
+  quality?: QualityDatasetState;
 }

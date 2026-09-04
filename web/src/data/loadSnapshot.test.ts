@@ -56,6 +56,14 @@ const incidents = [
   },
 ];
 
+const quality = {
+  bronze_rows: 305,
+  silver_rows: 305,
+  quarantine_rows: 0,
+  reason_counts: {},
+  dbt_test_status: "PASS",
+};
+
 function successfulFetch(input: string | URL | Request): Promise<Response> {
   const url = String(input);
   if (url.endsWith("manifest.json")) {
@@ -79,6 +87,134 @@ describe("loadSnapshot", () => {
     const snapshot = await loadSnapshot(successfulFetch, "/PortFlow/");
 
     expect(snapshot.equipment).toEqual({ status: "absent" });
+  });
+
+  it("loads and validates the manifest-declared quality dataset", async () => {
+    const qualityManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        quality: {
+          path: "snapshots/demo-v1/quality.json",
+          sha256: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        },
+      },
+      record_counts: { telemetry: 288, quality: 1 },
+    };
+    const qualityFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? qualityManifest :
+          url.endsWith("quality.json") ? quality : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(qualityFetch, "/PortFlow/");
+
+    expect(snapshot.quality).toEqual({ status: "ready", data: quality });
+  });
+
+  it("reports an absent quality dataset when the manifest has no quality entry", async () => {
+    const snapshot = await loadSnapshot(successfulFetch, "/PortFlow/");
+
+    expect(snapshot.quality).toEqual({ status: "absent" });
+  });
+
+  it("reports an unavailable quality dataset when its fetch fails", async () => {
+    const qualityManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        quality: {
+          path: "snapshots/demo-v1/quality.json",
+          sha256: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        },
+      },
+    };
+    const qualityFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(qualityManifest));
+      if (url.endsWith("quality.json")) return Promise.reject(new Error("network down"));
+      return Promise.resolve(Response.json(overview));
+    };
+
+    const snapshot = await loadSnapshot(qualityFetch, "/PortFlow/");
+
+    expect(snapshot.quality).toEqual({ status: "unavailable" });
+  });
+
+  it("reports a malformed quality dataset for invalid JSON", async () => {
+    const qualityManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        quality: {
+          path: "snapshots/demo-v1/quality.json",
+          sha256: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        },
+      },
+    };
+    const malformedQualityFetch = (payload: unknown) => (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(qualityManifest));
+      if (url.endsWith("quality.json")) {
+        return payload === "invalid-json"
+          ? Promise.resolve(new Response("not-json", { headers: { "content-type": "application/json" } }))
+          : Promise.resolve(Response.json(payload));
+      }
+      return Promise.resolve(Response.json(overview));
+    };
+
+    await expect(loadSnapshot(malformedQualityFetch("invalid-json"), "/PortFlow/")).resolves.toMatchObject({
+      quality: { status: "malformed" },
+    });
+  });
+
+  it("reports a malformed quality dataset for an invalid schema", async () => {
+    const qualityManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        quality: {
+          path: "snapshots/demo-v1/quality.json",
+          sha256: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        },
+      },
+    };
+    const malformedQualityFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("manifest.json")) return Promise.resolve(Response.json(qualityManifest));
+      if (url.endsWith("quality.json")) return Promise.resolve(Response.json({ ...quality, dbt_test_status: "FAIL" }));
+      return Promise.resolve(Response.json(overview));
+    };
+
+    await expect(loadSnapshot(malformedQualityFetch, "/PortFlow/")).resolves.toMatchObject({
+      quality: { status: "malformed" },
+    });
+  });
+
+  it("reports an empty quality dataset when it is an empty array", async () => {
+    const qualityManifest = {
+      ...manifest,
+      datasets: {
+        ...manifest.datasets,
+        quality: {
+          path: "snapshots/demo-v1/quality.json",
+          sha256: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        },
+      },
+    };
+    const qualityFetch = (input: string | URL | Request) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(
+        url.endsWith("manifest.json") ? qualityManifest :
+          url.endsWith("quality.json") ? [] : overview,
+      ));
+    };
+
+    const snapshot = await loadSnapshot(qualityFetch, "/PortFlow/");
+
+    expect(snapshot.quality).toEqual({ status: "empty" });
   });
 
   it("loads and validates equipment records without rejecting the overview", async () => {
@@ -411,7 +547,8 @@ describe("loadSnapshot", () => {
       const url = String(input);
       return Promise.resolve(Response.json(
         url.endsWith("manifest.json") ? fullManifest :
-          url.endsWith("event_replay.json") ? replay : overview,
+          url.endsWith("event_replay.json") ? replay :
+            url.endsWith("quality.json") ? quality : overview,
       ));
     };
 
@@ -420,6 +557,7 @@ describe("loadSnapshot", () => {
     expect(snapshot.manifest.record_counts.equipment).toBe(1);
     expect(snapshot.overview.terminal_id).toBe("TM-001");
     expect(snapshot.event_replay).toHaveLength(1);
+    expect(snapshot.quality).toEqual({ status: "ready", data: quality });
   });
 
   it("loads and validates incident records as an optional dataset", async () => {

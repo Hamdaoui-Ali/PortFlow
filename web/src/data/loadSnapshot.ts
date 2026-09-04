@@ -3,9 +3,11 @@ import {
   incidentsSchema,
   manifestSchema,
   overviewSchema,
+  qualitySchema,
   replaySchema,
   type EquipmentDatasetState,
   type IncidentDatasetState,
+  type QualityDatasetState,
   type SnapshotV1,
 } from "./schema";
 import { SnapshotLoadError } from "./errors";
@@ -82,6 +84,29 @@ async function loadIncidentDataset(
     : { status: "ready", records: result.data };
 }
 
+async function loadQualityDataset(
+  fetcher: SnapshotFetch,
+  url: string,
+): Promise<QualityDatasetState> {
+  let response: Response;
+  try {
+    response = await fetcher(url);
+  } catch {
+    return { status: "unavailable" };
+  }
+  if (!response.ok) return { status: "unavailable" };
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    return { status: "malformed" };
+  }
+  if (Array.isArray(payload) && payload.length === 0) return { status: "empty" };
+  const result = qualitySchema.safeParse(payload);
+  return result.success ? { status: "ready", data: result.data } : { status: "malformed" };
+}
+
 export type SnapshotFetch = (
   input: string | URL | Request,
   init?: RequestInit,
@@ -134,6 +159,7 @@ export async function loadSnapshot(
 
   const equipmentEntry = manifestResult.data.datasets.equipment;
   const incidentsEntry = manifestResult.data.datasets.incidents;
+  const qualityEntry = manifestResult.data.datasets.quality;
   const equipmentPromise = equipmentEntry
     ? withTimeout(loadEquipmentDataset(fetcher, `${dataBase}${equipmentEntry.path}`), OPTIONAL_DATASET_TIMEOUT_MS)
         .catch(() => ({ status: "unavailable" } as const))
@@ -142,11 +168,19 @@ export async function loadSnapshot(
     ? withTimeout(loadIncidentDataset(fetcher, `${dataBase}${incidentsEntry.path}`), OPTIONAL_DATASET_TIMEOUT_MS)
         .catch(() => ({ status: "unavailable" } as const))
     : Promise.resolve({ status: "absent" } as const);
-  const [equipment, incidents] = await Promise.all([equipmentPromise, incidentsPromise]);
+  const qualityPromise = qualityEntry
+    ? withTimeout(loadQualityDataset(fetcher, `${dataBase}${qualityEntry.path}`), OPTIONAL_DATASET_TIMEOUT_MS)
+        .catch(() => ({ status: "unavailable" } as const))
+    : Promise.resolve({ status: "absent" } as const);
+  const [equipment, incidents, quality] = await Promise.all([
+    equipmentPromise,
+    incidentsPromise,
+    qualityPromise,
+  ]);
 
   const replayEntry = manifestResult.data.datasets.event_replay;
   if (!replayEntry) {
-    return { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents };
+    return { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents, quality };
   }
 
   try {
@@ -155,10 +189,10 @@ export async function loadSnapshot(
       await readJson(replayResponse, "Event replay dataset"),
     );
     return replayResult.success
-      ? { manifest: manifestResult.data, overview: overviewResult.data, event_replay: replayResult.data, equipment, incidents }
-      : { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents };
+      ? { manifest: manifestResult.data, overview: overviewResult.data, event_replay: replayResult.data, equipment, incidents, quality }
+      : { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents, quality };
   } catch {
-    return { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents };
+    return { manifest: manifestResult.data, overview: overviewResult.data, equipment, incidents, quality };
   }
 }
 
