@@ -29,6 +29,16 @@ const snapshot = {
     schema_version: 1 as const,
     terminal_id: "TM-001",
   },
+  quality: {
+    status: "ready" as const,
+    data: {
+      bronze_rows: 305,
+      silver_rows: 305,
+      quarantine_rows: 0,
+      reason_counts: {},
+      dbt_test_status: "PASS" as const,
+    },
+  },
 };
 
 describe("App", () => {
@@ -118,6 +128,15 @@ describe("App", () => {
     expect(screen.getByRole("list", { name: "Replay activity" })).not.toHaveAttribute("aria-live");
   });
 
+  it("renders Data Health independently of global filter matching", async () => {
+    window.history.replaceState({}, "", "/?terminal=TM-002&range=7d#data-health");
+    render(<App loadData={() => Promise.resolve(snapshot)} />);
+
+    expect(await screen.findByRole("heading", { name: "Data Health" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Data Health" })[0]).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByText("Snapshot unavailable for selected filters")).not.toBeInTheDocument();
+  });
+
   it("distinguishes missing and empty replay datasets honestly", async () => {
     window.history.replaceState({}, "", "/#live-demo");
     const { rerender } = render(<App loadData={() => Promise.resolve(snapshot)} />);
@@ -141,6 +160,19 @@ describe("App", () => {
     rerender(<App loadData={() => Promise.reject(new Error("network down"))} />);
     expect(await screen.findByRole("status", { name: "Showing last valid snapshot" })).toBeInTheDocument();
     expect(screen.getByText("Simulation — not live operational data")).toBeInTheDocument();
+  });
+
+  it("keeps the stale snapshot notice above Data Health after reload failure", async () => {
+    window.history.replaceState({}, "", "/#data-health");
+    const { rerender } = render(<App loadData={() => Promise.resolve(snapshot)} />);
+    expect(await screen.findByRole("heading", { name: "Data Health" })).toBeInTheDocument();
+
+    rerender(<App loadData={() => Promise.reject(new Error("network down"))} />);
+
+    const staleNotice = await screen.findByRole("status", { name: "Showing last valid snapshot" });
+    expect(staleNotice).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Data Health" })).toBeInTheDocument();
+    expect(staleNotice.compareDocumentPosition(screen.getByRole("heading", { name: "Data Health" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("falls back to Overview for an unknown hash route", async () => {

@@ -10,6 +10,7 @@ import { AvailabilityTrend } from "../features/overview/AvailabilityTrend";
 import { EquipmentPage } from "../features/equipment/EquipmentPage";
 import { IncidentPage } from "../features/incidents/IncidentPage";
 import { LiveDemoPage } from "../features/replay/LiveDemoPage";
+import { DataHealthPage } from "../features/health/DataHealthPage";
 import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
 
 interface AppProps {
@@ -22,7 +23,7 @@ type SnapshotState =
   | { status: "error"; kind: SnapshotFailureKind }
   | { status: "stale"; kind: SnapshotFailureKind; snapshot: SnapshotV1 };
 
-type AppRoute = "equipment" | "incidents" | "live-demo" | "overview";
+type AppRoute = "data-health" | "equipment" | "incidents" | "live-demo" | "overview";
 
 export function App({ loadData = loadSnapshot }: AppProps) {
   const [snapshotState, setSnapshotState] = useState<SnapshotState>({ status: "loading" });
@@ -116,6 +117,16 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
     );
   }
 
+  if (route === "data-health") {
+    return (
+      <DataHealthPage
+        manifest={snapshot.manifest}
+        quality={snapshot.quality}
+        staleNotice={staleNotice}
+      />
+    );
+  }
+
   if (!matchesFilters(snapshot, filters)) {
     return <>
       {staleNotice}
@@ -158,6 +169,7 @@ function readRoute(): AppRoute {
   if (window.location.hash === "#equipment") return "equipment";
   if (window.location.hash === "#incidents") return "incidents";
   if (window.location.hash === "#live-demo") return "live-demo";
+  if (window.location.hash === "#data-health") return "data-health";
   return "overview";
 }
 
