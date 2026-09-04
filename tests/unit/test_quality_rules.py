@@ -8,10 +8,10 @@ def test_bad_load_gets_range_invalid() -> None:
     assert [issue.code for issue in issues] == ["RANGE_INVALID"]
 
 
-def test_unknown_equipment_gets_reference_missing() -> None:
+def test_unknown_equipment_gets_reference_invalid() -> None:
     row = valid_telemetry_row(equipment_id="QC-999")
     issues = validate_row("telemetry_events", row, references())
-    assert [issue.code for issue in issues] == ["REFERENCE_MISSING"]
+    assert [issue.code for issue in issues] == ["REFERENCE_INVALID"]
 
 
 def test_duplicate_identifier_gets_duplicate_key() -> None:

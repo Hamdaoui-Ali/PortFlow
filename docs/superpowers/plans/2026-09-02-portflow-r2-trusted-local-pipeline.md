@@ -20,7 +20,7 @@ Spec: docs/superpowers/specs/2026-09-02-portflow-r2-trusted-local-pipeline-desig
 - A cursor advances only after the staged Parquet partition is validated and atomically committed.
 - Bronze input rows equal Silver accepted rows plus quarantined rows for every run.
 - Invalid, unreconciled, or oversized data cannot replace the previous public snapshot.
-- Stable reason codes are SCHEMA_INVALID, RANGE_INVALID, REFERENCE_MISSING, TEMPORAL_INVALID, and DUPLICATE_KEY.
+- Stable reason codes are SCHEMA_INVALID, RANGE_INVALID, REFERENCE_INVALID, TEMPORAL_INVALID, and DUPLICATE_KEY.
 - Zero-denominator KPI values are null, never zero.
 - Identical seed and pipeline inputs produce identical logical rows, counts, Gold values, and export hashes.
 - Redpanda, Kafka, Dagster, Prometheus, Grafana, MinIO, PySpark, Terraform, cloud databases, and public streaming remain outside R2.
@@ -633,10 +633,10 @@ def test_bad_load_gets_range_invalid() -> None:
     assert [issue.code for issue in issues] == ["RANGE_INVALID"]
 
 
-def test_unknown_equipment_gets_reference_missing() -> None:
+def test_unknown_equipment_gets_reference_invalid() -> None:
     row = valid_telemetry_row(equipment_id="QC-999")
     issues = validate_row("telemetry_events", row, references())
-    assert [issue.code for issue in issues] == ["REFERENCE_MISSING"]
+    assert [issue.code for issue in issues] == ["REFERENCE_INVALID"]
 
 
 def test_duplicate_identifier_gets_duplicate_key() -> None:
@@ -657,7 +657,7 @@ def test_silver_reconciles_accepted_and_quarantined_rows(database_url, tmp_path)
         quarantine_dir=tmp_path / "quarantine",
     )
     assert report.bronze_rows == report.silver_rows + report.quarantine_rows
-    assert report.quarantine_reason_counts == {"RANGE_INVALID": 1, "REFERENCE_MISSING": 1}
+    assert report.quarantine_reason_counts == {"RANGE_INVALID": 1, "REFERENCE_INVALID": 1}
 ~~~
 
 Run:
@@ -674,7 +674,7 @@ Implement:
 VALID_REASON_CODES = (
     "SCHEMA_INVALID",
     "RANGE_INVALID",
-    "REFERENCE_MISSING",
+    "REFERENCE_INVALID",
     "TEMPORAL_INVALID",
     "DUPLICATE_KEY",
 )
@@ -685,7 +685,7 @@ class ValidationIssue:
     code: Literal[
         "SCHEMA_INVALID",
         "RANGE_INVALID",
-        "REFERENCE_MISSING",
+        "REFERENCE_INVALID",
         "TEMPORAL_INVALID",
         "DUPLICATE_KEY",
     ]
@@ -702,7 +702,7 @@ def validate_row(
     raise NotImplementedError("implement in PF-011")
 ~~~
 
-Return reason codes in the fixed order SCHEMA_INVALID, RANGE_INVALID, REFERENCE_MISSING, TEMPORAL_INVALID, DUPLICATE_KEY. Validate required columns and types, ranges from the domain models, foreign-key membership, event/ingestion ordering, opened/resolved ordering, and duplicate primary keys.
+Return reason codes in the fixed order SCHEMA_INVALID, RANGE_INVALID, REFERENCE_INVALID, TEMPORAL_INVALID, DUPLICATE_KEY. Validate required columns and types, ranges from the domain models, foreign-key membership, event/ingestion ordering, opened/resolved ordering, and duplicate primary keys.
 
 - [ ] Step 3: Implement Silver and quarantine writers
 

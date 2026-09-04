@@ -35,6 +35,7 @@ def test_cursor_replacement_failure_preserves_previous_file(tmp_path: Path) -> N
 
 def test_extraction_failure_does_not_commit_partition_or_cursor(
     database_url: str,
+    database_ready: None,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
