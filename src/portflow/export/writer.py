@@ -188,6 +188,7 @@ def _incident_documents(rows: Iterable[Mapping[str, object]]) -> list[dict[str, 
             {
                 "incident_id": str(row["incident_id"]),
                 "equipment_id": str(row["equipment_id"]),
+                "terminal_id": str(row["terminal_id"]),
                 "severity": str(row["severity"]),
                 "status": str(row["status"]),
                 "opened_at": _utc_text(_timestamp(row["opened_at"])),
@@ -310,7 +311,13 @@ def write_public_snapshot(
             alarm_rows = _query_rows(connection, "select * from stg_alarms order by alarm_id")
             incident_rows = _query_rows(
                 connection,
-                "select * from fct_incidents order by incident_id",
+                """
+                select i.*, min(t.terminal_id) as terminal_id
+                from fct_incidents i
+                join fct_equipment_telemetry t using (equipment_id)
+                group by all
+                order by i.incident_id
+                """,
             )
             overview = _overview_document(overview_rows[0], source_metadata)
             documents: dict[str, object] = {

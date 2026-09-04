@@ -188,10 +188,11 @@
     "incident_item": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["incident_id", "equipment_id", "severity", "status", "opened_at", "resolved_at", "root_cause"],
+      "required": ["incident_id", "equipment_id", "terminal_id", "severity", "status", "opened_at", "resolved_at", "root_cause"],
       "properties": {
         "incident_id": {"type": "string", "pattern": "^inc-[0-9]{6}$"},
         "equipment_id": {"type": "string", "pattern": "^[A-Z]{2,4}-[0-9]{3}$"},
+        "terminal_id": {"type": "string", "pattern": "^TM-[0-9]{3}$"},
         "severity": {"type": "string", "enum": ["MINOR", "MAJOR", "CRITICAL"]},
         "status": {"type": "string", "enum": ["OPEN", "RESOLVED"]},
         "opened_at": {"$ref": "#/$defs/utc_datetime"},

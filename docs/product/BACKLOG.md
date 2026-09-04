@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-024**. PF-023 is complete; the next task proves end-to-end pipeline reconciliation.
+Start **PF-025**. PF-024 is complete; the next task covers failure-injection recovery.
 
 ## Completed checkpoints
 
@@ -28,6 +28,7 @@ Start **PF-024**. PF-023 is complete; the next task proves end-to-end pipeline r
 - **R2 trusted local pipeline:** `8deb3b4`, `ab35b6a`, `e290238`, `0572fc0`, `16c9e69`, and `f6c7226` (with dbt artifact hygiene in `d625750`).
 - **PF-022 Data Health:** `87fdaf5`, `39eb76a`, `c33d8e8`, `e04567e`, `7eb0264`, `a0f5e70`, and `b3aa745`.
 - **PF-023 Responsive and accessibility hardening:** `cdc44a2`, `6b39a28`, `ebd401c`, `fbd0bec`, and `bada6ef`.
+- **PF-024 Pipeline reconciliation:** `c71a147`, `fecf854`, `dda5367`, and `1f49b94`.
 
 ## R0 — Verified constraints
 
