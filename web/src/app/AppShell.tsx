@@ -10,7 +10,7 @@ import {
   HardHat,
   PlaySquare,
 } from "lucide-react";
-import { createContext, type ReactNode, useContext, useMemo, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { APP_NAME } from "./constants";
 
@@ -55,8 +55,15 @@ function readFilter(name: string, fallback: string): string {
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const mainRef = useRef<HTMLElement>(null);
   const [terminal, setTerminal] = useState(() => readFilter("terminal", "all"));
   const [range, setRange] = useState(() => readFilter("range", "24h"));
+
+  useEffect(() => {
+    const focusRouteContent = () => mainRef.current?.focus();
+    window.addEventListener("hashchange", focusRouteContent);
+    return () => window.removeEventListener("hashchange", focusRouteContent);
+  }, []);
 
   const updateFilters = (nextTerminal: string, nextRange: string) => {
     const params = new URLSearchParams();
@@ -135,7 +142,7 @@ export function AppShell({ children }: AppShellProps) {
             <p className="filter-summary">Filters apply across operational views <ChevronRight size={15} aria-hidden="true" /></p>
           </div>
         </header>
-        <main id="main-content" className="content" tabIndex={-1}>
+        <main ref={mainRef} id="main-content" className="content" tabIndex={-1}>
           {children}
         </main>
         <div className="mobile-navigation"><Navigation variant="mobile" /></div>
@@ -148,7 +155,7 @@ export function AppShell({ children }: AppShellProps) {
 function Navigation({ variant }: { variant: "desktop" | "mobile" }) {
   const activeHref = window.location.hash || "#overview";
   return (
-    <nav className={`primary-navigation primary-navigation-${variant}`} aria-label="Primary navigation">
+    <nav className={`primary-navigation primary-navigation-${variant}`} aria-label={variant === "desktop" ? "Primary navigation" : "Mobile primary navigation"}>
       {navItems.map(({ label, href, icon: Icon }) => (
         <a key={label} className={href === activeHref ? "nav-link nav-link-active" : "nav-link"} href={href} aria-current={href === activeHref ? "page" : undefined}>
           <Icon size={18} strokeWidth={1.8} aria-hidden="true" />

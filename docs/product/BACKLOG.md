@@ -20,13 +20,14 @@
 
 ## Current next action
 
-Start **PF-023**. PF-022 is complete; the next task completes responsive and accessibility behavior.
+Start **PF-024**. PF-023 is complete; the next task proves end-to-end pipeline reconciliation.
 
 ## Completed checkpoints
 
 - **R1 first public slice:** `9423cbb`, `f2ba319`, `e004d02`, `3ceaef0`, and `e53641a`, with the approved design and plan in `docs/superpowers/`.
 - **R2 trusted local pipeline:** `8deb3b4`, `ab35b6a`, `e290238`, `0572fc0`, `16c9e69`, and `f6c7226` (with dbt artifact hygiene in `d625750`).
 - **PF-022 Data Health:** `87fdaf5`, `39eb76a`, `c33d8e8`, `e04567e`, `7eb0264`, `a0f5e70`, and `b3aa745`.
+- **PF-023 Responsive and accessibility hardening:** `cdc44a2`, `6b39a28`, `ebd401c`, `fbd0bec`, and `bada6ef`.
 
 ## R0 — Verified constraints
 

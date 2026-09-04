@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { App } from "./App";
@@ -54,10 +54,19 @@ describe("App", () => {
       "href",
       "#main-content",
     );
-    expect(screen.getAllByRole("navigation", { name: "Primary navigation" })).toHaveLength(2);
+    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Mobile primary navigation" })).toBeInTheDocument();
     for (const label of ["Overview", "Equipment", "Incidents", "Live Demo", "Data Health"]) {
       expect(screen.getAllByRole("link", { name: label })).toHaveLength(2);
     }
+  });
+
+  it("moves focus to the main content after route navigation", async () => {
+    render(<App loadData={() => new Promise(() => undefined)} />);
+
+    fireEvent.click(screen.getAllByRole("link", { name: "Equipment" })[0]);
+
+    await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
   });
 
   it("updates the global filters in the URL", () => {
