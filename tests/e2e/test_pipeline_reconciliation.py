@@ -1,5 +1,7 @@
 import hashlib
 import json
+import os
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -58,3 +60,21 @@ def test_seeded_pipeline_reconciles_public_snapshot(
     assert len(replay) == 288
     assert quality["quarantine_rows"] == 0
     assert quality["bronze_rows"] == quality["silver_rows"]
+
+    browser_environment = os.environ.copy()
+    browser_environment["PORTFLOW_RECONCILIATION_DIR"] = str(output_dir)
+    npm_command = "npm.cmd" if os.name == "nt" else "npm"
+    browser_result = subprocess.run(
+        [npm_command, "test", "--", "--run", "e2e/reconciliation.spec.tsx", "--pool=forks", "--maxWorkers=1"],
+        cwd=Path(__file__).parents[2] / "web",
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=browser_environment,
+    )
+    assert browser_result.returncode == 0, (
+        "browser reconciliation failed:\n"
+        f"{browser_result.stdout}\n{browser_result.stderr}"
+    )
