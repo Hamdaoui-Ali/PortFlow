@@ -47,6 +47,7 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .filter-summary { display: flex; align-items: center; gap: 4px; margin: 0 0 12px 8px; color: var(--muted); font-size: 12px; }
 .content { padding: 52px clamp(24px, 4vw, 52px) 64px; }
 .content:focus { outline: none; }
+.content:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 .availability-panel { display: grid; grid-template-columns: 52px minmax(0, 640px); gap: 18px; max-width: 760px; padding: 32px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .availability-icon { display: grid; width: 48px; height: 48px; place-items: center; color: var(--teal); }
 .availability-icon svg { width: 38px; height: 38px; }
