@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { act, cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "../src/app/App";
 import { snapshotCache } from "../src/data/cache";
@@ -95,6 +95,7 @@ function loadThroughApp(fetcher: SnapshotFetch, failures: SnapshotLoadError[] = 
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   cleanup();
   window.history.replaceState({}, "", "/");
   snapshotCache.clear();
@@ -109,6 +110,7 @@ describe("frontend failure-state fixtures", () => {
     expect(await screen.findByRole("heading", { name: "Operational snapshot unavailable" })).toBeInTheDocument();
     expect(failures[0]?.kind).toBe("unavailable");
     expect(screen.queryByRole("region", { name: "Overview KPIs" })).not.toBeInTheDocument();
+    expect(screen.queryByText("120 moves")).not.toBeInTheDocument();
   });
 
   it("reports a malformed manifest", async () => {
@@ -117,6 +119,7 @@ describe("frontend failure-state fixtures", () => {
 
     expect(await screen.findByRole("heading", { name: "Published snapshot malformed" })).toBeInTheDocument();
     expect(failures[0]?.kind).toBe("malformed");
+    expect(screen.queryByText("120 moves")).not.toBeInTheDocument();
   });
 
   it("reports an empty overview", async () => {
@@ -126,46 +129,68 @@ describe("frontend failure-state fixtures", () => {
 
     expect(await screen.findByRole("heading", { name: "Published snapshot empty" })).toBeInTheDocument();
     expect(failures[0]?.kind).toBe("empty");
+    expect(screen.queryByText("120 moves")).not.toBeInTheDocument();
   });
 
-  it("keeps Overview usable when the optional equipment entry is missing", async () => {
+  it("shows the equipment dataset state on Equipment while preserving Overview", async () => {
     const fixtures = fullFixtures();
     const nextManifest = manifest({ datasets: { ...manifest().datasets, equipment: undefined } });
+    window.history.replaceState({}, "", "/#equipment");
     render(<App loadData={loadThroughApp(createFetcher({ ...fixtures, "manifest.json": nextManifest }))} />);
 
+    expect(await screen.findByRole("heading", { name: "Equipment dataset not published" })).toBeInTheDocument();
+    expect(screen.queryByText("120 moves")).not.toBeInTheDocument();
+    window.history.replaceState({}, "", "/#overview");
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
     expect(await screen.findByRole("region", { name: "Overview KPIs" })).toBeInTheDocument();
     expect(screen.getByText("120 moves")).toBeInTheDocument();
     const snapshot = await loadSnapshot(createFetcher({ ...fixtures, "manifest.json": nextManifest }), "/");
     expect(snapshot.equipment).toEqual({ status: "absent" });
   });
 
-  it("marks an optional incidents payload with an unexpected field malformed", async () => {
+  it("shows malformed incidents state on Incidents while preserving Overview", async () => {
     const fixtures = fullFixtures();
     const malformedIncidents = [{ ...incidents[0], unexpected: true }];
     const fetcher = createFetcher({ ...fixtures, "snapshots/test/incidents.json": malformedIncidents });
+    window.history.replaceState({}, "", "/#incidents");
     render(<App loadData={loadThroughApp(fetcher)} />);
 
+    expect(await screen.findByRole("heading", { name: "Published incident data malformed" })).toBeInTheDocument();
+    expect(screen.queryByText("120 moves")).not.toBeInTheDocument();
+    window.history.replaceState({}, "", "/#overview");
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
     expect(await screen.findByRole("region", { name: "Overview KPIs" })).toBeInTheDocument();
     expect(screen.getByText("120 moves")).toBeInTheDocument();
     expect((await loadSnapshot(fetcher, "/")).incidents).toEqual({ status: "malformed" });
   });
 
-  it("omits a malformed optional replay event while keeping Overview usable", async () => {
+  it("shows malformed replay state on Live Demo while preserving Overview", async () => {
     const malformedReplay = [{ ...replay[0], unexpected: true }];
     const fetcher = createFetcher({ ...fullFixtures(), "snapshots/test/event-replay.json": malformedReplay });
+    window.history.replaceState({}, "", "/#live-demo");
     render(<App loadData={loadThroughApp(fetcher)} />);
 
+    expect(await screen.findByRole("heading", { name: "Replay dataset not published" })).toBeInTheDocument();
+    expect(screen.queryByText("120 moves")).not.toBeInTheDocument();
+    window.history.replaceState({}, "", "/#overview");
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
     expect(await screen.findByRole("region", { name: "Overview KPIs" })).toBeInTheDocument();
     expect(screen.getByText("120 moves")).toBeInTheDocument();
     expect((await loadSnapshot(fetcher, "/")).event_replay).toBeUndefined();
   });
 
   it("shows stale data health for a manifest older than the stale threshold", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-05T00:00:00Z"));
     window.history.replaceState({}, "", "/#data-health");
     const staleManifest = manifest({ generated_at: "2026-09-03T00:00:00Z" });
     render(<App loadData={loadThroughApp(createFetcher(fullFixtures(staleManifest)))} />);
 
-    expect(await screen.findByText("Data is healthy but stale.")).toBeInTheDocument();
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    expect(screen.getByText("Data is healthy but stale.")).toBeInTheDocument();
+    expect(screen.queryByText("Data is healthy and current.")).not.toBeInTheDocument();
   });
 
   it("shows the last valid cached snapshot after the next load fails", async () => {
