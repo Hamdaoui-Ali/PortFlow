@@ -21,8 +21,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
-    exclude: process.env.PORTFLOW_RECONCILIATION_DIR
+    exclude: process.env.PORTFLOW_FAILURE_TESTS || process.env.PORTFLOW_RECONCILIATION_DIR
       ? defaultTestExclude
-      : [...defaultTestExclude, "e2e/reconciliation.spec.tsx"],
+      : [...defaultTestExclude, "e2e/reconciliation.spec.tsx", "e2e/failure-states.spec.tsx"],
   },
 });
