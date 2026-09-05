@@ -12,7 +12,7 @@ from portflow.ingestion.postgres_to_bronze import TABLE_SPECS
 VALID_REASON_CODES = (
     "SCHEMA_INVALID",
     "RANGE_INVALID",
-    "REFERENCE_MISSING",
+    "REFERENCE_INVALID",
     "TEMPORAL_INVALID",
     "DUPLICATE_KEY",
 )
@@ -20,7 +20,7 @@ VALID_REASON_CODES = (
 ReasonCode = Literal[
     "SCHEMA_INVALID",
     "RANGE_INVALID",
-    "REFERENCE_MISSING",
+    "REFERENCE_INVALID",
     "TEMPORAL_INVALID",
     "DUPLICATE_KEY",
 ]
@@ -185,7 +185,7 @@ def _reference_issues(
     for column, identifiers in checks:
         value = row.get(column)
         if isinstance(value, str) and value not in identifiers:
-            _add_issue(issues, "REFERENCE_MISSING", f"{column} {value!r} is not referenced")
+            _add_issue(issues, "REFERENCE_INVALID", f"{column} {value!r} is not referenced")
     return issues
 
 

@@ -80,11 +80,11 @@ def test_silver_reconciles_accepted_and_quarantined_rows(
     )
     assert isinstance(report, SilverRunReport)
     assert report.bronze_rows == report.silver_rows + report.quarantine_rows
-    assert report.quarantine_reason_counts == {"RANGE_INVALID": 1, "REFERENCE_MISSING": 1}
+    assert report.quarantine_reason_counts == {"RANGE_INVALID": 1, "REFERENCE_INVALID": 1}
     quarantine_path = next((tmp_path / "quarantine").rglob("*.parquet"))
     quarantine_rows = pl.read_parquet(quarantine_path).to_dicts()
     assert all(row["raw_payload"] for row in quarantine_rows)
     assert {code for row in quarantine_rows for code in row["reason_codes"]} == {
         "RANGE_INVALID",
-        "REFERENCE_MISSING",
+        "REFERENCE_INVALID",
     }

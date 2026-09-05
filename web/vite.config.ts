@@ -15,14 +15,19 @@ const defaultTestExclude = [
   "**/.{idea,git,cache,output,temp}/**",
 ];
 
+const failureTestsEnabled = process.env.PORTFLOW_FAILURE_TESTS === "1";
+const reconciliationTestsEnabled = Boolean(process.env.PORTFLOW_RECONCILIATION_DIR);
+const suiteExcludes = [
+  ...(failureTestsEnabled ? [] : ["e2e/failure-states.spec.tsx"]),
+  ...(reconciliationTestsEnabled ? [] : ["e2e/reconciliation.spec.tsx"]),
+];
+
 export default defineConfig({
   base: resolveBasePath(),
   plugins: [react()],
   test: {
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
-    exclude: process.env.PORTFLOW_RECONCILIATION_DIR
-      ? defaultTestExclude
-      : [...defaultTestExclude, "e2e/reconciliation.spec.tsx"],
+    exclude: [...defaultTestExclude, ...suiteExcludes],
   },
 });

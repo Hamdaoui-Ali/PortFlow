@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-025**. PF-024 is complete; the next task covers failure-injection recovery.
+Start **PF-026**. PF-025 is complete; the next task enforces performance budgets.
 
 ## Completed checkpoints
 
@@ -29,6 +29,7 @@ Start **PF-025**. PF-024 is complete; the next task covers failure-injection rec
 - **PF-022 Data Health:** `87fdaf5`, `39eb76a`, `c33d8e8`, `e04567e`, `7eb0264`, `a0f5e70`, and `b3aa745`.
 - **PF-023 Responsive and accessibility hardening:** `cdc44a2`, `6b39a28`, `ebd401c`, `fbd0bec`, and `bada6ef`.
 - **PF-024 Pipeline reconciliation:** `c71a147`, `fecf854`, `dda5367`, and `1f49b94`.
+- **PF-025 Failure-injection coverage:** `b6d8cbf`, `dcef4db`, `6075f7a`, `83fb59d`, and `08ad75e`.
 
 ## R0 — Verified constraints
 

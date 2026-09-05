@@ -166,7 +166,7 @@ Silver validation is explicit and machine-readable. Stable reason codes are:
 
 - SCHEMA_INVALID
 - RANGE_INVALID
-- REFERENCE_MISSING
+- REFERENCE_INVALID
 - TEMPORAL_INVALID
 - DUPLICATE_KEY
 
