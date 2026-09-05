@@ -134,6 +134,7 @@ describe("frontend failure-state fixtures", () => {
     render(<App loadData={loadThroughApp(createFetcher({ ...fixtures, "manifest.json": nextManifest }))} />);
 
     expect(await screen.findByRole("region", { name: "Overview KPIs" })).toBeInTheDocument();
+    expect(screen.getByText("120 moves")).toBeInTheDocument();
     const snapshot = await loadSnapshot(createFetcher({ ...fixtures, "manifest.json": nextManifest }), "/");
     expect(snapshot.equipment).toEqual({ status: "absent" });
   });
@@ -145,6 +146,7 @@ describe("frontend failure-state fixtures", () => {
     render(<App loadData={loadThroughApp(fetcher)} />);
 
     expect(await screen.findByRole("region", { name: "Overview KPIs" })).toBeInTheDocument();
+    expect(screen.getByText("120 moves")).toBeInTheDocument();
     expect((await loadSnapshot(fetcher, "/")).incidents).toEqual({ status: "malformed" });
   });
 
@@ -154,6 +156,7 @@ describe("frontend failure-state fixtures", () => {
     render(<App loadData={loadThroughApp(fetcher)} />);
 
     expect(await screen.findByRole("region", { name: "Overview KPIs" })).toBeInTheDocument();
+    expect(screen.getByText("120 moves")).toBeInTheDocument();
     expect((await loadSnapshot(fetcher, "/")).event_replay).toBeUndefined();
   });
 
