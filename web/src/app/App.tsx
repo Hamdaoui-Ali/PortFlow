@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import { loadSnapshot, type SnapshotFetch } from "../data/loadSnapshot";
 import { snapshotCache } from "../data/cache";
@@ -7,11 +7,20 @@ import type { SnapshotV1 } from "../data/schema";
 import { AvailabilityCard } from "../features/overview/AvailabilityCard";
 import { OverviewKpiRail } from "../features/overview/OverviewKpiRail";
 import { AvailabilityTrend } from "../features/overview/AvailabilityTrend";
-import { EquipmentPage } from "../features/equipment/EquipmentPage";
-import { IncidentPage } from "../features/incidents/IncidentPage";
-import { LiveDemoPage } from "../features/replay/LiveDemoPage";
-import { DataHealthPage } from "../features/health/DataHealthPage";
 import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
+
+const EquipmentPage = lazy(() =>
+  import("../features/equipment/EquipmentPage").then(({ EquipmentPage: page }) => ({ default: page })),
+);
+const IncidentPage = lazy(() =>
+  import("../features/incidents/IncidentPage").then(({ IncidentPage: page }) => ({ default: page })),
+);
+const LiveDemoPage = lazy(() =>
+  import("../features/replay/LiveDemoPage").then(({ LiveDemoPage: page }) => ({ default: page })),
+);
+const DataHealthPage = lazy(() =>
+  import("../features/health/DataHealthPage").then(({ DataHealthPage: page }) => ({ default: page })),
+);
 
 interface AppProps {
   loadData?: (fetcher?: SnapshotFetch, baseUrl?: string) => Promise<SnapshotV1>;
@@ -59,7 +68,9 @@ export function App({ loadData = loadSnapshot }: AppProps) {
 
   return (
     <AppShell>
-      <AppContent route={route} snapshotState={snapshotState} />
+      <Suspense fallback={<p className="data-state" role="status">Loading selected view</p>}>
+        <AppContent route={route} snapshotState={snapshotState} />
+      </Suspense>
     </AppShell>
   );
 }
