@@ -26,6 +26,10 @@ try {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     npm --prefix web run build
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    python scripts/check_budgets.py
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    npm --prefix web run lighthouse
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 } finally {
     if ($hadDatabaseUrl) {
         $env:PORTFLOW_DATABASE_URL = $previousDatabaseUrl
