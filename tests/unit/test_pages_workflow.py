@@ -24,6 +24,10 @@ def test_pages_build_uses_base_path_and_one_validated_artifact() -> None:
     triggers = _workflow_triggers(workflow)
     assert triggers["push"]["branches"] == ["main"]
     assert "workflow_dispatch" in triggers
+    assert workflow["concurrency"] == {
+        "group": "github-pages",
+        "cancel-in-progress": False,
+    }
     assert build_job["timeout-minutes"] == 15
 
     quality_step = next(step for step in steps if step["name"] == "Run complete R2 quality gate")
