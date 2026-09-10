@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-026**. PF-025 is complete; the next task enforces performance budgets.
+Start **PF-027**. PF-026 is complete; the next task builds the complete CI quality gate.
 
 ## Completed checkpoints
 
@@ -30,6 +30,7 @@ Start **PF-026**. PF-025 is complete; the next task enforces performance budgets
 - **PF-023 Responsive and accessibility hardening:** `cdc44a2`, `6b39a28`, `ebd401c`, `fbd0bec`, and `bada6ef`.
 - **PF-024 Pipeline reconciliation:** `c71a147`, `fecf854`, `dda5367`, and `1f49b94`.
 - **PF-025 Failure-injection coverage:** `b6d8cbf`, `dcef4db`, `6075f7a`, `83fb59d`, and `08ad75e`.
+- **PF-026 Performance budgets:** `15089fc`.
 
 ## R0 — Verified constraints
 
