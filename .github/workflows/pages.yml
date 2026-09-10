@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       PORTFLOW_DATABASE_URL: postgresql://portflow:portflow@localhost:5432/portflow
     services:
@@ -57,13 +57,14 @@ jobs:
           python -m uv sync --extra dev --frozen
           npm --prefix web ci
 
-      - name: Run quality gate and Pages build
+      - name: Run complete R2 quality gate
         shell: pwsh
         env:
           VITE_BASE_PATH: /PortFlow/
-        run: |
-          ./scripts/verify_r2.ps1
-          npm --prefix web run verify:pages
+        run: ./scripts/verify_r2.ps1
+
+      - name: Verify Pages artifact
+        run: npm --prefix web run verify:pages
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -74,6 +75,7 @@ jobs:
           path: web/dist
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:

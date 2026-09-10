@@ -13,6 +13,10 @@
 3. Open **Settings > Environments > github-pages** and restrict deployment branches to main.
 4. Open **Settings > Branches** (or **Rules > Rulesets**) and protect main: require a pull request and the verify CI check before merge. If the account does not offer the desired rules, keep the same review and green-CI gate as a documented manual rule.
 
+The workflow also guards the deploy job to `refs/heads/main`. A manually selected
+workflow run from another branch may build and validate an artifact, but it cannot
+publish that artifact.
+
 No repository secret, payment card, public API, or runtime server is required.
 
 ## First publication
