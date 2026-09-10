@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-027**. PF-026 is complete; the next task builds the complete CI quality gate.
+Start **PF-028**. PF-027 is complete; the next task makes GitHub Pages publication safe.
 
 ## Completed checkpoints
 
@@ -31,6 +31,7 @@ Start **PF-027**. PF-026 is complete; the next task builds the complete CI quali
 - **PF-024 Pipeline reconciliation:** `c71a147`, `fecf854`, `dda5367`, and `1f49b94`.
 - **PF-025 Failure-injection coverage:** `b6d8cbf`, `dcef4db`, `6075f7a`, `83fb59d`, and `08ad75e`.
 - **PF-026 Performance budgets:** `15089fc`.
+- **PF-027 Complete CI quality gate:** `7280b8e`.
 
 ## R0 — Verified constraints
 
@@ -531,6 +532,8 @@ Start **PF-027**. PF-026 is complete; the next task builds the complete CI quali
 **Verification:** A controlled failure in each stage blocks the workflow.
 
 **Expected result:** Main cannot publish an invalid build.
+
+**Result:** Complete in `7280b8e`; the gate enables failure-state coverage, labels each stage, preserves environment overrides, and allows the complete check to finish within the CI timeout.
 
 ### Task PF-028 — Make GitHub Pages publication safe
 
