@@ -1,8 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { App } from "./App";
+import { App, loadDefaultSnapshot } from "./App";
 import { snapshotCache } from "../data/cache";
+
+vi.mock("../data/loadSnapshot", () => ({
+  loadSnapshot: vi.fn(),
+}));
 
 const snapshot = {
   manifest: {
@@ -264,5 +268,13 @@ describe("App", () => {
 
     expect(await screen.findByRole("status", { name: "Showing last valid snapshot" })).toBeInTheDocument();
     expect(screen.getAllByText("94.4%")).toHaveLength(2);
+  });
+
+  it("loads the default snapshot through the deferred data module", async () => {
+    const { loadSnapshot } = await import("../data/loadSnapshot");
+    vi.mocked(loadSnapshot).mockResolvedValue(snapshot);
+
+    await expect(loadDefaultSnapshot()).resolves.toBe(snapshot);
+    expect(loadSnapshot).toHaveBeenCalledWith(undefined, undefined);
   });
 });

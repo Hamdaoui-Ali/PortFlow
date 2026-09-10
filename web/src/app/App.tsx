@@ -1,12 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 
-import { loadSnapshot, type SnapshotFetch } from "../data/loadSnapshot";
+import type { SnapshotFetch } from "../data/loadSnapshot";
 import { snapshotCache } from "../data/cache";
 import { SnapshotLoadError, type SnapshotFailureKind } from "../data/errors";
 import type { SnapshotV1 } from "../data/schema";
-import { AvailabilityCard } from "../features/overview/AvailabilityCard";
-import { OverviewKpiRail } from "../features/overview/OverviewKpiRail";
-import { AvailabilityTrend } from "../features/overview/AvailabilityTrend";
 import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
 
 const EquipmentPage = lazy(() =>
@@ -21,6 +18,9 @@ const LiveDemoPage = lazy(() =>
 const DataHealthPage = lazy(() =>
   import("../features/health/DataHealthPage").then(({ DataHealthPage: page }) => ({ default: page })),
 );
+const OverviewPage = lazy(() =>
+  import("../features/overview/OverviewPage").then(({ OverviewPage: page }) => ({ default: page })),
+);
 
 interface AppProps {
   loadData?: (fetcher?: SnapshotFetch, baseUrl?: string) => Promise<SnapshotV1>;
@@ -34,7 +34,15 @@ type SnapshotState =
 
 type AppRoute = "data-health" | "equipment" | "incidents" | "live-demo" | "overview";
 
-export function App({ loadData = loadSnapshot }: AppProps) {
+export async function loadDefaultSnapshot(
+  fetcher?: SnapshotFetch,
+  baseUrl?: string,
+): Promise<SnapshotV1> {
+  const { loadSnapshot } = await import("../data/loadSnapshot");
+  return loadSnapshot(fetcher, baseUrl);
+}
+
+export function App({ loadData = loadDefaultSnapshot }: AppProps) {
   const [snapshotState, setSnapshotState] = useState<SnapshotState>({ status: "loading" });
   const [route, setRoute] = useState<AppRoute>(readRoute);
 
@@ -138,42 +146,7 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
     );
   }
 
-  if (!matchesFilters(snapshot, filters)) {
-    return <>
-      {staleNotice}
-      <div className="data-state data-state-warning" role="status">
-        <h2>Snapshot unavailable for selected filters</h2>
-        <p>This published snapshot covers Casablanca Terminal and the last 24 hours only.</p>
-      </div>
-    </>;
-  }
-
-  return (
-    <>
-      {staleNotice}
-      <OverviewKpiRail overview={snapshot.overview} />
-      <section className="overview-analysis" aria-label="Terminal throughput trend">
-        <div>
-          <p className="section-kicker">Activity signal</p>
-          <h2>Terminal throughput (moves)</h2>
-          <p className="analysis-summary">The current public snapshot contains a period total, not a time-series breakdown.</p>
-        </div>
-        {snapshot.event_replay?.length ? (
-          <AvailabilityTrend events={snapshot.event_replay} />
-        ) : (
-          <div className="analysis-empty" role="status">
-            <span className="analysis-empty-line" aria-hidden="true" />
-            <strong>Trend data unavailable</strong>
-            <span>Use the period total above while the next snapshot is generated.</span>
-          </div>
-        )}
-      </section>
-      <AvailabilityCard
-        value={snapshot.overview.availability.value}
-        generatedAt={snapshot.manifest.generated_at}
-      />
-    </>
-  );
+  return <OverviewPage snapshot={snapshot} filters={filters} staleNotice={staleNotice} />;
 }
 
 function readRoute(): AppRoute {
@@ -194,9 +167,4 @@ function failureDescription(kind: SnapshotFailureKind): string {
   if (kind === "malformed") return "PortFlow could not validate the published data format.";
   if (kind === "empty") return "The published snapshot contains no scheduled operational intervals.";
   return "PortFlow could not reach the published data.";
-}
-
-function matchesFilters(snapshot: SnapshotV1, filters: AppFilters): boolean {
-  const terminalMatches = filters.terminal === "all" || filters.terminal === snapshot.overview.terminal_id;
-  return terminalMatches && filters.range === "24h";
 }

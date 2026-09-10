@@ -12,15 +12,17 @@ artifacts exactly as they are built in CI.
 | JS and CSS bundle | 400,000 bytes | Every `.js` and `.css` file below `web/dist/assets` |
 | Startup payload | 400,000 bytes | `web/dist/index.html` plus its referenced local JS and CSS |
 
-The current measured baseline is 47,057 bytes of public data, 365,574 bytes
-of JS/CSS, and 333,016 bytes of startup payload. Limits are intentionally
+The current measured baseline is 47,057 bytes of public data, 366,310 bytes
+of JS/CSS, and 224,882 bytes of startup payload. Limits are intentionally
 larger than the baseline so normal copy and fixture changes have room without
 allowing an unbounded regression.
 
 ## Runtime budgets
 
 Lighthouse CI audits the built static site with a 375px mobile viewport and
-three local runs. The median run must satisfy:
+three local runs. The audit server mounts `web/dist` below the configured
+`VITE_BASE_PATH`, so the Pages path is tested with the same asset URLs that
+production uses. The median run must satisfy:
 
 | Metric | Limit |
 |---|---:|
@@ -32,8 +34,9 @@ three local runs. The median run must satisfy:
 | Time to Interactive | 4,000 ms |
 
 The runtime audit uses the local build only and writes reports to the ignored
-`.lighthouseci/` directory. It does not require a public URL, analytics
-service, or Lighthouse CI server.
+`.lighthouseci/` directory. Collection and assertion are separate commands so
+a failed collection cannot be mistaken for a passing budget gate. It does not
+require a public URL, analytics service, or Lighthouse CI server.
 
 ## Enforcement
 

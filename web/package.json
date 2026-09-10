@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "dev": "vite",
-    "lighthouse": "lhci autorun --config=lighthouse.config.js",
+    "lighthouse": "lhci collect --config=lighthouse.config.js && lhci assert --config=lighthouse.config.js",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "verify:pages": "node scripts/verify-pages-build.mjs"
