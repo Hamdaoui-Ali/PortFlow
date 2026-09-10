@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-028**. PF-027 is complete; the next task makes GitHub Pages publication safe.
+Start **PF-029**. PF-028 is complete; the next task documents one-command reproduction.
 
 ## Completed checkpoints
 
@@ -32,6 +32,7 @@ Start **PF-028**. PF-027 is complete; the next task makes GitHub Pages publicati
 - **PF-025 Failure-injection coverage:** `b6d8cbf`, `dcef4db`, `6075f7a`, `83fb59d`, and `08ad75e`.
 - **PF-026 Performance budgets:** `15089fc`.
 - **PF-027 Complete CI quality gate:** `7280b8e`.
+- **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`.
 
 ## R0 — Verified constraints
 
@@ -552,6 +553,8 @@ Start **PF-028**. PF-027 is complete; the next task makes GitHub Pages publicati
 **Verification:** Preview paths work, failed quality gates do not deploy, and the production URL loads all assets.
 
 **Expected result:** Deployment is repeatable, static, and failure-safe.
+
+**Result:** Complete in `3296fe4` and `82a07c0`; the existing `/PortFlow/` build and artifact checks are explicit, deployment is guarded by both the `github-pages` environment and the main-branch condition, and the contract test locks the concurrency setting.
 
 ### Task PF-029 — Document one-command reproduction
 
