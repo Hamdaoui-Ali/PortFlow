@@ -7,6 +7,7 @@ from typing import Any
 
 from portflow.pipeline import run_local_pipeline
 
+
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -62,7 +63,15 @@ def test_seeded_pipeline_reconciles_public_snapshot(
     browser_environment["PORTFLOW_RECONCILIATION_DIR"] = str(output_dir)
     npm_command = "npm.cmd" if os.name == "nt" else "npm"
     browser_result = subprocess.run(
-        [npm_command, "test", "--", "--run", "e2e/reconciliation.spec.tsx", "--pool=forks", "--maxWorkers=1"],
+        [
+            npm_command,
+            "test",
+            "--",
+            "--run",
+            "e2e/reconciliation.spec.tsx",
+            "--pool=forks",
+            "--maxWorkers=1",
+        ],
         cwd=Path(__file__).parents[2] / "web",
         check=False,
         capture_output=True,

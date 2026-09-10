@@ -101,15 +101,22 @@ def test_silver_quarantines_superseded_duplicate_with_stable_reason_code(
     assert isinstance(report, SilverRunReport)
     assert report.quarantine_reason_counts == {"DUPLICATE_KEY": 1}
     assert report.bronze_rows == report.silver_rows + report.quarantine_rows
-    silver_rows = pl.read_parquet(tmp_path / "silver" / "telemetry_events" / "part.parquet").to_dicts()
+    silver_rows = pl.read_parquet(
+        tmp_path / "silver" / "telemetry_events" / "part.parquet"
+    ).to_dicts()
     assert {row["event_id"] for row in silver_rows} == {
         "evt-000042-000001",
         "evt-000042-000002",
     }
     newer_duplicate = next(row for row in silver_rows if row["event_id"] == "evt-000042-000001")
     assert newer_duplicate["load_percent"] == 75.0
-    assert next(row for row in silver_rows if row["event_id"] == "evt-000042-000002")["load_percent"] == 25.0
-    quarantine_rows = pl.read_parquet(tmp_path / "quarantine" / "telemetry_events" / "part.parquet").to_dicts()
+    assert (
+        next(row for row in silver_rows if row["event_id"] == "evt-000042-000002")["load_percent"]
+        == 25.0
+    )
+    quarantine_rows = pl.read_parquet(
+        tmp_path / "quarantine" / "telemetry_events" / "part.parquet"
+    ).to_dicts()
     assert len(quarantine_rows) == 1
     assert quarantine_rows[0]["primary_key"] == "evt-000042-000001"
     assert quarantine_rows[0]["reason_codes"] == ["DUPLICATE_KEY"]

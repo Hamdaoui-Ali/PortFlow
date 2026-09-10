@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "../src/app/App";
@@ -180,16 +180,11 @@ describe("frontend failure-state fixtures", () => {
   });
 
   it("shows stale data health for a manifest older than the stale threshold", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-09-05T00:00:00Z"));
     window.history.replaceState({}, "", "/#data-health");
-    const staleManifest = manifest({ generated_at: "2026-09-03T00:00:00Z" });
+    const staleManifest = manifest({ generated_at: "2020-01-01T00:00:00Z" });
     render(<App loadData={loadThroughApp(createFetcher(fullFixtures(staleManifest)))} />);
 
-    await act(async () => {
-      await vi.runAllTimersAsync();
-    });
-    expect(screen.getByText("Data is healthy but stale.")).toBeInTheDocument();
+    expect(await screen.findByText("Data is healthy but stale.")).toBeInTheDocument();
     expect(screen.queryByText("Data is healthy and current.")).not.toBeInTheDocument();
   });
 
