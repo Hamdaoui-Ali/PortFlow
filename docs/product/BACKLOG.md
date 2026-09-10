@@ -32,7 +32,7 @@ Start **PF-029**. PF-028 is complete; the next task documents one-command reprod
 - **PF-025 Failure-injection coverage:** `b6d8cbf`, `dcef4db`, `6075f7a`, `83fb59d`, and `08ad75e`.
 - **PF-026 Performance budgets:** `15089fc`.
 - **PF-027 Complete CI quality gate:** `7280b8e`.
-- **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`.
+- **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`, `978fa43`.
 
 ## R0 — Verified constraints
 
@@ -554,7 +554,7 @@ Start **PF-029**. PF-028 is complete; the next task documents one-command reprod
 
 **Expected result:** Deployment is repeatable, static, and failure-safe.
 
-**Result:** Complete in `3296fe4` and `82a07c0`; the existing `/PortFlow/` build and artifact checks are explicit, deployment is guarded by both the `github-pages` environment and the main-branch condition, and the contract test locks the concurrency setting.
+**Result:** Complete in `3296fe4`, `82a07c0`, and `978fa43`; the existing `/PortFlow/` build and artifact checks are explicit, deployment is guarded by both the `github-pages` environment and the main-branch condition, the contract test locks the concurrency setting, and the committed snapshot matches the current incident export contract.
 
 ### Task PF-029 — Document one-command reproduction
 
