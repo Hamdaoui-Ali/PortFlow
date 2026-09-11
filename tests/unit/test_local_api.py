@@ -1,0 +1,117 @@
+import json
+from collections.abc import Mapping
+
+from portflow.local_api import dispatch_request
+
+
+class FakeLocalDataService:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, object | None]] = []
+
+    def status(self) -> dict[str, object]:
+        self.calls.append(("status", None))
+        return {
+            "api": "ready",
+            "database": "connected",
+            "schema": "ready",
+            "pipeline": "idle",
+        }
+
+    def schema(self) -> dict[str, object]:
+        self.calls.append(("schema", None))
+        return {"tables": [{"table_name": "terminals"}]}
+
+    def seed(self) -> dict[str, object]:
+        self.calls.append(("seed", None))
+        return {"seed": 42, "row_counts": {"terminals": 1}}
+
+    def import_payload(self, payload: Mapping[str, object]) -> dict[str, object]:
+        self.calls.append(("import", payload))
+        return {"table_name": payload["table"], "inserted_count": 1, "updated_count": 0}
+
+    def refresh(self) -> dict[str, object]:
+        self.calls.append(("refresh", None))
+        return {"manifest_path": "data/manifest.json"}
+
+
+def test_dispatches_status_and_schema() -> None:
+    service = FakeLocalDataService()
+
+    status = dispatch_request(service, method="GET", path="/api/status")
+    schema = dispatch_request(service, method="GET", path="/api/schema")
+
+    assert status.status == 200
+    assert status.body["database"] == "connected"
+    assert schema.status == 200
+    assert schema.body["tables"] == [{"table_name": "terminals"}]
+    assert service.calls == [("status", None), ("schema", None)]
+
+
+def test_dispatches_seed_import_and_refresh() -> None:
+    service = FakeLocalDataService()
+    payload = {
+        "table": "terminals",
+        "records": [{"terminal_id": "TM-101"}],
+    }
+
+    seed = dispatch_request(service, method="POST", path="/api/seed", body=b"{}")
+    imported = dispatch_request(
+        service,
+        method="POST",
+        path="/api/import",
+        body=json.dumps(payload).encode("utf-8"),
+    )
+    refreshed = dispatch_request(service, method="POST", path="/api/refresh", body=b"{}")
+
+    assert seed.status == 200
+    assert imported.status == 200
+    assert imported.body["table_name"] == "terminals"
+    assert refreshed.status == 200
+    assert service.calls[1] == ("import", payload)
+
+
+def test_rejects_unknown_path_and_method() -> None:
+    service = FakeLocalDataService()
+
+    unknown = dispatch_request(service, method="GET", path="/api/not-supported")
+    method = dispatch_request(service, method="DELETE", path="/api/status")
+
+    assert unknown.status == 404
+    assert method.status == 405
+
+
+def test_rejects_malformed_json() -> None:
+    response = dispatch_request(
+        FakeLocalDataService(),
+        method="POST",
+        path="/api/import",
+        body=b"{not-json",
+    )
+
+    assert response.status == 400
+    assert response.body["error"] == "invalid_json"
+
+
+def test_rejects_oversized_body() -> None:
+    response = dispatch_request(
+        FakeLocalDataService(),
+        method="POST",
+        path="/api/seed",
+        body=b"12345",
+        max_body_bytes=4,
+    )
+
+    assert response.status == 413
+    assert response.body["error"] == "request_too_large"
+
+
+def test_rejects_non_local_origin() -> None:
+    response = dispatch_request(
+        FakeLocalDataService(),
+        method="GET",
+        path="/api/status",
+        origin="https://example.com",
+    )
+
+    assert response.status == 403
+    assert response.body["error"] == "origin_not_allowed"
