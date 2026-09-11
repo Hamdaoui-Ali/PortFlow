@@ -9,6 +9,12 @@ export function resolveBasePath(
   return environment.VITE_BASE_PATH ?? "/";
 }
 
+export function resolveLocalApiTarget(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): string {
+  return environment.PORTFLOW_LOCAL_API_TARGET ?? "http://127.0.0.1:8000";
+}
+
 const defaultTestExclude = [
   "**/node_modules/**",
   "**/dist/**",
@@ -25,6 +31,14 @@ const suiteExcludes = [
 export default defineConfig({
   base: resolveBasePath(),
   plugins: [react()],
+  server: {
+    proxy: {
+      "/api": {
+        target: resolveLocalApiTarget(),
+        changeOrigin: false,
+      },
+    },
+  },
   test: {
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
