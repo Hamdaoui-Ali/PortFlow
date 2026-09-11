@@ -7,7 +7,10 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
+
+import psycopg
+from psycopg.sql import SQL, Composed, Identifier
 
 from portflow.ingestion.postgres_to_bronze import TABLE_SPECS
 from portflow.quality.rules import ReferenceSet, ValidationIssue, validate_row
@@ -337,3 +340,90 @@ def validate_records(
     """Return quality-rule issues after JSON normalization."""
     normalized = normalize_records(table_name, records)
     return _validate_normalized_records(table_name, normalized, reference_set)
+
+
+def load_reference_set(connection: psycopg.Connection[Any]) -> ReferenceSet:
+    """Read the current foreign-key identifiers used by quality validation."""
+    with connection.cursor() as cursor:
+        cursor.execute("select terminal_id from terminals")
+        terminal_ids = frozenset(str(row[0]) for row in cursor.fetchall())
+        cursor.execute("select equipment_id from equipment")
+        equipment_ids = frozenset(str(row[0]) for row in cursor.fetchall())
+    return ReferenceSet(terminal_ids=terminal_ids, equipment_ids=equipment_ids)
+
+
+def _existing_keys(
+    connection: psycopg.Connection[Any],
+    *,
+    table_name: str,
+    primary_key: str,
+    keys: Sequence[str],
+) -> frozenset[str]:
+    if not keys:
+        return frozenset()
+    statement = SQL("select {} from {} where {} = any(%s)").format(
+        Identifier(primary_key),
+        Identifier(table_name),
+        Identifier(primary_key),
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(statement, (list(keys),))
+        return frozenset(str(row[0]) for row in cursor.fetchall())
+
+
+def _upsert_statement(table_name: str) -> Composed:
+    table_spec = TABLE_SPECS[table_name]
+    columns = table_spec.columns
+    column_sql = SQL(", ").join(Identifier(column) for column in columns)
+    placeholders = SQL(", ").join(SQL("%s") for _ in columns)
+    updates = SQL(", ").join(
+        SQL("{} = excluded.{}").format(Identifier(column), Identifier(column))
+        for column in columns
+        if column != table_spec.primary_key
+    )
+    return SQL(
+        "insert into {} ({}) values ({}) on conflict ({}) do update set {}"
+    ).format(
+        Identifier(table_name),
+        column_sql,
+        placeholders,
+        Identifier(table_spec.primary_key),
+        updates,
+    )
+
+
+def import_records(
+    connection: psycopg.Connection[Any],
+    *,
+    table_name: str,
+    records: Sequence[Mapping[str, object]],
+) -> ImportReport:
+    """Validate and upsert one allow-listed table in one transaction."""
+    schema = _table_schema(table_name)
+    normalized = normalize_records(table_name, records)
+    with connection.transaction():
+        reference_set = load_reference_set(connection)
+    quality_issues = _validate_normalized_records(table_name, normalized, reference_set)
+    if quality_issues:
+        raise ImportValidationError(quality_issues)
+
+    primary_key = schema.primary_key
+    keys = [str(record[primary_key]) for record in normalized]
+    with connection.transaction():
+        existing_keys = _existing_keys(
+            connection,
+            table_name=table_name,
+            primary_key=primary_key,
+            keys=keys,
+        )
+        statement = _upsert_statement(table_name)
+        values = [tuple(record[column.name] for column in schema.columns) for record in normalized]
+        with connection.cursor() as cursor:
+            cursor.executemany(statement, values)
+
+    return ImportReport(
+        table_name=table_name,
+        received_count=len(normalized),
+        inserted_count=sum(key not in existing_keys for key in keys),
+        updated_count=sum(key in existing_keys for key in keys),
+    )
