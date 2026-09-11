@@ -4,6 +4,7 @@ import type { ManifestV1, QualityDatasetState } from "../../data/schema";
 import { HealthEvidence } from "./HealthEvidence";
 import { HealthKpiRail } from "./HealthKpiRail";
 import { HealthStatus } from "./HealthStatus";
+import { LocalDataWorkspace } from "./LocalDataWorkspace";
 import { deriveHealthViewModel } from "./healthPresentation";
 
 interface DataHealthPageProps {
@@ -27,6 +28,7 @@ export function DataHealthPage({ manifest, quality = { status: "absent" }, stale
       <HealthStatus model={model} />
       <HealthKpiRail model={model} />
       <HealthEvidence model={model} />
+      <LocalDataWorkspace />
     </section>
   );
 }
