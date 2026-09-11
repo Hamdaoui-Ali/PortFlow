@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-029**. PF-028 is complete; the next task documents one-command reproduction.
+Start **PF-030**. PF-029 is complete; the next task is the final V1 release gate.
 
 ## Completed checkpoints
 
@@ -33,6 +33,7 @@ Start **PF-029**. PF-028 is complete; the next task documents one-command reprod
 - **PF-026 Performance budgets:** `15089fc`.
 - **PF-027 Complete CI quality gate:** `7280b8e`.
 - **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`, `978fa43`.
+- **PF-029 Local data workspace and navigation reliability:** `f5312ad`, `7325f4d`, `85e17dc`, `24b4b21`, `9f19551`, and `827d8d7`; deterministic menu routing, a loopback-only local API, schema-allowlisted transactional JSON imports, Data Health controls, a Vite proxy, and a complete local runbook are delivered. Unit, static, frontend, build, Pages-path, and browser checks pass. The real PostgreSQL integration check is included but could not run in this environment because Docker Desktop's Linux engine was unavailable.
 
 ## R0 — Verified constraints
 
