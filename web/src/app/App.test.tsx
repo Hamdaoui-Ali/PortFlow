@@ -73,6 +73,32 @@ describe("App", () => {
     await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
   });
 
+  it("renders the selected page in the same navigation interaction", async () => {
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      equipment: {
+        status: "ready" as const,
+        records: [],
+      },
+    })} />);
+
+    expect(await screen.findByText("Terminal throughput (moves)")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("link", { name: "Equipment" })[0]);
+
+    expect(screen.getByRole("heading", { name: "Equipment fleet" })).toBeInTheDocument();
+    expect(screen.queryByText("Loading selected view")).not.toBeInTheDocument();
+  });
+
+  it("preserves the active route when global filters change", () => {
+    window.history.replaceState({}, "", "/?terminal=TM-001#equipment");
+    render(<App loadData={() => new Promise(() => undefined)} />);
+
+    fireEvent.change(screen.getByLabelText("Date range"), { target: { value: "7d" } });
+
+    expect(window.location.search).toBe("?terminal=TM-001&range=7d");
+    expect(window.location.hash).toBe("#equipment");
+  });
+
   it("updates the global filters in the URL", () => {
     window.history.replaceState({}, "", "/");
     render(<App loadData={() => new Promise(() => undefined)} />);

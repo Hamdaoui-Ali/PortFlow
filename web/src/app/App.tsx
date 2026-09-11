@@ -1,26 +1,15 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { SnapshotFetch } from "../data/loadSnapshot";
 import { snapshotCache } from "../data/cache";
 import { SnapshotLoadError, type SnapshotFailureKind } from "../data/errors";
 import type { SnapshotV1 } from "../data/schema";
+import { DataHealthPage } from "../features/health/DataHealthPage";
+import { EquipmentPage } from "../features/equipment/EquipmentPage";
+import { IncidentPage } from "../features/incidents/IncidentPage";
+import { LiveDemoPage } from "../features/replay/LiveDemoPage";
+import { OverviewPage } from "../features/overview/OverviewPage";
 import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
-
-const EquipmentPage = lazy(() =>
-  import("../features/equipment/EquipmentPage").then(({ EquipmentPage: page }) => ({ default: page })),
-);
-const IncidentPage = lazy(() =>
-  import("../features/incidents/IncidentPage").then(({ IncidentPage: page }) => ({ default: page })),
-);
-const LiveDemoPage = lazy(() =>
-  import("../features/replay/LiveDemoPage").then(({ LiveDemoPage: page }) => ({ default: page })),
-);
-const DataHealthPage = lazy(() =>
-  import("../features/health/DataHealthPage").then(({ DataHealthPage: page }) => ({ default: page })),
-);
-const OverviewPage = lazy(() =>
-  import("../features/overview/OverviewPage").then(({ OverviewPage: page }) => ({ default: page })),
-);
 
 interface AppProps {
   loadData?: (fetcher?: SnapshotFetch, baseUrl?: string) => Promise<SnapshotV1>;
@@ -75,10 +64,8 @@ export function App({ loadData = loadDefaultSnapshot }: AppProps) {
   }, []);
 
   return (
-    <AppShell>
-      <Suspense fallback={<p className="data-state" role="status">Loading selected view</p>}>
-        <AppContent route={route} snapshotState={snapshotState} />
-      </Suspense>
+    <AppShell onNavigate={(hash) => setRoute(readRoute(hash))}>
+      <AppContent route={route} snapshotState={snapshotState} />
     </AppShell>
   );
 }
@@ -149,11 +136,11 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
   return <OverviewPage snapshot={snapshot} filters={filters} staleNotice={staleNotice} />;
 }
 
-function readRoute(): AppRoute {
-  if (window.location.hash === "#equipment") return "equipment";
-  if (window.location.hash === "#incidents") return "incidents";
-  if (window.location.hash === "#live-demo") return "live-demo";
-  if (window.location.hash === "#data-health") return "data-health";
+function readRoute(hash = window.location.hash): AppRoute {
+  if (hash === "#equipment") return "equipment";
+  if (hash === "#incidents") return "incidents";
+  if (hash === "#live-demo") return "live-demo";
+  if (hash === "#data-health") return "data-health";
   return "overview";
 }
 

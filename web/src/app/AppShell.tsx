@@ -36,6 +36,7 @@ const rangeOptions = [
 
 interface AppShellProps {
   children: ReactNode;
+  onNavigate?: (hash: string) => void;
 }
 
 export interface AppFilters {
@@ -54,7 +55,7 @@ function readFilter(name: string, fallback: string): string {
   return new URLSearchParams(window.location.search).get(name) ?? fallback;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, onNavigate }: AppShellProps) {
   const mainRef = useRef<HTMLElement>(null);
   const [terminal, setTerminal] = useState(() => readFilter("terminal", "all"));
   const [range, setRange] = useState(() => readFilter("range", "24h"));
@@ -70,7 +71,12 @@ export function AppShell({ children }: AppShellProps) {
     if (nextTerminal !== "all") params.set("terminal", nextTerminal);
     if (nextRange !== "24h") params.set("range", nextRange);
     const query = params.toString();
-    window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    const hash = window.location.hash;
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${hash}`,
+    );
   };
 
   const selectedTerminal = useMemo(
@@ -103,7 +109,7 @@ export function AppShell({ children }: AppShellProps) {
           <img src={`${import.meta.env.BASE_URL}brand/portflow-mark.png`} alt="" />
           <span>{APP_NAME}</span>
         </a>
-        <Navigation variant="desktop" />
+        <Navigation variant="desktop" onNavigate={onNavigate} />
         <div className="sidebar-footer">
           <Database size={16} aria-hidden="true" />
           <span>Static snapshot</span>
@@ -145,19 +151,31 @@ export function AppShell({ children }: AppShellProps) {
         <main ref={mainRef} id="main-content" className="content" tabIndex={-1}>
           {children}
         </main>
-        <div className="mobile-navigation"><Navigation variant="mobile" /></div>
+        <div className="mobile-navigation"><Navigation variant="mobile" onNavigate={onNavigate} /></div>
       </div>
       </div>
     </AppFiltersContext.Provider>
   );
 }
 
-function Navigation({ variant }: { variant: "desktop" | "mobile" }) {
+function Navigation({
+  variant,
+  onNavigate,
+}: {
+  variant: "desktop" | "mobile";
+  onNavigate?: (hash: string) => void;
+}) {
   const activeHref = window.location.hash || "#overview";
   return (
     <nav className={`primary-navigation primary-navigation-${variant}`} aria-label={variant === "desktop" ? "Primary navigation" : "Mobile primary navigation"}>
       {navItems.map(({ label, href, icon: Icon }) => (
-        <a key={label} className={href === activeHref ? "nav-link nav-link-active" : "nav-link"} href={href} aria-current={href === activeHref ? "page" : undefined}>
+        <a
+          key={label}
+          className={href === activeHref ? "nav-link nav-link-active" : "nav-link"}
+          href={href}
+          onClick={() => onNavigate?.(href)}
+          aria-current={href === activeHref ? "page" : undefined}
+        >
           <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
           <span>{label}</span>
         </a>
