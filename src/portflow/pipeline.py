@@ -54,6 +54,7 @@ def run_local_pipeline(
     database_url: str,
     output_dir: Path,
     seed: int = 42,
+    connect_timeout: int | None = None,
 ) -> Path:
     """Run migrations, seed, Bronze, Silver, Gold, and atomic public export."""
     repository_root = _repository_root()
@@ -69,7 +70,7 @@ def run_local_pipeline(
         cursor_store = CursorStore(work_dir / "state" / "cursors.json")
 
         try:
-            with get_connection(database_url) as connection:
+            with get_connection(database_url, connect_timeout=connect_timeout) as connection:
                 apply_migrations(connection, repository_root / "db" / "migrations")
                 seed_operational(connection, seed=seed)
                 for table_name in TABLE_SPECS:

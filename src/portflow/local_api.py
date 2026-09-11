@@ -40,6 +40,7 @@ class LocalApiConfig:
     output_dir: Path
     port: int = 8000
     max_body_bytes: int = 2_000_000
+    database_connect_timeout_seconds: int = 3
     allowed_origins: frozenset[str] = DEFAULT_ALLOWED_ORIGINS
 
 
@@ -116,7 +117,10 @@ class PostgresLocalDataService:
     def status(self) -> dict[str, object]:
         pipeline_state, pipeline_message = self._pipeline_status()
         try:
-            with get_connection(self._config.database_url) as connection:
+            with get_connection(
+                self._config.database_url,
+                connect_timeout=self._config.database_connect_timeout_seconds,
+            ) as connection:
                 row = connection.execute(
                     "select to_regclass('public.terminals')"
                 ).fetchone()
@@ -145,7 +149,10 @@ class PostgresLocalDataService:
 
     def seed(self) -> dict[str, object]:
         repository_root = _repository_root()
-        with get_connection(self._config.database_url) as connection:
+        with get_connection(
+            self._config.database_url,
+            connect_timeout=self._config.database_connect_timeout_seconds,
+        ) as connection:
             apply_migrations(connection, repository_root / "db" / "migrations")
             report = seed_operational(connection, seed=42)
         return {
@@ -166,7 +173,10 @@ class PostgresLocalDataService:
 
         records = cast(list[Mapping[str, object]], records_value)
         repository_root = _repository_root()
-        with get_connection(self._config.database_url) as connection:
+        with get_connection(
+            self._config.database_url,
+            connect_timeout=self._config.database_connect_timeout_seconds,
+        ) as connection:
             apply_migrations(connection, repository_root / "db" / "migrations")
             report = import_records(
                 connection,
@@ -185,6 +195,7 @@ class PostgresLocalDataService:
             manifest_path = run_local_pipeline(
                 database_url=self._config.database_url,
                 output_dir=self._config.output_dir,
+                connect_timeout=self._config.database_connect_timeout_seconds,
             )
             with self._state_lock:
                 self._pipeline_state = "idle"

@@ -1,7 +1,14 @@
 import json
 from collections.abc import Mapping
+from pathlib import Path
 
-from portflow.local_api import dispatch_request
+import psycopg
+
+from portflow.local_api import (
+    LocalApiConfig,
+    PostgresLocalDataService,
+    dispatch_request,
+)
 
 
 class FakeLocalDataService:
@@ -115,3 +122,28 @@ def test_rejects_non_local_origin() -> None:
 
     assert response.status == 403
     assert response.body["error"] == "origin_not_allowed"
+
+
+def test_postgres_status_uses_bounded_connection(monkeypatch) -> None:
+    calls: list[tuple[str, int | None]] = []
+
+    def fail_get_connection(
+        database_url: str,
+        *,
+        connect_timeout: int | None = None,
+    ) -> object:
+        calls.append((database_url, connect_timeout))
+        raise psycopg.OperationalError("offline")
+
+    monkeypatch.setattr("portflow.local_api.get_connection", fail_get_connection)
+    service = PostgresLocalDataService(
+        LocalApiConfig(
+            database_url="postgresql://offline",
+            output_dir=Path("data"),
+        )
+    )
+
+    response = service.status()
+
+    assert response["database"] == "unavailable"
+    assert calls == [("postgresql://offline", 3)]
