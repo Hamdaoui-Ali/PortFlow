@@ -12,7 +12,7 @@ REQUIRED_COMMANDS = (
     "pytest",
     "ruff check .",
     "mypy src",
-    "npm --prefix web test -- --run --maxWorkers=2",
+    "npm --prefix web test -- --run --maxWorkers=1",
     "npm --prefix web run typecheck",
     "npm --prefix web run build",
     "scripts/check_budgets.py",

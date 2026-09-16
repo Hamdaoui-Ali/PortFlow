@@ -104,6 +104,7 @@ export function EquipmentTable({
                     {column.key === "equipment_id" ? (
                       <button
                         type="button"
+                        id={`equipment-link-${record.equipment_id}`}
                         aria-label={`Open equipment ${record.equipment_id}`}
                         onClick={() => onSelect(record.equipment_id)}
                       >

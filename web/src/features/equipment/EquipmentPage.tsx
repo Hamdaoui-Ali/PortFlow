@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { AppFilters } from "../../app/AppShell";
 import type { EquipmentDatasetState } from "../../data/schema";
@@ -20,6 +20,15 @@ const equipmentUrlKeys = ["search", "sort", "direction", "equipment"] as const;
 
 export function EquipmentPage({ dataset, filters }: EquipmentPageProps) {
   const [urlState, setUrlState] = useState(() => readEquipmentUrlState(window.location.search));
+  const returnFocusId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!urlState.equipmentId && returnFocusId.current) {
+      const returnTarget = document.getElementById(`equipment-link-${returnFocusId.current}`);
+      (returnTarget ?? document.getElementById("equipment-page-title"))?.focus();
+      returnFocusId.current = null;
+    }
+  }, [urlState.equipmentId]);
 
   useEffect(() => {
     const restoreUrlState = () => setUrlState(readEquipmentUrlState(window.location.search));
@@ -91,7 +100,10 @@ export function EquipmentPage({ dataset, filters }: EquipmentPageProps) {
         direction={urlState.direction}
         onQueryChange={(query) => updateUrlState({ ...urlState, query }, "replace")}
         onSortChange={handleSortChange}
-        onSelect={(equipmentId) => updateUrlState({ ...urlState, equipmentId }, "push")}
+        onSelect={(equipmentId) => {
+          returnFocusId.current = equipmentId;
+          updateUrlState({ ...urlState, equipmentId }, "push");
+        }}
       />
       {visibleRecords.length === 0 ? (
         <div className="data-state data-state-warning" role="status" aria-label="No matching equipment">
