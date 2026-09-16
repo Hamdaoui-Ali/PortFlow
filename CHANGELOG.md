@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased - 2026-09-16
+## PortFlow V1 - 2026-09-16
 
-PortFlow remains unreleased while the expected GitHub Pages URL is being provisioned. The local PF-030 gate is green, but `https://hamdaoui-ali.github.io/PortFlow/` and its required assets/data paths currently return HTTP 404.
+PortFlow V1 is published at `https://hamdaoui-ali.github.io/PortFlow/`. The merged `main` commit passed CI and
+the GitHub Actions Pages workflow completed both its build and deploy jobs.
 
-### Included in this candidate
+### Included in V1
 
 - Static operations control-tower views for Overview, Equipment, Incidents, Live Demo, and Data Health.
 - A deterministic local PostgreSQL, validation, reconciliation, and snapshot-export pipeline.
@@ -19,6 +20,10 @@ PortFlow remains unreleased while the expected GitHub Pages URL is being provisi
 - 69 Python tests passed.
 - 189 frontend tests passed, including failure-state, trend-label, and equipment-focus coverage.
 - Ruff, mypy, TypeScript, Pages-path verification, byte budgets, and three Lighthouse runs passed.
+- The public root, hashed assets, manifest, versioned datasets, and brand mark returned HTTP 200.
+- The published overview displayed the simulated-data disclosure and 94.4% equipment availability.
+- Public route checks passed for Overview, Equipment, Incidents, Live Demo, and Data Health.
+- Reduced-motion emulation disabled live motion styles while the replay still entered its playing state.
 
 ### Known boundaries
 
@@ -26,4 +31,5 @@ PortFlow remains unreleased while the expected GitHub Pages URL is being provisi
 - No production runtime backend, live commercial feed, public write API, authentication, or public database is included.
 - The local API remains loopback-only and PostgreSQL remains disposable local/CI state.
 - The committed `demo-v2` snapshot is stale relative to the evidence date.
-- PF-030 stays open until GitHub Pages returns HTTP 200 for the page, hashed assets, manifest, datasets, and brand mark.
+- The repository's `main` branch protection rules remain a separate hardening follow-up; the Pages environment and
+  deploy job are restricted to `main`.
