@@ -20,7 +20,8 @@
 
 ## Current next action
 
-Start **PF-030**. PF-029 is complete; the next task is the final V1 release gate.
+Configure the documented pull-request and green-CI protection rule for `main`, then start **PF-101**. PF-030 is
+complete and PortFlow V1 is published.
 
 ## Completed checkpoints
 
@@ -34,6 +35,7 @@ Start **PF-030**. PF-029 is complete; the next task is the final V1 release gate
 - **PF-027 Complete CI quality gate:** `7280b8e`.
 - **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`, `978fa43`.
 - **PF-029 Local data workspace and navigation reliability:** `f5312ad`, `7325f4d`, `85e17dc`, `24b4b21`, `9f19551`, `827d8d7`, and `d310109`; deterministic menu routing, a loopback-only local API, schema-allowlisted transactional JSON imports, bounded database waits, Data Health controls, a Vite proxy, and a complete local runbook are delivered. Unit, static, frontend, build, Pages-path, and browser checks pass. The real PostgreSQL integration check is included but could not run in this environment because Docker Desktop's Linux engine was unavailable.
+- **PF-030 V1 release gate:** `4156222` and merged release commit `c735701`; local quality gates, public HTTP 200 checks, public route checks, responsive/accessibility evidence, reduced-motion emulation, and GitHub Actions Pages publication all pass.
 
 ## R0 — Verified constraints
 
@@ -592,6 +594,10 @@ Start **PF-030**. PF-029 is complete; the next task is the final V1 release gate
 **Verification:** Every checklist item has a passing result or V1 remains incomplete.
 
 **Expected result:** PortFlow V1 has an auditable release record.
+
+**Result:** Complete in `c735701`; the release record is passing and the published site is available at
+`https://hamdaoui-ali.github.io/PortFlow/`. Main branch protection remains a separate repository-hardening
+follow-up.
 
 ## Post-V1 backlog
 
