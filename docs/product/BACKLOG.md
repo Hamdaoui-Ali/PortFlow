@@ -20,8 +20,8 @@
 
 ## Current next action
 
-Configure the documented pull-request and green-CI protection rule for `main`, then start **PF-101**. PF-030 is
-complete and PortFlow V1 is published.
+Start **PF-101**. PF-030 is complete, PortFlow V1 is published, and the documented pull-request and green-CI
+protection rule is configured for `main`.
 
 ## Completed checkpoints
 
@@ -36,6 +36,7 @@ complete and PortFlow V1 is published.
 - **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`, `978fa43`.
 - **PF-029 Local data workspace and navigation reliability:** `f5312ad`, `7325f4d`, `85e17dc`, `24b4b21`, `9f19551`, `827d8d7`, and `d310109`; deterministic menu routing, a loopback-only local API, schema-allowlisted transactional JSON imports, bounded database waits, Data Health controls, a Vite proxy, and a complete local runbook are delivered. Unit, static, frontend, build, Pages-path, and browser checks pass. The real PostgreSQL integration check is included but could not run in this environment because Docker Desktop's Linux engine was unavailable.
 - **PF-030 V1 release gate:** `4156222` and merged release commit `c735701`; local quality gates, public HTTP 200 checks, public route checks, responsive/accessibility evidence, reduced-motion emulation, and GitHub Actions Pages publication all pass.
+- **PF-031 Main branch protection:** configured on 2026-09-16 as a classic rule matching `main`; pull requests and the `verify` status check are required, with no human approval-count requirement and no force-push or deletion bypass.
 
 ## R0 — Verified constraints
 
@@ -596,8 +597,26 @@ complete and PortFlow V1 is published.
 **Expected result:** PortFlow V1 has an auditable release record.
 
 **Result:** Complete in `c735701`; the release record is passing and the published site is available at
-`https://hamdaoui-ali.github.io/PortFlow/`. Main branch protection remains a separate repository-hardening
-follow-up.
+`https://hamdaoui-ali.github.io/PortFlow/`. Main branch protection is tracked separately in PF-031.
+
+### Task PF-031 — Protect main with pull-request and green-CI rules
+
+**Priority:** P1
+
+**Dependencies:** PF-030
+
+**Goal:** Prevent direct changes to `main` from bypassing the reviewed pull-request and CI gate.
+
+**Action:** Configure the documented classic branch protection rule for `main`: require a pull request and the
+GitHub Actions `verify` status check before merge, without requiring a human approval count; keep force pushes and
+deletions disabled.
+
+**Verification:** Confirm the saved rule in **Settings > Branches** and record the live configuration in the release
+checklist.
+
+**Expected result:** Every future change to `main` follows a pull request and a green `verify` check.
+
+**Result:** Complete on 2026-09-16. The saved rule applies to 1 branch and matches the documented configuration.
 
 ## Post-V1 backlog
 
