@@ -35,7 +35,7 @@ try {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     Write-Host "==> Run frontend tests (including failure states)"
-    npm --prefix web test -- --run --maxWorkers=2
+    npm --prefix web test -- --run --maxWorkers=1
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     Write-Host "==> Typecheck frontend"

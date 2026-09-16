@@ -142,6 +142,7 @@ describe("EquipmentPage", () => {
     expect(screen.getByRole("searchbox", { name: "Search equipment ID" })).toHaveValue("QC");
     expect(screen.getByRole("columnheader", { name: "Availability" }))
       .toHaveAttribute("aria-sort", "descending");
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Open equipment QC-001" }));
     expect(new URLSearchParams(window.location.search).has("equipment")).toBe(false);
   });
 

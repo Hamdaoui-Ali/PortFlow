@@ -17,14 +17,20 @@ export function AvailabilityTrend({ events }: AvailabilityTrendProps) {
   return (
     <div className="availability-trend">
       <div className="trend-chart" role="img" aria-label={`Hourly availability trend. ${summary}`}>
-        {points.map((point) => (
-          <div className="trend-point" key={point.label}>
-            <div className="trend-bar-track">
-              <div className="trend-bar" style={{ height: `${Math.max(point.value * 100, 2)}%` }} />
+        {points.map((point, pointIndex) => {
+          const isCheckpoint = pointIndex % 4 === 0 || pointIndex === points.length - 1;
+
+          return (
+            <div className="trend-point" key={point.label}>
+              <div className="trend-bar-track">
+                <div className="trend-bar" style={{ height: `${Math.max(point.value * 100, 2)}%` }} />
+              </div>
+              <span className={isCheckpoint ? "trend-label-visible" : "trend-label-hidden"}>
+                {point.label}
+              </span>
             </div>
-            <span>{point.label}</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <p className="trend-summary">{summary}</p>
     </div>
