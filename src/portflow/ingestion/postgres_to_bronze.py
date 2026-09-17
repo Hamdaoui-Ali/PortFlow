@@ -1,6 +1,7 @@
 """Incremental PostgreSQL extraction into immutable Bronze Parquet partitions."""
 
 import hashlib
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -10,6 +11,7 @@ import polars as pl
 import psycopg
 from psycopg.sql import SQL, Identifier
 
+from portflow.domain.models import TelemetryEvent
 from portflow.ingestion.cursor import CursorStore, SourceCursor
 
 _EPOCH_UTC = datetime(1970, 1, 1, tzinfo=UTC)
@@ -135,6 +137,16 @@ class ExtractionResult:
     partition_path: Path | None
     content_sha256: str | None
     next_cursor: SourceCursor | None
+
+
+@dataclass(frozen=True, slots=True)
+class StreamBronzeWriteResult:
+    """Outcome of writing one streaming telemetry batch to Bronze."""
+
+    table_name: str
+    row_count: int
+    partition_path: Path
+    content_sha256: str
 
 
 def _source_cursor(value: object, primary_key: object) -> SourceCursor:
@@ -268,6 +280,54 @@ def _existing_partition_summary(bronze_dir: Path, table_name: str) -> tuple[int,
             for chunk in iter(lambda: handle.read(1024 * 1024), b""):
                 digest.update(chunk)
     return logical_row_count, digest.hexdigest()
+
+
+def write_telemetry_bronze_batch(
+    events: Sequence[TelemetryEvent],
+    *,
+    bronze_dir: Path,
+    run_id: str,
+) -> StreamBronzeWriteResult:
+    """Write a deterministic streaming telemetry batch using the Bronze writer."""
+    if not events:
+        raise ValueError("events must not be empty")
+    if not run_id:
+        raise ValueError("run_id must not be empty")
+
+    ordered_events = sorted(events, key=lambda event: (event.ingestion_timestamp, event.event_id))
+    spec = TABLE_SPECS["telemetry_events"]
+    rows = [
+        (
+            event.event_id,
+            event.schema_version,
+            event.equipment_id,
+            event.terminal_id,
+            event.event_timestamp,
+            event.ingestion_timestamp,
+            event.state.value,
+            event.available,
+            event.load_percent,
+            event.temperature_c,
+            event.ingestion_timestamp,
+            event.ingestion_timestamp,
+        )
+        for event in ordered_events
+    ]
+    final_event = ordered_events[-1]
+    next_cursor = SourceCursor(final_event.ingestion_timestamp, final_event.event_id)
+    partition_path, content_sha256 = _write_batch(
+        rows,
+        spec=spec,
+        bronze_dir=bronze_dir,
+        run_id=run_id,
+        next_cursor=next_cursor,
+    )
+    return StreamBronzeWriteResult(
+        table_name=spec.table_name,
+        row_count=len(rows),
+        partition_path=partition_path,
+        content_sha256=content_sha256,
+    )
 
 
 def extract_table(
