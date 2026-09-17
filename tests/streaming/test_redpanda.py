@@ -20,7 +20,7 @@ pytestmark = [
     pytest.mark.redpanda,
     pytest.mark.skipif(
         not os.environ.get("PORTFLOW_REDPANDA_BROKERS"),
-        reason="PORTFLOW_REDPANDA_BROKERS is not set",
+        reason="PORTFLOW_REDPANDA_BROKERS is not set; start the streaming Compose profile",
     ),
 ]
 

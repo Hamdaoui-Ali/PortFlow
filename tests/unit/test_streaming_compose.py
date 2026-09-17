@@ -23,6 +23,19 @@ def test_compose_keeps_redpanda_opt_in() -> None:
     assert "--advertise-kafka-addr" in compose
 
 
+def test_streaming_cleanup_is_scoped_to_redpanda() -> None:
+    script = (REPOSITORY_ROOT / "scripts" / "verify_streaming.ps1").read_text(
+        encoding="utf-8"
+    )
+    runbook = (REPOSITORY_ROOT / "docs" / "runbooks" / "local-streaming.md").read_text(
+        encoding="utf-8"
+    )
+    cleanup = "docker compose --profile streaming down -v redpanda"
+
+    assert cleanup in script
+    assert cleanup in runbook
+
+
 def test_producer_runner_forwards_seed_and_count(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -152,3 +165,39 @@ def test_consumer_runner_forwards_max_messages_run_id_and_bronze_dir(
 def test_consumer_runner_requires_positive_max_messages() -> None:
     with pytest.raises(SystemExit):
         run_stream_consumer.main(["--max-messages", "0"])
+
+
+def test_consumer_runner_uses_safe_default_for_empty_bronze_dir(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+    config = StreamingConfig("localhost:19092", "portflow.telemetry", "portflow-bronze", 50)
+
+    def fake_config() -> StreamingConfig:
+        return config
+
+    def fake_create(received_config: StreamingConfig) -> object:
+        assert received_config == config
+        return object()
+
+    def fake_consume(
+        consumer: object,
+        *,
+        topic: str,
+        bronze_dir: Path,
+        run_id: str,
+        batch_size: int,
+        max_messages: int,
+    ) -> ConsumeReport:
+        del consumer, topic, run_id, batch_size, max_messages
+        captured["bronze_dir"] = bronze_dir
+        return ConsumeReport(1, 1, 1, 1)
+
+    monkeypatch.setenv("PORTFLOW_STREAM_BRONZE_DIR", "")
+    monkeypatch.setattr(run_stream_consumer.StreamingConfig, "from_env", fake_config)
+    monkeypatch.setattr(run_stream_consumer, "create_consumer", fake_create)
+    monkeypatch.setattr(run_stream_consumer, "consume_telemetry_stream", fake_consume)
+
+    run_stream_consumer.main(["--max-messages", "1"])
+
+    assert captured["bronze_dir"] == Path("data/bronze-stream")

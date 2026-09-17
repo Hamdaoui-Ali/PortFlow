@@ -15,10 +15,11 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--max-messages", type=_positive_int, required=True)
     parser.add_argument("--run-id", default="stream-run-000042")
+    default_bronze_dir = os.environ.get("PORTFLOW_STREAM_BRONZE_DIR") or "data/bronze-stream"
     parser.add_argument(
         "--bronze-dir",
         type=Path,
-        default=Path(os.environ.get("PORTFLOW_STREAM_BRONZE_DIR", "data/bronze-stream")),
+        default=Path(default_bronze_dir),
     )
     args = parser.parse_args(argv)
 

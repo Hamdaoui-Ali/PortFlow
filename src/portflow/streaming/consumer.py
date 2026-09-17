@@ -80,7 +80,7 @@ def consume_telemetry_stream(
     """Consume, publish, and synchronously commit bounded telemetry batches."""
     if not topic:
         raise ValueError("topic must not be empty")
-    if not run_id:
+    if not run_id.strip():
         raise ValueError("run_id must not be empty")
     if batch_size <= 0:
         raise ValueError("batch_size must be greater than zero")

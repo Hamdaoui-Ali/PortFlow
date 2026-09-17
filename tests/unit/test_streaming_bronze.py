@@ -89,3 +89,14 @@ def test_rejects_empty_events_and_run_id(
         )
 
     assert not list((tmp_path / "bronze").rglob("*.parquet"))
+
+
+def test_rejects_whitespace_run_id(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="run_id"):
+        write_telemetry_bronze_batch(
+            [event("evt-000042-000001", 0)],
+            bronze_dir=tmp_path / "bronze",
+            run_id="   ",
+        )
+
+    assert not list((tmp_path / "bronze").rglob("*.parquet"))

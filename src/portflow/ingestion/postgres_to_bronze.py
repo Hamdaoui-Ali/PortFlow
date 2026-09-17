@@ -291,7 +291,7 @@ def write_telemetry_bronze_batch(
     """Write a deterministic streaming telemetry batch using the Bronze writer."""
     if not events:
         raise ValueError("events must not be empty")
-    if not run_id:
+    if not run_id.strip():
         raise ValueError("run_id must not be empty")
 
     ordered_events = sorted(events, key=lambda event: (event.ingestion_timestamp, event.event_id))
@@ -344,7 +344,7 @@ def extract_table(
         raise ValueError(f"unsupported source table: {table_name}")
     if batch_size <= 0:
         raise ValueError("batch_size must be greater than zero")
-    if not run_id:
+    if not run_id.strip():
         raise ValueError("run_id must not be empty")
 
     spec = TABLE_SPECS[table_name]

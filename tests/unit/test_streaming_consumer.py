@@ -186,6 +186,24 @@ def test_writer_failure_does_not_commit(tmp_path: Path) -> None:
     assert consumer.closed is True
 
 
+def test_rejects_whitespace_run_id_before_consuming(tmp_path: Path) -> None:
+    consumer = FakeConsumer([message_for(valid_event())])
+
+    with pytest.raises(ValueError, match="run_id"):
+        consume_telemetry_stream(
+            consumer,
+            topic="portflow.telemetry",
+            bronze_dir=tmp_path,
+            run_id="   ",
+            batch_size=1,
+            max_messages=1,
+        )
+
+    assert consumer.subscribed == []
+    assert consumer.commits == []
+    assert not list(tmp_path.rglob("*.parquet"))
+
+
 def test_times_out_without_messages(tmp_path: Path) -> None:
     consumer = FakeConsumer([])
 

@@ -17,11 +17,13 @@ service and consume it into the existing Bronze Parquet contract.
 ## Prerequisites
 
 - Python `3.12` or newer with the locked project environment.
+- `uv` installed; use `python -m pip install uv` if it is not already available.
 - Docker Desktop running with its Linux engine enabled.
 - The repository's development dependencies installed:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
+python -m pip install uv
 python -m uv sync --extra dev --frozen
 ```
 
@@ -36,7 +38,7 @@ $env:PORTFLOW_REDPANDA_BROKERS = "localhost:19092"
 python -m uv run python scripts/run_stream_producer.py --seed 42 --count 12
 python -m uv run python scripts/run_stream_consumer.py --max-messages 12 --run-id stream-run-000042 --bronze-dir data/bronze-stream
 python -m uv run pytest tests/streaming/test_redpanda.py -m redpanda -v
-docker compose --profile streaming down -v
+docker compose --profile streaming down -v redpanda
 ```
 
 The producer reports the topic and published count. The consumer reports consumed rows,
@@ -44,8 +46,9 @@ Bronze rows, committed batches, and batch count. With the default batch size of 
 events are written in one batch by the runner; the integration check deliberately uses a batch
 size of `5` to verify three commits.
 
-`docker compose --profile streaming down -v` removes only disposable local Compose resources and
-Redpanda state. It does not modify the committed public snapshot or the PostgreSQL workflow.
+`docker compose --profile streaming down -v redpanda` removes only disposable local Redpanda
+resources and state. It does not stop PostgreSQL, modify the committed public snapshot, or change
+the PostgreSQL workflow.
 
 ## Configuration
 
