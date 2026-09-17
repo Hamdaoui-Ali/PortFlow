@@ -20,8 +20,9 @@
 
 ## Current next action
 
-Configure the documented pull-request and green-CI protection rule for `main`, then start **PF-101**. PF-030 is
-complete and PortFlow V1 is published.
+Start **PF-102**, the next streaming slice. PF-030 and PF-101 are complete and PortFlow V1 is published.
+The documented pull-request and green-CI branch-protection rule for `main` remains an outstanding
+repository-hardening follow-up.
 
 ## Completed checkpoints
 
@@ -36,6 +37,7 @@ complete and PortFlow V1 is published.
 - **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`, `978fa43`.
 - **PF-029 Local data workspace and navigation reliability:** `f5312ad`, `7325f4d`, `85e17dc`, `24b4b21`, `9f19551`, `827d8d7`, and `d310109`; deterministic menu routing, a loopback-only local API, schema-allowlisted transactional JSON imports, bounded database waits, Data Health controls, a Vite proxy, and a complete local runbook are delivered. Unit, static, frontend, build, Pages-path, and browser checks pass. The real PostgreSQL integration check is included but could not run in this environment because Docker Desktop's Linux engine was unavailable.
 - **PF-030 V1 release gate:** `4156222` and merged release commit `c735701`; local quality gates, public HTTP 200 checks, public route checks, responsive/accessibility evidence, reduced-motion emulation, and GitHub Actions Pages publication all pass.
+- **PF-101 local Redpanda streaming:** design `06c0570`, plan `a205df8`, implementation commits `96ad360`, `c65bb37`, `c89de5a`, `c08411e`, `236a277`, `e0e8ca7`, and `511c52f`; canonical telemetry publishing, manual-commit consumption, deterministic Bronze writes, an opt-in Compose profile, broker-optional integration coverage, and separate CI verification are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The main branch-protection rule remains outstanding.
 
 ## R0 — Verified constraints
 
@@ -603,7 +605,7 @@ follow-up.
 
 These items are P2 and cannot block V1:
 
-- PF-101: Redpanda local streaming into the existing Bronze contract.
+- PF-101: **Complete** — Redpanda local streaming into the existing Bronze contract.
 - PF-102: Streaming deduplication, late events, and dead-letter handling.
 - PF-103: Dagster orchestration and run metadata.
 - PF-104: Prometheus and Grafana engineering observability.
@@ -629,6 +631,7 @@ These items are P2 and cannot block V1:
 | Performance budgets | PF-026 |
 | Safe CI and static publication | PF-027–PF-028 |
 | Clean-clone reproducibility and release evidence | PF-029–PF-030 |
+| Local telemetry streaming into the existing Bronze contract | PF-101 |
 
 ## Definition of done for every task
 

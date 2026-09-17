@@ -1,5 +1,30 @@
 # Changelog
 
+## PF-101 local streaming - 2026-09-17
+
+PortFlow now includes an opt-in, local Kafka-compatible telemetry path backed by Redpanda. The
+bounded producer emits deterministic `TelemetryEvent` records to `portflow.telemetry`; the
+consumer validates the canonical message contract, writes the existing telemetry Bronze schema,
+and synchronously commits offsets only after a successful atomic write.
+
+### Included
+
+- Pinned one-node Redpanda Compose service under the `streaming` profile on host port `19092`.
+- Lazy Confluent Kafka adapters behind transport-neutral producer and consumer protocols.
+- Deterministic CLI runners, unit coverage with fake clients, and a broker-backed round-trip test.
+- A separate GitHub Actions streaming workflow and local PowerShell verification command.
+- A local streaming runbook that preserves the static/public-data boundary.
+
+### PF-101 boundaries
+
+- Stream output is disposable local Bronze data and never writes `web/public/data` or the hosted
+  static site.
+- Delivery is at least once; a crash after Bronze publication and before offset commit may replay
+  a batch.
+- Deduplication, late events, dead-letter topics, and replay/backfill policy are deferred to
+  PF-102. Schema Registry, serialization formats beyond canonical JSON, transactions,
+  multi-broker deployment, authentication, and a public streaming UI are excluded.
+
 ## PortFlow V1 - 2026-09-16
 
 PortFlow V1 is published at `https://hamdaoui-ali.github.io/PortFlow/`. The merged `main` commit passed CI and

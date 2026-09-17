@@ -24,3 +24,5 @@ Implementation begins with one deterministic equipment-availability KPI rendered
 The public site remains static and reads versioned JSON only. For local development, PortFlow includes a loopback-only API that connects the existing PostgreSQL pipeline to the **Data Health** page. Use it to seed demo data, import validated JSON records, and refresh the published snapshot without editing source files.
 
 Follow the complete [local development runbook](docs/runbooks/local-development.md). The browser never connects directly to PostgreSQL, and the hosted/static site intentionally shows **Local API unavailable** because it has no database connection.
+
+For the opt-in Kafka-compatible telemetry path, follow the [local Redpanda streaming runbook](docs/runbooks/local-streaming.md). It writes disposable stream output to local Bronze only; the public browser remains static and the committed public snapshot is unchanged.
