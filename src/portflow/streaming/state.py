@@ -106,62 +106,70 @@ class StreamStateStore:
 
         try:
             with self._connection:
-                current_watermark = self.get_watermark(topic)
-                batch_watermark = current_watermark
+                batch_watermark = self.get_watermark(topic)
                 pending: dict[str, str] = {}
                 for event in events:
-                    digest = telemetry_payload_sha256(event)
-                    previous_digest = pending.get(event.event_id)
-                    if previous_digest is not None:
-                        if previous_digest != digest:
-                            raise StreamStateError(
-                                f"event_id {event.event_id} has conflicting payloads"
-                            )
-                        continue
-
-                    existing = self.get_event(event.event_id)
-                    if existing is not None:
-                        if existing.payload_sha256 != digest:
-                            raise StreamStateError(
-                                f"event_id {event.event_id} has a conflicting payload"
-                            )
-                        if existing.outcome != "bronze":
-                            raise StreamStateError(
-                                f"event_id {event.event_id} already has outcome "
-                                f"{existing.outcome}"
-                            )
-                    else:
-                        self._connection.execute(
-                            """
-                            INSERT INTO processed_events(
-                                event_id, payload_sha256, ingestion_timestamp, outcome, reason_code
-                            ) VALUES (?, ?, ?, 'bronze', NULL)
-                            """,
-                            (
-                                event.event_id,
-                                digest,
-                                _timestamp_text(event.ingestion_timestamp),
-                            ),
-                        )
-                    pending[event.event_id] = digest
-                    if batch_watermark is None or event.ingestion_timestamp > batch_watermark:
-                        batch_watermark = event.ingestion_timestamp
-
-                if batch_watermark is not None:
-                    self._connection.execute(
-                        """
-                        INSERT INTO watermarks(topic, max_ingestion_timestamp)
-                        VALUES (?, ?)
-                        ON CONFLICT(topic) DO UPDATE SET
-                            max_ingestion_timestamp = excluded.max_ingestion_timestamp
-                        WHERE excluded.max_ingestion_timestamp > watermarks.max_ingestion_timestamp
-                        """,
-                        (topic, _timestamp_text(batch_watermark)),
+                    batch_watermark = self._record_bronze_event(
+                        event,
+                        pending=pending,
+                        batch_watermark=batch_watermark,
                     )
+                self._advance_watermark(topic, batch_watermark)
         except StreamStateError:
             raise
         except sqlite3.Error as exc:
             raise StreamStateError(f"could not record Bronze state for {topic}") from exc
+
+    def _record_bronze_event(
+        self,
+        event: TelemetryEvent,
+        *,
+        pending: dict[str, str],
+        batch_watermark: datetime | None,
+    ) -> datetime | None:
+        digest = telemetry_payload_sha256(event)
+        previous_digest = pending.get(event.event_id)
+        if previous_digest is not None:
+            if previous_digest != digest:
+                raise StreamStateError(f"event_id {event.event_id} has conflicting payloads")
+            return batch_watermark
+
+        existing = self.get_event(event.event_id)
+        if existing is None:
+            self._insert_bronze_event(event, digest)
+        else:
+            _validate_existing_bronze_event(existing, event.event_id, digest)
+
+        pending[event.event_id] = digest
+        return _latest_watermark(batch_watermark, event.ingestion_timestamp)
+
+    def _insert_bronze_event(self, event: TelemetryEvent, digest: str) -> None:
+        self._connection.execute(
+            """
+            INSERT INTO processed_events(
+                event_id, payload_sha256, ingestion_timestamp, outcome, reason_code
+            ) VALUES (?, ?, ?, 'bronze', NULL)
+            """,
+            (
+                event.event_id,
+                digest,
+                _timestamp_text(event.ingestion_timestamp),
+            ),
+        )
+
+    def _advance_watermark(self, topic: str, batch_watermark: datetime | None) -> None:
+        if batch_watermark is None:
+            return
+        self._connection.execute(
+            """
+            INSERT INTO watermarks(topic, max_ingestion_timestamp)
+            VALUES (?, ?)
+            ON CONFLICT(topic) DO UPDATE SET
+                max_ingestion_timestamp = excluded.max_ingestion_timestamp
+            WHERE excluded.max_ingestion_timestamp > watermarks.max_ingestion_timestamp
+            """,
+            (topic, _timestamp_text(batch_watermark)),
+        )
 
     def record_dead_letter(
         self,
@@ -224,6 +232,23 @@ def _row_to_event_state(row: sqlite3.Row) -> ProcessedEventState:
         outcome=cast(EventOutcome, raw_outcome),
         reason_code=cast(str | None, row["reason_code"]),
     )
+
+
+def _validate_existing_bronze_event(
+    existing: ProcessedEventState,
+    event_id: str,
+    digest: str,
+) -> None:
+    if existing.payload_sha256 != digest:
+        raise StreamStateError(f"event_id {event_id} has a conflicting payload")
+    if existing.outcome != "bronze":
+        raise StreamStateError(f"event_id {event_id} already has outcome {existing.outcome}")
+
+
+def _latest_watermark(current: datetime | None, candidate: datetime) -> datetime:
+    if current is None or candidate > current:
+        return candidate
+    return current
 
 
 def _timestamp_text(value: datetime) -> str:

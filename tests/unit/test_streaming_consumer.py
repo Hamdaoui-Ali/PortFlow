@@ -639,6 +639,7 @@ def test_state_failure_does_not_commit(tmp_path: Path) -> None:
             pass
 
     consumer = FakeConsumer([message_for(valid_event())])
+    state_store = FailingStateStore()
 
     with pytest.raises(StreamStateError, match="state failed"):
         consume_telemetry_stream(
@@ -648,7 +649,7 @@ def test_state_failure_does_not_commit(tmp_path: Path) -> None:
             run_id="stream-run-000042",
             batch_size=1,
             max_messages=1,
-            state_store=FailingStateStore(),  # type: ignore[arg-type]
+            state_store=state_store,  # type: ignore[arg-type]
         )
 
     assert consumer.commits == []
@@ -656,6 +657,7 @@ def test_state_failure_does_not_commit(tmp_path: Path) -> None:
 
 def test_dlq_failure_does_not_commit(tmp_path: Path) -> None:
     consumer = FakeConsumer([FakeMessage(b"not-json", telemetry_headers())])
+    dead_letter_producer = FakeProducer(delivery_error="broker rejected")
 
     with pytest.raises(ProducerDeliveryError, match="broker rejected"):
         consume_telemetry_stream(
@@ -665,7 +667,7 @@ def test_dlq_failure_does_not_commit(tmp_path: Path) -> None:
             run_id="stream-run-000042",
             batch_size=1,
             max_messages=1,
-            dead_letter_producer=FakeProducer(delivery_error="broker rejected"),
+            dead_letter_producer=dead_letter_producer,
             dead_letter_topic="portflow.telemetry.dlq",
         )
 

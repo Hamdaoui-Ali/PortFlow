@@ -134,10 +134,11 @@ def test_publish_dead_letters_uses_source_location_key_when_key_is_missing() -> 
 
 def test_publish_dead_letters_surfaces_delivery_error() -> None:
     producer = FakeProducer(delivery_error="broker rejected record")
+    record = dead_letter_record()
 
     with pytest.raises(ProducerDeliveryError, match="broker rejected record"):
         publish_dead_letters(
-            [dead_letter_record()],
+            [record],
             producer=producer,
             topic="portflow.telemetry.dlq",
         )
@@ -145,10 +146,11 @@ def test_publish_dead_letters_surfaces_delivery_error() -> None:
 
 def test_publish_dead_letters_surfaces_unflushed_records() -> None:
     producer = FakeProducer(remaining=1)
+    record = dead_letter_record()
 
     with pytest.raises(ProducerDeliveryError, match="1"):
         publish_dead_letters(
-            [dead_letter_record()],
+            [record],
             producer=producer,
             topic="portflow.telemetry.dlq",
         )
@@ -168,10 +170,11 @@ def test_publish_dead_letters_validates_all_records_before_producing() -> None:
         reason=invalid.reason,
         run_id="",
     )
+    valid = dead_letter_record()
 
     with pytest.raises(ValueError, match="run_id"):
         publish_dead_letters(
-            [dead_letter_record(), invalid],
+            [valid, invalid],
             producer=producer,
             topic="portflow.telemetry.dlq",
         )

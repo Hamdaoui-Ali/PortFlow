@@ -30,32 +30,41 @@ from portflow.streaming.state import StreamStateStore
 
 class ConsumerMessage(Protocol):
     def value(self) -> bytes | None:
+        # Protocol-only method; the concrete Kafka message provides the payload.
         pass
 
     def headers(self) -> Sequence[Header] | None:
+        # Protocol-only method; the concrete Kafka message provides the headers.
         pass
 
     def key(self) -> bytes | None:
+        # Protocol-only method; the concrete Kafka message provides the key.
         pass
 
     def partition(self) -> int:
+        # Protocol-only method; the concrete Kafka message provides the partition.
         pass
 
     def offset(self) -> int:
+        # Protocol-only method; the concrete Kafka message provides the offset.
         pass
 
 
 class ConsumerClient(Protocol):
     def subscribe(self, topics: Sequence[str]) -> None:
+        # Protocol-only method; the concrete Kafka consumer performs subscription.
         pass
 
     def poll(self, timeout: float) -> ConsumerMessage | None:
+        # Protocol-only method; the concrete Kafka consumer polls the broker.
         pass
 
     def commit(self, *, message: ConsumerMessage, asynchronous: bool) -> None:
+        # Protocol-only method; the concrete Kafka consumer commits the offset.
         pass
 
     def close(self) -> None:
+        # Protocol-only method; the concrete Kafka consumer closes the connection.
         pass
 
 
@@ -71,6 +80,7 @@ class BronzeWriter(Protocol):
         bronze_dir: Path,
         run_id: str,
     ) -> StreamBronzeWriteResult:
+        # Protocol-only method; the injected writer persists the Bronze batch.
         pass
 
 
@@ -249,15 +259,15 @@ def consume_telemetry_stream(
         processing_error = exc
         raise
     finally:
-        cleanup_error: BaseException | None = None
+        cleanup_error: Exception | None = None
         try:
             consumer.close()
-        except BaseException as exc:
+        except Exception as exc:
             cleanup_error = exc
         if owned_state_store and active_state_store is not None:
             try:
                 active_state_store.close()
-            except BaseException as exc:
+            except Exception as exc:
                 if cleanup_error is None:
                     cleanup_error = exc
         if cleanup_error is not None and processing_error is None:
