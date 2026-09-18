@@ -26,6 +26,10 @@ dev = [
   "pyyaml>=6.0,<7",
   "ruff>=0.11,<1",
 ]
+orchestration = [
+  "dagster>=1.11,<2",
+  "dagster-webserver>=1.11,<2",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/portflow"]
