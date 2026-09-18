@@ -1,5 +1,6 @@
 """Canonical encoding and validation for PortFlow telemetry messages."""
 
+import hashlib
 import json
 from collections.abc import Sequence
 
@@ -32,6 +33,11 @@ def encode_telemetry_event(event: TelemetryEvent) -> bytes:
         ensure_ascii=False,
     )
     return payload.encode("utf-8")
+
+
+def telemetry_payload_sha256(event: TelemetryEvent) -> str:
+    """Return the SHA-256 digest of the canonical telemetry payload."""
+    return hashlib.sha256(encode_telemetry_event(event)).hexdigest()
 
 
 def decode_telemetry_event(
