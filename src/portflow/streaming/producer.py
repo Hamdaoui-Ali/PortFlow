@@ -82,6 +82,6 @@ def publish_telemetry_events(
 
 def create_producer(config: StreamingConfig) -> ProducerClient:
     """Construct the concrete Confluent producer only when requested."""
-    from confluent_kafka import Producer  # type: ignore[import-not-found]
+    from confluent_kafka import Producer
 
     return cast(ProducerClient, Producer(producer_properties(config)))

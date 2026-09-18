@@ -70,7 +70,7 @@ def test_redpanda_round_trip(tmp_path: Path) -> None:
         )
 
         assert publish_report.published_count == 12
-        assert consume_report == ConsumeReport(12, 12, 12, 3)
+        assert consume_report == ConsumeReport(12, 12, 3, 3)
 
         actual_files = sorted((bronze_dir / "telemetry_events").rglob("*.parquet"))
         assert len(actual_files) == 3

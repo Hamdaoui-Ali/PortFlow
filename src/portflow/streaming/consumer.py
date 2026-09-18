@@ -266,7 +266,7 @@ def consume_telemetry_stream(
 
 def create_consumer(config: StreamingConfig) -> ConsumerClient:
     """Construct the concrete Confluent consumer only when requested."""
-    from confluent_kafka import Consumer  # type: ignore[import-not-found]
+    from confluent_kafka import Consumer
 
     return cast(ConsumerClient, Consumer(consumer_properties(config)))
 
