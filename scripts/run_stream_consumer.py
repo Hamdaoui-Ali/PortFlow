@@ -9,6 +9,8 @@ from pathlib import Path
 
 from portflow.streaming.config import StreamingConfig
 from portflow.streaming.consumer import consume_telemetry_stream, create_consumer
+from portflow.streaming.producer import create_producer
+from portflow.streaming.state import StreamStateStore
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -25,14 +27,23 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     config = StreamingConfig.from_env()
     consumer = create_consumer(config)
-    report = consume_telemetry_stream(
-        consumer,
-        topic=config.topic,
-        bronze_dir=args.bronze_dir,
-        run_id=args.run_id,
-        batch_size=config.batch_size,
-        max_messages=args.max_messages,
-    )
+    state_store = StreamStateStore(args.bronze_dir / ".stream-state.sqlite3")
+    try:
+        dead_letter_producer = create_producer(config)
+        report = consume_telemetry_stream(
+            consumer,
+            topic=config.topic,
+            bronze_dir=args.bronze_dir,
+            run_id=args.run_id,
+            batch_size=config.batch_size,
+            max_messages=args.max_messages,
+            dead_letter_producer=dead_letter_producer,
+            dead_letter_topic=config.dlq_topic,
+            allowed_lateness_seconds=config.allowed_lateness_seconds,
+            state_store=state_store,
+        )
+    finally:
+        state_store.close()
     print(json.dumps(asdict(report), sort_keys=True))
 
 

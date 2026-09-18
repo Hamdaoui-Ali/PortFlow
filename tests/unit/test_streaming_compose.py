@@ -116,6 +116,18 @@ def test_consumer_runner_forwards_max_messages_run_id_and_bronze_dir(
         300,
     )
     consumer = object()
+    producer = object()
+
+    class FakeStateStore:
+        instances: list["FakeStateStore"] = []
+
+        def __init__(self, path: Path) -> None:
+            self.path = path
+            self.closed = False
+            self.instances.append(self)
+
+        def close(self) -> None:
+            self.closed = True
 
     def fake_config() -> StreamingConfig:
         return config
@@ -123,6 +135,10 @@ def test_consumer_runner_forwards_max_messages_run_id_and_bronze_dir(
     def fake_create(received_config: StreamingConfig) -> object:
         captured["config"] = received_config
         return consumer
+
+    def fake_create_producer(received_config: StreamingConfig) -> object:
+        captured["producer_config"] = received_config
+        return producer
 
     def fake_consume(
         received_consumer: object,
@@ -132,6 +148,10 @@ def test_consumer_runner_forwards_max_messages_run_id_and_bronze_dir(
         run_id: str,
         batch_size: int,
         max_messages: int,
+        dead_letter_producer: object,
+        dead_letter_topic: str,
+        allowed_lateness_seconds: int,
+        state_store: object,
     ) -> ConsumeReport:
         captured["consume"] = (
             received_consumer,
@@ -140,11 +160,17 @@ def test_consumer_runner_forwards_max_messages_run_id_and_bronze_dir(
             run_id,
             batch_size,
             max_messages,
+            dead_letter_producer,
+            dead_letter_topic,
+            allowed_lateness_seconds,
+            state_store,
         )
         return ConsumeReport(7, 7, 2, 2)
 
     monkeypatch.setattr(run_stream_consumer.StreamingConfig, "from_env", fake_config)
     monkeypatch.setattr(run_stream_consumer, "create_consumer", fake_create)
+    monkeypatch.setattr(run_stream_consumer, "create_producer", fake_create_producer, raising=False)
+    monkeypatch.setattr(run_stream_consumer, "StreamStateStore", FakeStateStore, raising=False)
     monkeypatch.setattr(run_stream_consumer, "consume_telemetry_stream", fake_consume)
 
     bronze_dir = tmp_path / "stream-bronze"
@@ -167,12 +193,22 @@ def test_consumer_runner_forwards_max_messages_run_id_and_bronze_dir(
         "stream-run-000007",
         50,
         7,
+        producer,
+        "portflow.telemetry.dlq",
+        300,
+        FakeStateStore.instances[0],
     )
+    assert FakeStateStore.instances[0].path == bronze_dir / ".stream-state.sqlite3"
+    assert FakeStateStore.instances[0].closed is True
+    assert captured["producer_config"] == config
     assert json.loads(capsys.readouterr().out) == {
         "batch_count": 2,
         "bronze_row_count": 7,
         "committed_count": 2,
         "consumed_count": 7,
+        "dead_letter_count": 0,
+        "duplicate_count": 0,
+        "late_count": 0,
     }
 
 
@@ -194,10 +230,21 @@ def test_consumer_runner_uses_safe_default_for_empty_bronze_dir(
         300,
     )
 
+    class FakeStateStore:
+        def __init__(self, path: Path) -> None:
+            captured["state_path"] = path
+
+        def close(self) -> None:
+            pass
+
     def fake_config() -> StreamingConfig:
         return config
 
     def fake_create(received_config: StreamingConfig) -> object:
+        assert received_config == config
+        return object()
+
+    def fake_create_producer(received_config: StreamingConfig) -> object:
         assert received_config == config
         return object()
 
@@ -209,16 +256,33 @@ def test_consumer_runner_uses_safe_default_for_empty_bronze_dir(
         run_id: str,
         batch_size: int,
         max_messages: int,
+        dead_letter_producer: object,
+        dead_letter_topic: str,
+        allowed_lateness_seconds: int,
+        state_store: object,
     ) -> ConsumeReport:
-        del consumer, topic, run_id, batch_size, max_messages
+        del (
+            consumer,
+            topic,
+            run_id,
+            batch_size,
+            max_messages,
+            dead_letter_producer,
+            dead_letter_topic,
+            allowed_lateness_seconds,
+            state_store,
+        )
         captured["bronze_dir"] = bronze_dir
         return ConsumeReport(1, 1, 1, 1)
 
     monkeypatch.setenv("PORTFLOW_STREAM_BRONZE_DIR", "")
     monkeypatch.setattr(run_stream_consumer.StreamingConfig, "from_env", fake_config)
     monkeypatch.setattr(run_stream_consumer, "create_consumer", fake_create)
+    monkeypatch.setattr(run_stream_consumer, "create_producer", fake_create_producer, raising=False)
+    monkeypatch.setattr(run_stream_consumer, "StreamStateStore", FakeStateStore, raising=False)
     monkeypatch.setattr(run_stream_consumer, "consume_telemetry_stream", fake_consume)
 
     run_stream_consumer.main(["--max-messages", "1"])
 
     assert captured["bronze_dir"] == Path("data/bronze-stream")
+    assert captured["state_path"] == Path("data/bronze-stream/.stream-state.sqlite3")
