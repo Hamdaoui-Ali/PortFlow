@@ -36,6 +36,32 @@ def test_streaming_cleanup_is_scoped_to_redpanda() -> None:
     assert cleanup in runbook
 
 
+def test_streaming_docs_describe_pf102_safety_contract() -> None:
+    runbook = (REPOSITORY_ROOT / "docs" / "runbooks" / "local-streaming.md").read_text(
+        encoding="utf-8"
+    )
+    readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
+    backlog = (REPOSITORY_ROOT / "docs" / "product" / "BACKLOG.md").read_text(
+        encoding="utf-8"
+    )
+    changelog = (REPOSITORY_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+
+    for required in (
+        "PORTFLOW_REDPANDA_DLQ_TOPIC=portflow.telemetry.dlq",
+        "PORTFLOW_STREAM_ALLOWED_LATENESS_SECONDS=300",
+        "data/bronze-stream/.stream-state.sqlite3",
+        "invalid_telemetry",
+        "late_event",
+        "duplicate_conflict",
+        "web/public/data",
+    ):
+        assert required in runbook
+
+    assert "PF-102" in readme
+    assert "PF-102" in backlog
+    assert "PF-102" in changelog
+
+
 def test_producer_runner_forwards_seed_and_count(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

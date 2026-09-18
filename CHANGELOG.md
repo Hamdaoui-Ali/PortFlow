@@ -1,5 +1,34 @@
 # Changelog
 
+## PF-102 stream safety - 2026-09-18
+
+PortFlow's opt-in local telemetry stream is now safe to retry across consumer restarts. The
+consumer persists event identity and topic watermarks in a local SQLite state file, applies a
+five-minute bounded-lateness policy, and preserves rejected records in a canonical dead-letter
+topic before committing source offsets.
+
+### Included
+
+- Durable `<bronze-dir>/.stream-state.sqlite3` state with canonical payload digests and atomic
+  Bronze/watermark updates.
+- Exact-duplicate suppression, duplicate-conflict detection, and inclusive lateness-boundary
+  handling.
+- Canonical UTF-8 JSON DLQ envelopes with base64 binary fields, ordered headers, source position,
+  and the fixed reason codes `invalid_telemetry`, `late_event`, and `duplicate_conflict`.
+- Commit ordering that requires Bronze, state, and DLQ publication to succeed first, plus runner
+  wiring for the configured DLQ topic and allowed lateness.
+- Unit, broker-optional integration, documentation, and static-browser-boundary coverage.
+
+### PF-102 boundaries
+
+- Stream output, SQLite state, and DLQ data remain disposable local state; the public browser stays
+  static and `web/public/data` is unchanged.
+- Delivery remains at least once at the Redpanda/Parquet boundary. A crash before source commit
+  may repeat a malformed or conflict DLQ record.
+- PF-103 orchestration and run metadata, automatic DLQ reprocessing, Schema Registry,
+  transactions, multi-broker deployment, authentication, and a public streaming UI remain out of
+  scope.
+
 ## PF-101 local streaming - 2026-09-17
 
 PortFlow now includes an opt-in, local Kafka-compatible telemetry path backed by Redpanda. The
@@ -21,9 +50,9 @@ and synchronously commits offsets only after a successful atomic write.
   static site.
 - Delivery is at least once; a crash after Bronze publication and before offset commit may replay
   a batch.
-- Deduplication, late events, dead-letter topics, and replay/backfill policy are deferred to
-  PF-102. Schema Registry, serialization formats beyond canonical JSON, transactions,
-  multi-broker deployment, authentication, and a public streaming UI are excluded.
+- Deduplication, late events, and dead-letter topics are delivered in PF-102; automatic
+  replay/backfill remains deferred. Schema Registry, serialization formats beyond canonical JSON,
+  transactions, multi-broker deployment, authentication, and a public streaming UI are excluded.
 
 ## PortFlow V1 - 2026-09-16
 

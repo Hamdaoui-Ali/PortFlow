@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-102**, the next streaming slice. PF-030 and PF-101 are complete and PortFlow V1 is published.
+Start **PF-103**, the next streaming slice. PF-030, PF-101, and PF-102 are complete and PortFlow V1 is published.
 The documented pull-request and green-CI branch-protection rule for `main` remains an outstanding
 repository-hardening follow-up.
 
@@ -38,6 +38,7 @@ repository-hardening follow-up.
 - **PF-029 Local data workspace and navigation reliability:** `f5312ad`, `7325f4d`, `85e17dc`, `24b4b21`, `9f19551`, `827d8d7`, and `d310109`; deterministic menu routing, a loopback-only local API, schema-allowlisted transactional JSON imports, bounded database waits, Data Health controls, a Vite proxy, and a complete local runbook are delivered. Unit, static, frontend, build, Pages-path, and browser checks pass. The real PostgreSQL integration check is included but could not run in this environment because Docker Desktop's Linux engine was unavailable.
 - **PF-030 V1 release gate:** `4156222` and merged release commit `c735701`; local quality gates, public HTTP 200 checks, public route checks, responsive/accessibility evidence, reduced-motion emulation, and GitHub Actions Pages publication all pass.
 - **PF-101 local Redpanda streaming:** design `06c0570`, plan `a205df8`, implementation commits `96ad360`, `c65bb37`, `c89de5a`, `c08411e`, `236a277`, `e0e8ca7`, and `511c52f`; canonical telemetry publishing, manual-commit consumption, deterministic Bronze writes, an opt-in Compose profile, broker-optional integration coverage, and separate CI verification are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The main branch-protection rule remains outstanding.
+- **PF-102 stream safety:** design `9a5dfca`, plan `b5bcd6a`, implementation commits `edc7b6b`, `1367a53`, `b3f304a`, `bad4b87`, `b33f3d3`, and `1508582`; durable SQLite event state, exact-duplicate suppression, bounded lateness, canonical dead-letter envelopes, safe commit ordering, runner wiring, and broker-optional round-trip coverage are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The main branch-protection rule remains outstanding.
 
 ## R0 — Verified constraints
 
@@ -606,7 +607,7 @@ follow-up.
 These items are P2 and cannot block V1:
 
 - PF-101: **Complete** — Redpanda local streaming into the existing Bronze contract.
-- PF-102: Streaming deduplication, late events, and dead-letter handling.
+- PF-102: **Complete** — Streaming deduplication, late events, and dead-letter handling.
 - PF-103: Dagster orchestration and run metadata.
 - PF-104: Prometheus and Grafana engineering observability.
 - PF-105: Larger DuckDB, Polars, and PySpark benchmarks.
@@ -632,6 +633,7 @@ These items are P2 and cannot block V1:
 | Safe CI and static publication | PF-027–PF-028 |
 | Clean-clone reproducibility and release evidence | PF-029–PF-030 |
 | Local telemetry streaming into the existing Bronze contract | PF-101 |
+| Restart-safe local telemetry streaming and dead-letter handling | PF-102 |
 
 ## Definition of done for every task
 
