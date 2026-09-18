@@ -42,7 +42,14 @@ def test_producer_runner_forwards_seed_and_count(
 ) -> None:
     captured: dict[str, object] = {}
     events = [object()]
-    config = StreamingConfig("localhost:19092", "portflow.telemetry", "portflow-bronze", 50)
+    config = StreamingConfig(
+        "localhost:19092",
+        "portflow.telemetry",
+        "portflow-bronze",
+        50,
+        "portflow.telemetry.dlq",
+        300,
+    )
     producer = object()
 
     def fake_generate(
@@ -100,7 +107,14 @@ def test_consumer_runner_forwards_max_messages_run_id_and_bronze_dir(
     tmp_path: Path,
 ) -> None:
     captured: dict[str, object] = {}
-    config = StreamingConfig("localhost:19092", "portflow.telemetry", "portflow-bronze", 50)
+    config = StreamingConfig(
+        "localhost:19092",
+        "portflow.telemetry",
+        "portflow-bronze",
+        50,
+        "portflow.telemetry.dlq",
+        300,
+    )
     consumer = object()
 
     def fake_config() -> StreamingConfig:
@@ -171,7 +185,14 @@ def test_consumer_runner_uses_safe_default_for_empty_bronze_dir(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     captured: dict[str, object] = {}
-    config = StreamingConfig("localhost:19092", "portflow.telemetry", "portflow-bronze", 50)
+    config = StreamingConfig(
+        "localhost:19092",
+        "portflow.telemetry",
+        "portflow-bronze",
+        50,
+        "portflow.telemetry.dlq",
+        300,
+    )
 
     def fake_config() -> StreamingConfig:
         return config

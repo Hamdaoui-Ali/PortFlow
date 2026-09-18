@@ -15,6 +15,8 @@ def test_defaults_are_safe_for_local_compose() -> None:
         topic="portflow.telemetry",
         group_id="portflow-bronze",
         batch_size=50,
+        dlq_topic="portflow.telemetry.dlq",
+        allowed_lateness_seconds=300,
     )
     assert producer_properties(config) == {
         "bootstrap.servers": "localhost:19092",
@@ -36,8 +38,15 @@ def test_defaults_are_safe_for_local_compose() -> None:
         {"PORTFLOW_REDPANDA_BROKERS": ""},
         {"PORTFLOW_REDPANDA_TOPIC": ""},
         {"PORTFLOW_REDPANDA_GROUP": ""},
+        {"PORTFLOW_REDPANDA_DLQ_TOPIC": ""},
+        {
+            "PORTFLOW_REDPANDA_TOPIC": "same",
+            "PORTFLOW_REDPANDA_DLQ_TOPIC": "same",
+        },
         {"PORTFLOW_STREAM_BATCH_SIZE": "0"},
         {"PORTFLOW_STREAM_BATCH_SIZE": "not-an-int"},
+        {"PORTFLOW_STREAM_ALLOWED_LATENESS_SECONDS": "not-an-int"},
+        {"PORTFLOW_STREAM_ALLOWED_LATENESS_SECONDS": "-1"},
     ],
 )
 def test_rejects_invalid_values(env: dict[str, str]) -> None:

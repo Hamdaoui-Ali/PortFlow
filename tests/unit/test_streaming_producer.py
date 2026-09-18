@@ -128,6 +128,8 @@ def test_create_producer_uses_edge_properties(monkeypatch: pytest.MonkeyPatch) -
         topic="portflow.telemetry",
         group_id="portflow-bronze",
         batch_size=50,
+        dlq_topic="portflow.telemetry.dlq",
+        allowed_lateness_seconds=300,
     )
 
     producer = create_producer(config)
