@@ -1,5 +1,27 @@
 # Changelog
 
+## PF-104 engineering observability - 2026-09-19
+
+PortFlow now includes an optional local Prometheus and Grafana stack for inspecting bounded
+Dagster-managed streaming runs through the PF-103 `stream_runs` contract.
+
+### Included
+
+- A dependency-free read-only metrics exporter with a `/metrics` endpoint.
+- An opt-in `observability` Compose profile with Prometheus and Grafana.
+- A provisioned Grafana dashboard for state-store availability, run status, duration, and stream
+  outcome totals.
+- Unit, configuration, Compose, and documentation coverage for missing state, malformed state,
+  bounded labels, loopback ports, and read-only mounts.
+
+### PF-104 boundaries
+
+- Metrics are local, scrape-time aggregates; no per-message instrumentation, tracing, alerts, or
+  hosted monitoring service is added.
+- Run IDs, exception messages, broker addresses, and raw payloads are not metric labels.
+- The exporter does not mutate SQLite state, the public browser remains static, and
+  `web/public/data` is unchanged.
+
 ## PF-103 local orchestration - 2026-09-19
 
 PortFlow now includes optional local Dagster orchestration for one bounded telemetry consumer
