@@ -1,5 +1,31 @@
 # Changelog
 
+## PF-103 local orchestration - 2026-09-19
+
+PortFlow now includes optional local Dagster orchestration for one bounded telemetry consumer
+run. Each Dagster execution records durable run lifecycle metadata in the existing Bronze
+directory's SQLite state and uses Dagster's generated run ID as its canonical run identifier.
+
+### Included
+
+- An optional `orchestration` dependency extra with Dagster and the local Dagster webserver.
+- A typed `stream_consumer_job` with explicit topic, Bronze path, batch, limit, lateness, poll,
+  and idle-timeout configuration.
+- `running`, `succeeded`, and `failed` run metadata with timestamps, report counters, and terminal
+  error details when available.
+- Manual CLI/UI execution documentation, SQLite inspection guidance, and failure-preserving
+  cleanup behavior.
+- Broker-optional unit coverage, full Python regression coverage, and a passing Redpanda round trip.
+
+### PF-103 boundaries
+
+- Orchestration covers the streaming consumer path only; the existing direct producer and consumer
+  CLI commands remain unchanged and do not write `stream_runs`.
+- Execution remains local and manual. Producer orchestration, schedules, sensors, automatic
+  retries, always-on services, hosted Dagster, and a public streaming UI remain out of scope.
+- Stream output, SQLite state, and DLQ data remain disposable local state; the public browser stays
+  static and `web/public/data` is unchanged.
+
 ## PF-102 stream safety - 2026-09-18
 
 PortFlow's opt-in local telemetry stream is now safe to retry across consumer restarts. The
