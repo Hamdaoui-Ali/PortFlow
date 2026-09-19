@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 from scripts import run_stream_consumer, run_stream_producer
 
 from portflow.domain.models import TelemetryEvent
@@ -10,6 +11,37 @@ from portflow.streaming.consumer import ConsumeReport
 from portflow.streaming.producer import PublishReport
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
+
+
+def test_observability_profile_is_opt_in_and_read_only() -> None:
+    compose = yaml.safe_load((REPOSITORY_ROOT / "compose.yaml").read_text(encoding="utf-8"))
+    services = compose["services"]
+
+    assert services["portflow-metrics"]["profiles"] == ["observability"]
+    assert services["prometheus"]["profiles"] == ["observability"]
+    assert (
+        services["portflow-metrics"]["environment"]["PORTFLOW_STREAM_STATE_PATH"]
+        == "/var/lib/portflow/.stream-state.sqlite3"
+    )
+    assert any(
+        str(mount).endswith(":ro") for mount in services["portflow-metrics"]["volumes"]
+    )
+    assert "127.0.0.1:9108:9108" in services["portflow-metrics"]["ports"]
+    assert "127.0.0.1:9090:9090" in services["prometheus"]["ports"]
+
+
+def test_prometheus_scrapes_only_portflow_metrics() -> None:
+    config = yaml.safe_load(
+        (REPOSITORY_ROOT / "observability" / "prometheus.yml").read_text(encoding="utf-8")
+    )
+
+    assert config["global"]["scrape_interval"] == "5s"
+    assert config["scrape_configs"] == [
+        {
+            "job_name": "portflow-stream",
+            "static_configs": [{"targets": ["portflow-metrics:9108"]}],
+        }
+    ]
 
 
 def test_compose_keeps_redpanda_opt_in() -> None:

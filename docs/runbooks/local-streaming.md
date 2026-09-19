@@ -119,6 +119,64 @@ docker compose --profile streaming down -v redpanda
 The browser remains static, `web/public/data` remains unchanged, and no automatic retry is
 configured.
 
+## Optional engineering observability (PF-104)
+
+PF-104 adds an opt-in local Prometheus and Grafana view for Dagster-managed stream runs. The
+metrics exporter reads `data/bronze-stream/.stream-state.sqlite3` through a read-only container
+mount and refreshes its aggregate view on each Prometheus scrape. It never initializes the
+database or changes event, watermark, Bronze, DLQ, or run state. Direct CLI consumer runs do not
+write `stream_runs`, so only PF-103 Dagster executions appear in this dashboard.
+
+Start the broker and observability services from the repository root:
+
+```powershell
+Set-Location C:/Users/aliha/PortFlow
+docker compose --profile streaming --profile observability up -d --wait redpanda portflow-metrics prometheus grafana
+```
+
+Check the exporter directly:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:9108/metrics
+```
+
+Open the local tools at:
+
+- Prometheus: `http://127.0.0.1:9090`
+- Grafana: `http://127.0.0.1:3000`
+
+Grafana uses the disposable local default password `portflow`. Set
+`$env:PORTFLOW_GRAFANA_ADMIN_PASSWORD` before starting the profile when a different local
+password is needed. The ports are bound to loopback and are not a hosted or public service.
+
+The dashboard reports state-store availability, active/succeeded/failed run counts, latest run
+duration, and aggregate consumed, Bronze, committed, duplicate, late, and dead-letter totals. It
+does not expose run IDs, exception messages, broker addresses, or raw payloads as metric labels.
+
+Stop only the disposable observability services and their named volumes with:
+
+```powershell
+docker compose --profile observability down -v portflow-metrics prometheus grafana
+```
+
+Stop the optional broker separately when it is no longer needed:
+
+```powershell
+docker compose --profile streaming down -v redpanda
+```
+
+These commands do not remove the tracked directory sentinel, PostgreSQL data, stream Bronze
+files, or `web/public/data`.
+
+### PF-104 troubleshooting
+
+- **`state_store_available=0`:** run a PF-103 Dagster job using `data/bronze-stream`, then refresh
+  the dashboard. A missing state database is a valid empty-state condition.
+- **Prometheus target is down:** confirm `portflow-metrics` is healthy and inspect
+  `http://127.0.0.1:9108/metrics` directly before restarting the observability profile.
+- **Loopback port already in use:** stop the local process using port `3000`, `9090`, or `9108`,
+  or change the host-side binding in the disposable local Compose file before starting again.
+
 ## Configuration
 
 | Variable | Default | Purpose |
