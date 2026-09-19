@@ -156,7 +156,7 @@ does not expose run IDs, exception messages, broker addresses, or raw payloads a
 Stop only the disposable observability services and their named volumes with:
 
 ```powershell
-docker compose --profile observability down -v
+docker compose --profile observability down -v portflow-metrics prometheus grafana
 ```
 
 Stop the optional broker separately when it is no longer needed:

@@ -19,7 +19,7 @@ def test_streaming_runbook_documents_pf104_start_inspect_and_cleanup() -> None:
         "PORTFLOW_GRAFANA_ADMIN_PASSWORD",
         "read-only",
         "stream_runs",
-        "docker compose --profile observability down -v",
+        "docker compose --profile observability down -v portflow-metrics prometheus grafana",
     ):
         assert required in runbook
 
