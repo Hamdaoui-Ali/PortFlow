@@ -56,6 +56,69 @@ checks deliberately use smaller batches to verify multiple commits and restart b
 resources and state. It does not stop PostgreSQL, modify the committed public snapshot, or change
 the PostgreSQL workflow.
 
+## Optional Dagster orchestration (PF-103)
+
+Dagster is an optional local dependency for manually launching one bounded streaming consumer
+run. It does not add a daemon, schedule, sensor, automatic retry, or always-on service. Install the
+extra and start the disposable broker before launching a run:
+
+```powershell
+Set-Location C:/Users/aliha/PortFlow
+python -m uv sync --extra dev --extra orchestration
+$env:PORTFLOW_REDPANDA_BROKERS = "localhost:19092"
+$env:PORTFLOW_REDPANDA_GROUP = "portflow-bronze"
+$env:PORTFLOW_REDPANDA_DLQ_TOPIC = "portflow.telemetry.dlq"
+docker compose --profile streaming up -d --wait redpanda
+```
+
+Create a user-owned YAML file named `pf-103-run.yaml` with the exact op configuration below:
+
+```yaml
+ops:
+  consume_stream:
+    config:
+      topic: portflow.telemetry
+      bronze_dir: data/bronze-stream
+      batch_size: 2
+      max_messages: 12
+      allowed_lateness_seconds: 300
+      poll_timeout_seconds: 1.0
+      idle_timeout_seconds: 30.0
+```
+
+Launch the job manually from the repository root:
+
+```powershell
+python -m uv run --extra dev --extra orchestration dagster job execute `
+  -m portflow.orchestration.streaming `
+  -j stream_consumer_job `
+  -c pf-103-run.yaml
+```
+
+The local Dagster UI may be used instead of the CLI to launch the same job. No daemon or schedule
+is required. Dagster's generated `run_id` is the canonical identifier for these orchestrated
+executions, and the consumer records run metadata in
+`data/bronze-stream/.stream-state.sqlite3`. Inspect the lifecycle fields with:
+
+```powershell
+python -c "import sqlite3; c=sqlite3.connect('data/bronze-stream/.stream-state.sqlite3'); c.row_factory=sqlite3.Row; print(*[dict(row) for row in c.execute('SELECT run_id, status, started_at, finished_at, error_type, error_message FROM stream_runs ORDER BY started_at DESC')], sep='\n')"
+```
+
+Failed rows may have null report counters because a failure can happen before the consumer
+returns its report; null counters do not prove that zero messages were processed. A failed run's
+original consumer error remains the execution error even if writing failure metadata also fails.
+
+The existing `scripts/run_stream_consumer.py` command remains a direct, non-Dagster execution path
+and does not write `stream_runs`. Dagster run IDs are canonical only for Dagster-managed runs.
+After a manual fixture, stop only the disposable broker resources:
+
+```powershell
+docker compose --profile streaming down -v redpanda
+```
+
+The browser remains static, `web/public/data` remains unchanged, and no automatic retry is
+configured.
+
 ## Configuration
 
 | Variable | Default | Purpose |
