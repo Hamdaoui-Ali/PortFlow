@@ -81,3 +81,21 @@ def test_cli_failure_rejects_reason_code_str_subclass(monkeypatch, capsys) -> No
     assert output == "portability verification failed: verification_failed\n"
     assert "alice" not in output
     assert "secret" not in output
+
+
+def test_cli_failure_rejects_reason_code_property(monkeypatch, capsys) -> None:
+    class Failure(ValueError):
+        @property
+        def reason_code(self) -> str:
+            raise RuntimeError("C:\\Users\\alice\\sensitive-secret")
+
+    def fail(*args, **kwargs):
+        raise Failure("raw secret text")
+
+    monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
+
+    assert main(["verify", "--manifest", ".portability/bigquery/manifest.json"]) == 1
+    output = capsys.readouterr().out
+    assert output == "portability verification failed: verification_failed\n"
+    assert "alice" not in output
+    assert "sensitive-secret" not in output
