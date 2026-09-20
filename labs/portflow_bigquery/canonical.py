@@ -53,6 +53,12 @@ _TIMESTAMP_FIELDS = {"source_period_start", "source_period_end"}
 def canonicalize_rows(rows: Iterable[Mapping[str, object]]) -> list[dict[str, object]]:
     """Normalize result rows into the strict, deterministic comparison shape."""
     canonical = [_canonicalize_row(row) for row in rows]
+    seen_terminal_ids: set[str] = set()
+    for row in canonical:
+        terminal_id = cast(str, row["terminal_id"])
+        if terminal_id in seen_terminal_ids:
+            raise ValueError(f"duplicate terminal_id: {terminal_id}")
+        seen_terminal_ids.add(terminal_id)
     canonical.sort(key=lambda row: cast(str, row["terminal_id"]))
     return canonical
 

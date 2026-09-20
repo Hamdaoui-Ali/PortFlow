@@ -91,6 +91,18 @@ def test_canonicalizer_sorts_rows_by_terminal_id() -> None:
     assert [row["terminal_id"] for row in result] == ["TM-001", "TM-002"]
 
 
+def test_duplicate_terminal_ids_are_rejected_in_any_input_order() -> None:
+    first = _row("TM-001")
+    second = _row("TM-001")
+    second["availability"] = 0.5
+    rows = [first, second]
+
+    with pytest.raises(ValueError, match=r"duplicate terminal_id.*TM-001"):
+        canonicalize_rows(rows)
+    with pytest.raises(ValueError, match=r"duplicate terminal_id.*TM-001"):
+        result_sha256(list(reversed(rows)))
+
+
 def test_result_hash_is_independent_of_input_order() -> None:
     first = [_row("TM-002"), _row("TM-001")]
     second = list(reversed(first))
