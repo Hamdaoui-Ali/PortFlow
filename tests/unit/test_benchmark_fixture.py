@@ -66,3 +66,16 @@ def test_fixture_rejects_negative_seed() -> None:
 def test_fixture_rejects_unsupported_compression() -> None:
     with pytest.raises(ValueError, match="compression must be zstd"):
         FixtureSpec(seed=42, rows=1, compression="snappy")
+
+
+def test_fixture_rejects_symlinked_output_root(tmp_path: Path) -> None:
+    target_root = tmp_path / "target-fixture"
+    target_root.mkdir()
+    linked_root = tmp_path / "fixture"
+    try:
+        linked_root.symlink_to(target_root, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"directory links unavailable: {error}")
+
+    with pytest.raises(ValueError, match="fixture output path"):
+        generate_fixture(FixtureSpec(seed=42, rows=1), linked_root)

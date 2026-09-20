@@ -12,6 +12,7 @@ import polars as pl
 from portflow.domain.models import EquipmentState  # type: ignore[import-untyped]
 
 from .models import FixtureMetadata, FixtureSpec
+from .paths import reject_reparse_components
 
 FIXTURE_COLUMNS = (
     "event_id",
@@ -99,6 +100,10 @@ def logical_fixture_hash(path: Path) -> str:
 
 def generate_fixture(spec: FixtureSpec, output_dir: Path) -> FixtureMetadata:
     """Generate one deterministic Parquet fixture and return its metadata."""
+    reject_reparse_components(
+        output_dir,
+        message="fixture output path must not contain symbolic links or reparse points",
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
     for parquet_path in output_dir.glob("part-*.parquet"):
         parquet_path.unlink()
