@@ -25,6 +25,45 @@ def test_rendered_contract_uses_bigquery_functions_and_no_tokens() -> None:
     validate_google_sql(sql)
 
 
+def test_validator_rejects_qualified_projection_wildcard() -> None:
+    sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
+    sql = sql.replace(
+        "  COALESCE(a.critical_alarms, 0) AS critical_alarms\nFROM",
+        "  COALESCE(a.critical_alarms, 0) AS critical_alarms,\n  p.*\nFROM",
+    )
+
+    with pytest.raises(QueryValidationError) as error:
+        validate_google_sql(sql)
+
+    assert error.value.reason_code == "implicit_select_star"
+
+
+def test_validator_rejects_reordered_projection() -> None:
+    sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
+    sql = sql.replace(
+        "  p.terminal_id,\n  p.source_period_start,",
+        "  p.source_period_start,\n  p.terminal_id,",
+    )
+
+    with pytest.raises(QueryValidationError) as error:
+        validate_google_sql(sql)
+
+    assert error.value.reason_code == "missing_output_field"
+
+
+def test_validator_rejects_extra_projection() -> None:
+    sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
+    sql = sql.replace(
+        "  COALESCE(a.critical_alarms, 0) AS critical_alarms\nFROM",
+        "  COALESCE(a.critical_alarms, 0) AS critical_alarms,\n  1 AS extra_field\nFROM",
+    )
+
+    with pytest.raises(QueryValidationError) as error:
+        validate_google_sql(sql)
+
+    assert error.value.reason_code == "missing_output_field"
+
+
 @pytest.mark.parametrize(
     ("project_id", "dataset", "reason_code"),
     [

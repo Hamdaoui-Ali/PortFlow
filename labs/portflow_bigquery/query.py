@@ -12,28 +12,26 @@ _DATASET = re.compile(r"^[A-Za-z0-9_]+$")
 _TOKENS = ("{{ project_id }}", "{{ dataset }}")
 _FORBIDDEN_DUCKDB = re.compile(r"\b(?:read_parquet|date_diff|filter)\s*\(", re.IGNORECASE)
 _SELECT_STAR = re.compile(r"\bSELECT\s+(?:DISTINCT\s+)?\*", re.IGNORECASE)
-_OUTPUT_FIELDS = frozenset(
-    {
-        "terminal_id",
-        "source_period_start",
-        "source_period_end",
-        "available_intervals",
-        "scheduled_intervals",
-        "active_intervals",
-        "available_time_minutes",
-        "resolved_incident_count",
-        "repair_minutes",
-        "qualifying_failure_count",
-        "operating_hours",
-        "throughput",
-        "average_dwell_minutes",
-        "availability",
-        "utilization",
-        "mttr_minutes",
-        "mtbf_hours",
-        "active_incidents",
-        "critical_alarms",
-    }
+_OUTPUT_FIELDS = (
+    "terminal_id",
+    "source_period_start",
+    "source_period_end",
+    "available_intervals",
+    "scheduled_intervals",
+    "active_intervals",
+    "available_time_minutes",
+    "resolved_incident_count",
+    "repair_minutes",
+    "qualifying_failure_count",
+    "operating_hours",
+    "throughput",
+    "average_dwell_minutes",
+    "availability",
+    "utilization",
+    "mttr_minutes",
+    "mtbf_hours",
+    "active_incidents",
+    "critical_alarms",
 )
 
 
@@ -58,8 +56,14 @@ def _validate_output_fields(statement: exp.Expr) -> None:
     select = statement if isinstance(statement, exp.Select) else statement.find(exp.Select)
     if select is None:
         raise QueryValidationError("missing_output_field")
-    output_fields = {expression.alias_or_name for expression in select.expressions}
-    if not _OUTPUT_FIELDS.issubset(output_fields):
+    for projection in select.expressions:
+        expression = projection.this if isinstance(projection, exp.Alias) else projection
+        if isinstance(expression, exp.Star) or (
+            isinstance(expression, exp.Column) and isinstance(expression.this, exp.Star)
+        ):
+            raise QueryValidationError("implicit_select_star")
+    output_fields = tuple(expression.alias_or_name for expression in select.expressions)
+    if output_fields != _OUTPUT_FIELDS:
         raise QueryValidationError("missing_output_field")
 
 
