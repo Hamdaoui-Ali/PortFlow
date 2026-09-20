@@ -277,13 +277,14 @@ def generate_fixture(
     schema_columns: dict[str, tuple[str, ...]] = {}
 
     for table_name in sorted(schema):
-        table_root = fixture_root / table_name
+        table_root = resolve_artifact_path(fixture_root, table_name)
         table_root.mkdir(parents=True, exist_ok=True)
         for parquet_path in table_root.glob("*.parquet"):
-            parquet_path.unlink()
+            resolve_artifact_path(table_root, parquet_path.name).unlink()
         columns = _table_columns(schema[table_name])
         frame = pl.DataFrame(fixture_rows[table_name]).select(columns)
-        frame.write_parquet(table_root / "part-000000.parquet")
+        parquet_target = resolve_artifact_path(table_root, "part-000000.parquet")
+        frame.write_parquet(parquet_target)
         rows_by_table[table_name] = frame.height
         schema_columns[table_name] = tuple(columns)
 

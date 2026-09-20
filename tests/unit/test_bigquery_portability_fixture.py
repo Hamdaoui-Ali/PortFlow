@@ -1,3 +1,4 @@
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -13,6 +14,19 @@ from labs.portflow_bigquery.schema import load_schema
 
 ROOT = Path(__file__).parents[2]
 SCHEMA_PATH = ROOT / "analytics" / "portability" / "bigquery" / "schema.json"
+
+
+def _link_directory(link: Path, target: Path) -> None:
+    try:
+        link.symlink_to(target, target_is_directory=True)
+    except OSError:
+        if os.name != "nt":
+            raise
+        result = os.system(
+            f'cmd.exe /c mklink /J "{link}" "{target}" >nul 2>nul'
+        )
+        if result != 0:
+            raise OSError("directory links unavailable")
 
 
 def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
@@ -112,3 +126,44 @@ def test_fixture_writer_rejects_output_outside_artifact_root(tmp_path: Path) -> 
             schema_path=SCHEMA_PATH,
             repository_root=tmp_path,
         )
+
+
+def test_fixture_writer_rejects_linked_artifact_root(tmp_path: Path) -> None:
+    portability_root = tmp_path / ".portability"
+    portability_root.mkdir()
+    outside = tmp_path / "outside-root"
+    outside.mkdir()
+    linked_root = portability_root / "bigquery"
+    try:
+        _link_directory(linked_root, outside)
+    except OSError as error:
+        pytest.skip(f"directory links unavailable: {error}")
+
+    with pytest.raises(ValueError, match="artifact root"):
+        generate_fixture(
+            FixtureSpec(seed=42),
+            linked_root / "fixture",
+            schema_path=SCHEMA_PATH,
+            repository_root=tmp_path,
+        )
+    assert not list(outside.iterdir())
+
+
+def test_fixture_writer_rejects_linked_table_root(tmp_path: Path) -> None:
+    fixture_root = tmp_path / ".portability" / "bigquery" / "fixture"
+    fixture_root.mkdir(parents=True)
+    outside = tmp_path / "outside-table"
+    outside.mkdir()
+    try:
+        _link_directory(fixture_root / "telemetry_events", outside)
+    except OSError as error:
+        pytest.skip(f"directory links unavailable: {error}")
+
+    with pytest.raises(ValueError, match="artifact path"):
+        generate_fixture(
+            FixtureSpec(seed=42),
+            fixture_root,
+            schema_path=SCHEMA_PATH,
+            repository_root=tmp_path,
+        )
+    assert not list(outside.iterdir())
