@@ -1,8 +1,8 @@
 # PF-105 Reproducible Engine Benchmarks
 
-**Status:** Draft for review  
-**Date:** 2026-09-19  
-**Parent slice:** PF-104 engineering observability  
+**Status:** Draft for review
+**Date:** 2026-09-19
+**Parent slice:** PF-104 engineering observability
 **Scope decision:** Local reproducible performance evidence
 
 ## Goal
