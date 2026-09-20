@@ -1,5 +1,26 @@
 # Changelog
 
+## PF-105 benchmark evidence - 2026-09-20
+
+PortFlow now includes an opt-in benchmark harness for comparing the shared telemetry
+workload across DuckDB, Polars, and optional Docker-isolated PySpark.
+
+### Included
+
+- Deterministic smoke, small, medium, and large fixture profiles with logical hashes.
+- Versioned JSON reports with median and p95 timing, engine status, bounded reason codes, and
+  canonical result hashes.
+- A pinned Spark image, cross-engine result equivalence checks, report verification, and a
+  local benchmark runbook.
+
+### PF-105 boundaries
+
+- Benchmark fixtures and reports are disposable local engineering evidence under
+  .benchmarks/; benchmark data is not public data and never updates web/public/data.
+- Timing is host-specific and is not a hosted performance guarantee.
+- PySpark remains optional; missing Docker produces a bounded unavailable result rather than
+  silently substituting another engine.
+
 ## PF-104 engineering observability - 2026-09-19
 
 PortFlow now includes an optional local Prometheus and Grafana stack for inspecting bounded

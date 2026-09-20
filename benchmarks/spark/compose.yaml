@@ -1,0 +1,25 @@
+services:
+  pyspark:
+    image: apache/spark@sha256:a89782d90529a623fc4471cdddb0f9c32d6eed10a81b256a80207b23c3b1df00
+    working_dir: /tmp
+    entrypoint: ["/opt/spark/bin/spark-submit"]
+    command:
+      - "--master"
+      - "local[2]"
+      - "/workspace/benchmarks/portflow_benchmarks/spark_worker.py"
+      - "--fixture-dir"
+      - "/workspace/fixture/${PF_BENCHMARK_FIXTURE_SUBPATH:-.}"
+      - "--window-start"
+      - "${PF_BENCHMARK_WINDOW_START:-2026-01-01T00:00:00Z}"
+      - "--window-end"
+      - "${PF_BENCHMARK_WINDOW_END:-2026-01-02T00:00:00Z}"
+      - "--output"
+      - "/workspace/output/${PF_BENCHMARK_OUTPUT_NAME:-result.json}"
+      - "--warmup"
+      - "${PF_BENCHMARK_WARMUP:-1}"
+      - "--repetitions"
+      - "${PF_BENCHMARK_REPETITIONS:-3}"
+    volumes:
+      - ../../.benchmarks/fixtures:/workspace/fixture:ro
+      - ../../benchmarks:/workspace/benchmarks:ro
+      - ../../.benchmarks/spark:/workspace/output

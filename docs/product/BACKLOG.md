@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-105**, larger DuckDB, Polars, and PySpark benchmarks. PF-030, PF-101, PF-102, PF-103, and PF-104 are complete and PortFlow V1 is published.
+Start **PF-106**, the BigQuery Sandbox portability lab. PF-030, PF-101, PF-102, PF-103, PF-104, and PF-105 are complete and PortFlow V1 is published.
 The documented pull-request and green-CI branch-protection rule for `main` remains an outstanding
 repository-hardening follow-up.
 
@@ -41,6 +41,7 @@ repository-hardening follow-up.
 - **PF-102 stream safety:** design `9a5dfca`, plan `b5bcd6a`, implementation commits `edc7b6b`, `1367a53`, `b3f304a`, `bad4b87`, `b33f3d3`, and `1508582`; durable SQLite event state, exact-duplicate suppression, bounded lateness, canonical dead-letter envelopes, safe commit ordering, runner wiring, and broker-optional round-trip coverage are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The main branch-protection rule remains outstanding.
 - **PF-103 local orchestration:** design `5508ab0`, plan `5bfaefe`, implementation commits `1d59781`, `502317b`, `63a0063`, and `c56113f`; optional local Dagster consumer orchestration, canonical Dagster run IDs, SQLite run lifecycle metadata, manual execution documentation, full Python verification (`142 passed, 2 skipped`), and both Redpanda round-trip checks are delivered. Producer orchestration, schedules, retries, hosted Dagster, and a public streaming UI remain out of scope. The main branch-protection rule remains outstanding.
 - **PF-104 engineering observability:** design and plan `7faa6a9`, implementation commits `1518c98`, `eb5e47b`, `9f36112`, `3f7ab58`, and `6c4f678`; read-only stream-run metrics, optional Prometheus/Grafana Compose services, a local dashboard, bounded-label contracts, and a local runbook are delivered. The main branch-protection rule remains outstanding.
+- **PF-105 benchmark evidence:** design `e653555`, plan `88fc4c5`, implementation commits `b01625a`, `dc6bad5`, `1237b7c`, `6998db8`, and `7cc7cf1`; deterministic smoke/small/medium/large fixtures, DuckDB/Polars equivalence, pinned Docker-isolated PySpark, versioned reports, verification CLI, and benchmark documentation are delivered. Focused PF-105 tests pass (`40 passed`), the full Python suite passes (`200 passed, 2 skipped`), and the small all-engine report verifies with matching result hashes. Browser reconciliation remains environment-dependent here because the checkout lacks the web Vitest dependency. The public data diff is empty and the main branch-protection rule remains outstanding.
 
 ## R0 — Verified constraints
 
@@ -612,7 +613,7 @@ These items are P2 and cannot block V1:
 - PF-102: **Complete** — Streaming deduplication, late events, and dead-letter handling.
 - PF-103: **Complete** — Optional local Dagster orchestration and run metadata for bounded consumer runs.
 - PF-104: **Complete** — Prometheus and Grafana engineering observability.
-- PF-105: Larger DuckDB, Polars, and PySpark benchmarks.
+- PF-105: **Complete** — Deterministic DuckDB, Polars, and Docker-isolated PySpark benchmark evidence; design `e653555`, plan `88fc4c5`, and implementation through `7cc7cf1`.
 - PF-106: BigQuery Sandbox portability lab.
 - PF-107: Databricks Free Edition Delta/PySpark lab.
 - PF-108: Optional time-limited cloud comparison.
@@ -638,6 +639,7 @@ These items are P2 and cannot block V1:
 | Restart-safe local telemetry streaming and dead-letter handling | PF-102 |
 | Optional local consumer orchestration and run metadata | PF-103 |
 | Local stream-run engineering observability | PF-104 |
+| Reproducible local engine benchmark evidence | PF-105 |
 
 ## Definition of done for every task
 
