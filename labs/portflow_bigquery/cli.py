@@ -44,7 +44,8 @@ class _ArgumentParser(argparse.ArgumentParser):
 def _safe_reason_code(error: BaseException, fallback: str) -> str:
     try:
         args = BaseException.__getattribute__(error, "args")
-    except Exception:
+    except BaseException:
+        # Contain every descriptor failure so CLI output cannot escape bounded messages.
         return fallback
     if type(args) is tuple and args and type(args[0]) is str:
         reason_code = args[0]

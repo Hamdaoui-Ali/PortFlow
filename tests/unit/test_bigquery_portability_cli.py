@@ -161,3 +161,21 @@ def test_cli_failure_rejects_reason_code_dict_descriptor(monkeypatch, capsys) ->
     assert output == "portability verification failed: query_hash_mismatch\n"
     assert "alice" not in output
     assert "dict-secret" not in output
+
+
+def test_cli_failure_rejects_args_descriptor_base_exception(monkeypatch, capsys) -> None:
+    class Failure(ValueError):
+        @property
+        def args(self) -> tuple[str]:
+            raise SystemExit("C:\\Users\\alice\\args-secret")
+
+    def fail(*args, **kwargs):
+        raise Failure("query_hash_mismatch")
+
+    monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
+
+    assert main(["verify", "--manifest", ".portability/bigquery/manifest.json"]) == 1
+    output = capsys.readouterr().out
+    assert output == "portability verification failed: verification_failed\n"
+    assert "alice" not in output
+    assert "args-secret" not in output
