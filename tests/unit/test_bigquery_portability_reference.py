@@ -34,6 +34,29 @@ def test_failed_dbt_reference_has_bounded_reason(
     assert "secret-looking" not in str(error.value)
 
 
+def test_unlaunchable_dbt_reference_has_bounded_reason(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    def raise_launch_error(*args: object, **kwargs: object) -> object:
+        raise OSError("dbt missing at C:\\private\\dbt.exe")
+
+    monkeypatch.setattr(
+        "labs.portflow_bigquery.reference.subprocess.run", raise_launch_error
+    )
+    (tmp_path / "fixture").mkdir()
+
+    with pytest.raises(ReferenceExecutionError) as error:
+        run_local_reference(
+            repository_root=tmp_path,
+            fixture_root=tmp_path / "fixture",
+            gold_db=tmp_path / "gold" / "portflow.duckdb",
+        )
+
+    assert error.value.reason_code == "dbt_reference_failed"
+    assert "private" not in str(error.value)
+    assert len(str(error.value)) < 100
+
+
 def test_reference_requires_fixture_directory(tmp_path: Path) -> None:
     with pytest.raises(ReferenceExecutionError) as error:
         run_local_reference(

@@ -33,25 +33,28 @@ def run_local_reference(
     if not fixture_root.is_dir():
         raise ReferenceExecutionError("fixture_missing")
 
-    result = subprocess.run(
-        [
-            "dbt",
-            "build",
-            "--project-dir",
-            str(repository_root / "analytics"),
-            "--profiles-dir",
-            str(repository_root / "analytics"),
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-        cwd=repository_root,
-        env={
-            **os.environ,
-            "PORTFLOW_SILVER_DIR": fixture_root.as_posix(),
-            "PORTFLOW_GOLD_DB": gold_db.as_posix(),
-        },
-    )
+    try:
+        result = subprocess.run(
+            [
+                "dbt",
+                "build",
+                "--project-dir",
+                str(repository_root / "analytics"),
+                "--profiles-dir",
+                str(repository_root / "analytics"),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=repository_root,
+            env={
+                **os.environ,
+                "PORTFLOW_SILVER_DIR": fixture_root.as_posix(),
+                "PORTFLOW_GOLD_DB": gold_db.as_posix(),
+            },
+        )
+    except OSError:
+        raise ReferenceExecutionError("dbt_reference_failed") from None
     if result.returncode != 0:
         raise ReferenceExecutionError("dbt_reference_failed")
     if not gold_db.is_file():
