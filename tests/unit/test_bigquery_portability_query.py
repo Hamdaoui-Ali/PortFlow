@@ -134,6 +134,8 @@ def test_validator_reports_tokenization_failures_as_invalid_google_sql(fragment:
         validate_google_sql(fragment)
 
     assert error.value.reason_code == "invalid_google_sql"
+
+
 def test_validator_reports_invalid_google_sql() -> None:
     with pytest.raises(QueryValidationError) as error:
         validate_google_sql("SELECT FROM")
