@@ -70,11 +70,11 @@ def build_compose_command(
     )
 
 
-def failure_execution(reason_code: str) -> EngineExecution:
+def failure_execution(reason_code: str, *, engine_name: str = "pyspark") -> EngineExecution:
     """Return safe unavailable metadata without exposing subprocess output."""
     safe_reason = reason_code if _REASON_PATTERN.fullmatch(reason_code) else "spark_failed"
     return EngineExecution(
-        name="pyspark",
+        name=engine_name,
         version="unavailable",
         startup_seconds=0.0,
         warmup_seconds=0.0,

@@ -76,3 +76,32 @@ def test_run_benchmark_uses_input_rows_for_throughput(
     report = runner.run_benchmark("smoke", ["duckdb"], report_path=tmp_path / "report.json")
 
     assert report["engines"][0]["rows_per_second"] == 2_000.0
+
+
+def test_run_benchmark_preserves_engine_name_when_host_execution_fails(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    metadata = FixtureMetadata(
+        seed=42,
+        rows=1_000,
+        generator_version="1",
+        compression="zstd",
+        fixture_dir=tmp_path,
+        file_count=1,
+        bytes=1,
+        logical_sha256="c" * 64,
+        schema=("event_id",),
+    )
+    monkeypatch.setattr(runner, "generate_fixture", lambda spec, output: metadata)
+
+    def fail_execution(name, fixture, workload):
+        raise RuntimeError("engine failed")
+
+    monkeypatch.setattr(runner, "execute_workload", fail_execution)
+
+    report = runner.run_benchmark("smoke", ["duckdb"], report_path=tmp_path / "report.json")
+
+    assert report["engines"][0]["name"] == "duckdb"
+    assert report["engines"][0]["status"] == "unavailable"
+    assert report["engines"][0]["reason_code"] == "engine_execution_failed"

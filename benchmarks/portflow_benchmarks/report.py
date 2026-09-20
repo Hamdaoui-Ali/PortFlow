@@ -107,7 +107,7 @@ def validate_report(report: Mapping[str, object]) -> None:
         if status not in {"ok", "unavailable", "error"}:
             raise ValueError(f"engines[{index}].status is invalid")
         engine_rows = _integer(engine.get("result_rows"), f"engines[{index}].result_rows")
-        if engine_rows != result_rows:
+        if status == "ok" and engine_rows != result_rows:
             raise ValueError(f"engines[{index}].result_rows does not match workload.result_rows")
         for field in ("startup_seconds", "warmup_seconds", "rows_per_second"):
             _number(engine.get(field), f"engines[{index}].{field}")

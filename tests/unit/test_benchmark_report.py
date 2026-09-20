@@ -95,6 +95,17 @@ def test_report_rejects_row_count_mismatch() -> None:
         validate_report(report)
 
 
+def test_report_allows_unavailable_engine_without_result_rows() -> None:
+    report = valid_report()
+    unavailable = report["engines"][0]
+    unavailable["status"] = "unavailable"
+    unavailable["reason_code"] = "docker_unavailable"
+    unavailable["result_sha256"] = ""
+    unavailable["result_rows"] = 0
+
+    validate_report(report)
+
+
 def test_report_rejects_unbounded_failure_reason() -> None:
     report = valid_report()
     failed = report["engines"][0]

@@ -108,7 +108,7 @@ def _run_host_engine(
         last = execute_workload(engine_name, fixture_dir, workload)
         timed.extend(last.timed_seconds)
     if last is None:
-        return _engine_report(failure_execution("no_timed_samples"))
+        return _engine_report(failure_execution("no_timed_samples", engine_name=engine_name))
     return _engine_report(
         last,
         timed_seconds=timed,
@@ -142,7 +142,9 @@ def _run_engine(
             input_rows,
         )
     except Exception:
-        return _engine_report(failure_execution("engine_execution_failed"))
+        return _engine_report(
+            failure_execution("engine_execution_failed", engine_name=engine_name)
+        )
 
 
 def _complete_engine_hashes(engines: list[dict[str, object]]) -> tuple[str, int]:
