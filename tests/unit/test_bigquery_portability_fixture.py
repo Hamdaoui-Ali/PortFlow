@@ -118,9 +118,10 @@ def test_fixture_hash_is_repeatable_and_independent_of_file_names(tmp_path: Path
 
 
 def test_fixture_writer_rejects_output_outside_artifact_root(tmp_path: Path) -> None:
+    spec = FixtureSpec(seed=42)
     with pytest.raises(ValueError, match="artifact root"):
         generate_fixture(
-            FixtureSpec(seed=42),
+            spec,
             tmp_path / "outside" / "fixture",
             schema_path=SCHEMA_PATH,
             repository_root=tmp_path,
@@ -138,9 +139,10 @@ def test_fixture_writer_rejects_linked_artifact_root(tmp_path: Path) -> None:
     except OSError as error:
         pytest.skip(f"directory links unavailable: {error}")
 
+    spec = FixtureSpec(seed=42)
     with pytest.raises(ValueError, match="artifact root"):
         generate_fixture(
-            FixtureSpec(seed=42),
+            spec,
             linked_root / "fixture",
             schema_path=SCHEMA_PATH,
             repository_root=tmp_path,
@@ -158,11 +160,7 @@ def test_fixture_writer_rejects_linked_table_root(tmp_path: Path) -> None:
     except OSError as error:
         pytest.skip(f"directory links unavailable: {error}")
 
+    spec = FixtureSpec(seed=42)
     with pytest.raises(ValueError, match="artifact path"):
-        generate_fixture(
-            FixtureSpec(seed=42),
-            fixture_root,
-            schema_path=SCHEMA_PATH,
-            repository_root=tmp_path,
-        )
+        generate_fixture(spec, fixture_root, schema_path=SCHEMA_PATH, repository_root=tmp_path)
     assert not list(outside.iterdir())

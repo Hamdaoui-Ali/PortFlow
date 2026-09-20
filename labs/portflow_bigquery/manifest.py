@@ -43,8 +43,13 @@ _COMMON: dict[str, object] = {
     "cloud_execution": {"const": "not_run"},
 }
 _HASH = {"type": "string", "pattern": "^[0-9a-f]{64}$"}
-_COUNT = {"type": "integer", "minimum": 0}
 _TABLES = ("telemetry_events", "container_movements", "incidents", "alarms")
+
+
+def _count_schema() -> dict[str, object]:
+    return {"type": "integer", "minimum": 0}
+
+
 _SCHEMA = {
     "oneOf": [
         _object_schema(
@@ -68,14 +73,16 @@ _SCHEMA = {
                     {
                         "generator_version": {"const": "1"},
                         "tables": {"type": "integer", "const": 4},
-                        "rows": _object_schema(dict.fromkeys(_TABLES, _COUNT)),
+                        "rows": _object_schema(
+                            {table: _count_schema() for table in _TABLES}
+                        ),
                         "sha256": _HASH,
                     }
                 ),
                 "reference": _object_schema(
                     {
                         "engine": {"const": "duckdb_dbt"},
-                        "result_rows": _COUNT,
+                        "result_rows": _count_schema(),
                         "result_sha256": _HASH,
                     }
                 ),
@@ -228,7 +235,7 @@ def validate_manifest(path: Path, *, artifact_root: Path) -> dict[str, object]:
         # Do not resolve away a link before the path helper can inspect it.
         relative = path.absolute().relative_to(artifact_root.absolute()).as_posix()
         target = resolve_artifact_path(artifact_root, relative)
-    except (ArtifactPathError, ValueError):
+    except ValueError:
         raise ManifestVerificationError("artifact_path_invalid") from None
     try:
         manifest = _validate(json.loads(target.read_text(encoding="utf-8")))

@@ -83,3 +83,11 @@ def test_spark_failure_metadata_is_bounded_and_safe() -> None:
     assert len(execution.reason_code or "") <= 64
     assert execution.result_sha256 == ""
     assert execution.result_rows == ()
+
+
+def test_spark_worker_rejects_output_outside_mount(tmp_path: Path, monkeypatch) -> None:
+    output_root = tmp_path / "output"
+    monkeypatch.setattr(spark_worker, "_OUTPUT_ROOT", output_root, raising=False)
+
+    with pytest.raises(ValueError, match="within Spark output"):
+        spark_worker._write_payload(tmp_path / "outside" / "result.json", {})

@@ -67,22 +67,18 @@ def _engine_report(
             "reason_code": execution.reason_code,
         }
     summary = summarize_timings(samples)
+    warmup_value = execution.warmup_seconds if warmup_seconds is None else warmup_seconds
+    input_count = input_rows if input_rows is not None else len(execution.result_rows)
+    rows_per_second = input_count / summary.median_seconds if summary.median_seconds > 0 else 0.0
     return {
         "name": execution.name,
         "version": execution.version,
         "startup_seconds": execution.startup_seconds,
-        "warmup_seconds": execution.warmup_seconds
-        if warmup_seconds is None
-        else warmup_seconds,
+        "warmup_seconds": warmup_value,
         "timed_seconds": samples,
         "median_seconds": summary.median_seconds,
         "p95_seconds": summary.p95_seconds,
-        "rows_per_second": (
-            input_rows if input_rows is not None else len(execution.result_rows)
-        )
-        / summary.median_seconds
-        if summary.median_seconds > 0
-        else 0.0,
+        "rows_per_second": rows_per_second,
         "result_sha256": execution.result_sha256,
         "result_rows": len(execution.result_rows),
         "status": execution.status,

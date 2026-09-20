@@ -1,5 +1,5 @@
 import stat
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 DEFAULT_ARTIFACT_ROOT = Path(".portability") / "bigquery"
 _REPARSE_POINT_ATTRIBUTE = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
@@ -51,6 +51,23 @@ def _reject_reparse_components(path: Path, message: str) -> None:
             raise ArtifactPathError(message)
 
 
+def _validate_relative_path(relative_path: str) -> None:
+    """Reject path syntax that could escape the root on either host OS."""
+    windows = PureWindowsPath(relative_path)
+    posix = PurePosixPath(relative_path)
+    if (
+        not relative_path
+        or relative_path == "."
+        or windows.drive
+        or windows.root
+        or posix.is_absolute()
+        or ".." in windows.parts
+        or ".." in posix.parts
+        or "\\" in relative_path
+    ):
+        raise ArtifactPathError("artifact path must remain below artifact root")
+
+
 def resolve_artifact_root(
     candidate: Path | None = None,
     *,
@@ -81,6 +98,7 @@ def resolve_artifact_root(
 
 
 def resolve_artifact_path(root: Path, relative_path: str) -> Path:
+    _validate_relative_path(relative_path)
     root_candidate = _absolute_without_resolving(root)
     _reject_reparse_components(
         root_candidate,

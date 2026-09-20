@@ -29,6 +29,12 @@ from .query import QueryValidationError, query_sha256, render_query, validate_go
 from .reference import run_local_reference
 from .schema import load_schema
 
+_QUERY_FILE = "overview_kpis.sql"
+_SCHEMA_FILE = "schema.json"
+_MANIFEST_FILE = "manifest.json"
+_RESULT_FILE = "expected-result.json"
+_FINGERPRINT_FILE = "input-fingerprint.json"
+
 
 @dataclass(frozen=True)
 class RunSpec:
@@ -44,20 +50,20 @@ class RunSpec:
 def run_bundle(spec: RunSpec) -> dict[str, object]:
     """Build, record, and verify a local bundle; record bounded known failures."""
     root = resolve_artifact_root(spec.output_root, repository_root=spec.repository_root)
-    manifest_path = resolve_artifact_path(root, "manifest.json")
+    manifest_path = resolve_artifact_path(root, _MANIFEST_FILE)
     try:
         source = spec.repository_root / "analytics" / "portability" / "bigquery"
         fixture = generate_fixture(
             FixtureSpec(seed=spec.seed),
             root / "fixture",
-            schema_path=source / "schema.json",
+            schema_path=source / _SCHEMA_FILE,
             repository_root=spec.repository_root,
         )
         template = (source / "overview_kpis.sql").read_text(encoding="utf-8")
         query = render_query(template, project_id=spec.project_id, dataset=spec.dataset)
         validate_google_sql(query)
-        write_text(root / "overview_kpis.sql", query)
-        write_text(root / "schema.json", (source / "schema.json").read_text(encoding="utf-8"))
+        write_text(root / _QUERY_FILE, query)
+        write_text(root / _SCHEMA_FILE, (source / _SCHEMA_FILE).read_text(encoding="utf-8"))
         with TemporaryDirectory(prefix="portflow-pf106-") as reference_root:
             reference_repository = Path(reference_root)
             # The production project also contains maintenance_orders, outside
@@ -79,11 +85,11 @@ def run_bundle(spec: RunSpec) -> dict[str, object]:
                 fixture_root=root / "fixture",
                 gold_db=reference_repository / "portflow.duckdb",
             )
-        write_json(root / "expected-result.json", list(reference.rows))
-        write_json(root / "input-fingerprint.json", fixture.as_json())
+        write_json(root / _RESULT_FILE, list(reference.rows))
+        write_json(root / _FINGERPRINT_FILE, fixture.as_json())
         manifest = build_manifest(
             query_sha256=query_sha256(query),
-            schema_sha256=file_sha256(root / "schema.json"),
+            schema_sha256=file_sha256(root / _SCHEMA_FILE),
             fixture=fixture,
             reference=reference,
             dry_run_command=DRY_RUN_COMMAND,

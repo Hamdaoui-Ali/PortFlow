@@ -93,7 +93,8 @@ def test_real_bundle_is_repeatable_and_has_exact_hashes(
     canonical_bytes = (json.dumps(rows, sort_keys=True, separators=(",", ":")) + "\n").encode()
     assert manifest["reference"]["result_sha256"] == hashlib.sha256(canonical_bytes).hexdigest()
     text = (original / "manifest.json").read_text(encoding="utf-8")
-    assert str(ROOT) not in text and ROOT.as_posix() not in text
+    assert str(ROOT) not in text
+    assert ROOT.as_posix() not in text
     assert "traceback" not in text.lower()
     verify_bundle(original / "manifest.json", repository_root=ROOT)
 
@@ -208,8 +209,9 @@ def test_failed_run_replaces_success_with_bounded_error(
         raise ValueError("dbt_reference_failed private traceback C:/secret")
 
     monkeypatch.setattr(runner, "run_local_reference", fail)
+    spec = RunSpec(repository_root=ROOT, output_root=bundle)
     with pytest.raises(ValueError, match="dbt_reference_failed"):
-        run_bundle(RunSpec(repository_root=ROOT, output_root=bundle))
+        run_bundle(spec)
     text = (bundle / "manifest.json").read_text(encoding="utf-8")
     manifest = json.loads(text)
     assert manifest["verification"] == {
@@ -217,7 +219,8 @@ def test_failed_run_replaces_success_with_bounded_error(
         "reason_code": "run_failed",
         "verifier_version": "1",
     }
-    assert "dbt_reference_failed" not in text and "private" not in text
+    assert "dbt_reference_failed" not in text
+    assert "private" not in text
     assert not gold_paths[0].parent.exists()
     with pytest.raises(ManifestVerificationError, match="^manifest_invalid$"):
         verify_bundle(bundle / "manifest.json", repository_root=ROOT)

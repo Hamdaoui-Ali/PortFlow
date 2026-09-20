@@ -57,14 +57,13 @@ def test_canonicalizer_rejects_missing_result_fields() -> None:
 def test_workload_spec_requires_utc_and_a_forward_window() -> None:
     start = datetime(2026, 1, 1, tzinfo=UTC)
     end = start + timedelta(hours=1)
+    naive_start = datetime(2026, 1, 1)
+    non_utc_start = start.astimezone(timezone(timedelta(hours=1)))
 
     assert WorkloadSpec(window_start=start, window_end=end).window_start == start
     with pytest.raises(ValueError, match="timezone-aware UTC"):
-        WorkloadSpec(window_start=datetime(2026, 1, 1), window_end=end)
+        WorkloadSpec(window_start=naive_start, window_end=end)
     with pytest.raises(ValueError, match="timezone-aware UTC"):
-        WorkloadSpec(
-            window_start=start.astimezone(timezone(timedelta(hours=1))),
-            window_end=end,
-        )
+        WorkloadSpec(window_start=non_utc_start, window_end=end)
     with pytest.raises(ValueError, match="after window_start"):
         WorkloadSpec(window_start=start, window_end=start)

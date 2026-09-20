@@ -1,7 +1,6 @@
 """Command-line interface for local benchmark evidence."""
 
 import argparse
-import json
 from pathlib import Path
 from typing import cast
 
@@ -25,10 +24,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
-    try:
-        args = parser.parse_args(argv)
-    except SystemExit as error:
-        return error.code if isinstance(error.code, int) else 2
+    args = parser.parse_args(argv)
     if args.command == "run":
         try:
             report = run_benchmark(
@@ -51,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "verify":
         try:
             verify_report(args.report)
-        except (OSError, ValueError, json.JSONDecodeError):
+        except (OSError, ValueError):
             print("report verification failed")
             return 1
         print("report verified")

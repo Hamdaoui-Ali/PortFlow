@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+from benchmarks.portflow_benchmarks import report as report_module
 from benchmarks.portflow_benchmarks import runner
 from benchmarks.portflow_benchmarks.cli import main
 from benchmarks.portflow_benchmarks.models import EngineExecution, FixtureMetadata
@@ -9,20 +11,32 @@ from tests.unit.test_benchmark_report import valid_report
 
 
 def test_cli_help_returns_success(capsys) -> None:
-    assert main(["--help"]) == 0
+    with pytest.raises(SystemExit) as error:
+        main(["--help"])
+    assert error.value.code == 0
     assert "run" in capsys.readouterr().out
 
 
-def test_cli_verify_returns_success_for_valid_report(tmp_path: Path, capsys) -> None:
-    report_path = tmp_path / "report.json"
+def test_cli_verify_returns_success_for_valid_report(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    report_root = tmp_path / "reports"
+    monkeypatch.setattr(report_module, "REPORT_ROOT", report_root)
+    report_root.mkdir()
+    report_path = report_root / "report.json"
     report_path.write_text(json.dumps(valid_report()), encoding="utf-8")
 
     assert main(["verify", "--report", str(report_path)]) == 0
     assert "verified" in capsys.readouterr().out.lower()
 
 
-def test_cli_verify_returns_nonzero_for_invalid_report(tmp_path: Path, capsys) -> None:
-    report_path = tmp_path / "report.json"
+def test_cli_verify_returns_nonzero_for_invalid_report(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    report_root = tmp_path / "reports"
+    monkeypatch.setattr(report_module, "REPORT_ROOT", report_root)
+    report_root.mkdir()
+    report_path = report_root / "report.json"
     report = valid_report()
     report["engines"][0]["result_sha256"] = "b" * 64
     report_path.write_text(json.dumps(report), encoding="utf-8")
@@ -35,6 +49,8 @@ def test_run_benchmark_uses_input_rows_for_throughput(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
+    report_root = tmp_path / "reports"
+    monkeypatch.setattr(report_module, "REPORT_ROOT", report_root)
     result_rows = (
         {
             "terminal_id": "TM-001",
@@ -73,7 +89,7 @@ def test_run_benchmark_uses_input_rows_for_throughput(
         lambda name, fixture, workload: execution,
     )
 
-    report = runner.run_benchmark("smoke", ["duckdb"], report_path=tmp_path / "report.json")
+    report = runner.run_benchmark("smoke", ["duckdb"], report_path=report_root / "report.json")
 
     assert report["engines"][0]["rows_per_second"] == 2_000.0
 
@@ -82,6 +98,8 @@ def test_run_benchmark_preserves_engine_name_when_host_execution_fails(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
+    report_root = tmp_path / "reports"
+    monkeypatch.setattr(report_module, "REPORT_ROOT", report_root)
     metadata = FixtureMetadata(
         seed=42,
         rows=1_000,
@@ -100,7 +118,7 @@ def test_run_benchmark_preserves_engine_name_when_host_execution_fails(
 
     monkeypatch.setattr(runner, "execute_workload", fail_execution)
 
-    report = runner.run_benchmark("smoke", ["duckdb"], report_path=tmp_path / "report.json")
+    report = runner.run_benchmark("smoke", ["duckdb"], report_path=report_root / "report.json")
 
     assert report["engines"][0]["name"] == "duckdb"
     assert report["engines"][0]["status"] == "unavailable"

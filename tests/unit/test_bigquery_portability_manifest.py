@@ -169,8 +169,9 @@ def test_io_preserves_utf8_and_lf_bytes(tmp_path: Path) -> None:
 
 def test_external_root_fails_without_writing_error_manifest(tmp_path: Path) -> None:
     output = tmp_path / "outside"
+    spec = RunSpec(repository_root=tmp_path, output_root=output)
     with pytest.raises(ValueError, match="artifact root"):
-        run_bundle(RunSpec(repository_root=tmp_path, output_root=output))
+        run_bundle(spec)
     assert not output.exists()
     with pytest.raises(ManifestVerificationError, match="^artifact_path_invalid$"):
         verify_bundle(output / "manifest.json", repository_root=tmp_path)
@@ -178,7 +179,8 @@ def test_external_root_fails_without_writing_error_manifest(tmp_path: Path) -> N
 
 def test_missing_source_writes_error_after_root_resolution(tmp_path: Path) -> None:
     output = tmp_path / ".portability" / "bigquery"
+    spec = RunSpec(repository_root=tmp_path, output_root=output)
     with pytest.raises(ValueError, match="invalid portability schema"):
-        run_bundle(RunSpec(repository_root=tmp_path, output_root=output))
+        run_bundle(spec)
     manifest = validate_manifest(output / "manifest.json", artifact_root=output)
     assert manifest == build_error_manifest("run_failed")

@@ -107,7 +107,7 @@ def _load_worker_result(path: Path) -> EngineExecution:
             result_sha256=result_hash,
             result_rows=rows,
         )
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+    except (KeyError, TypeError, ValueError):
         return failure_execution("spark_result_invalid")
 
 

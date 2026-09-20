@@ -12,6 +12,7 @@ from .timing import summarize_timings
 
 REPORT_SCHEMA_VERSION = 1
 ENGINE_NAMES = {"duckdb", "polars", "pyspark"}
+REPORT_ROOT = Path(__file__).resolve().parents[2] / ".benchmarks" / "reports"
 _HASH_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _REASON_PATTERN = re.compile(r"^[a-z0-9_]{1,64}$")
 _DRIVE_PATH_PATTERN = re.compile(r"^[A-Za-z]:[\\/]")
@@ -64,13 +65,17 @@ def _integer(value: object, field: str) -> int:
     return value
 
 
-def validate_report(report: Mapping[str, object]) -> None:
-    """Validate the shareable benchmark report contract."""
-    if _contains_absolute_path(report):
-        raise ValueError("absolute path is not allowed in a report")
-    if report.get("schema_version") != REPORT_SCHEMA_VERSION:
-        raise ValueError("invalid schema_version")
-    fixture = _mapping(report.get("fixture"), "fixture")
+def _resolve_report_path(path: Path, artifact_root: Path | None = None) -> Path:
+    root = (artifact_root or REPORT_ROOT).resolve(strict=False)
+    candidate = path.resolve(strict=False)
+    try:
+        candidate.relative_to(root)
+    except ValueError as error:
+        raise ValueError("report path must remain within benchmark reports") from error
+    return candidate
+
+
+def _validate_fixture(fixture: Mapping[str, object]) -> None:
     _integer(fixture.get("seed"), "fixture.seed")
     _integer(fixture.get("rows"), "fixture.rows")
     _hash(fixture.get("logical_sha256"), "fixture.logical_sha256")
@@ -78,71 +83,108 @@ def validate_report(report: Mapping[str, object]) -> None:
     if not isinstance(fixture.get("generator_version"), str):
         raise ValueError("fixture.generator_version must be a string")
 
-    workload = _mapping(report.get("workload"), "workload")
+
+def _validate_workload(workload: Mapping[str, object]) -> int:
     if workload.get("name") != "telemetry_terminal_state_summary":
         raise ValueError("invalid workload name")
     for field in ("window_start", "window_end"):
         value = workload.get(field)
         if not isinstance(value, str) or not value.endswith("Z"):
             raise ValueError(f"workload.{field} must be a UTC string")
-    result_rows = _integer(workload.get("result_rows"), "workload.result_rows")
+    return _integer(workload.get("result_rows"), "workload.result_rows")
 
-    engines_value = report.get("engines")
-    if not isinstance(engines_value, list) or not engines_value:
+
+def _timing_samples(engine: Mapping[str, object], index: int, *, required: bool) -> list[float]:
+    timed = engine.get("timed_seconds")
+    if not isinstance(timed, list):
+        raise ValueError(f"engines[{index}].timed_seconds must be a list")
+    if required and not timed:
+        raise ValueError(f"engines[{index}].timed_seconds must not be empty")
+    return [float(value) for value in timed]
+
+
+def _validate_successful_engine(
+    engine: Mapping[str, object],
+    index: int,
+) -> str:
+    samples = _timing_samples(engine, index, required=True)
+    summary = summarize_timings(samples)
+    median_seconds = _number(engine.get("median_seconds"), f"engines[{index}].median_seconds")
+    if abs(median_seconds - summary.median_seconds) > 1e-9:
+        raise ValueError(f"engines[{index}].median_seconds is invalid")
+    p95_seconds = _number(engine.get("p95_seconds"), f"engines[{index}].p95_seconds")
+    if abs(p95_seconds - summary.p95_seconds) > 1e-9:
+        raise ValueError(f"engines[{index}].p95_seconds is invalid")
+    result_hash = _hash(engine.get("result_sha256"), f"engines[{index}].result_sha256")
+    if engine.get("reason_code") not in (None, ""):
+        raise ValueError(f"engines[{index}].reason_code must be empty for ok status")
+    return result_hash
+
+
+def _validate_unavailable_engine(engine: Mapping[str, object], index: int) -> None:
+    reason = engine.get("reason_code")
+    if not isinstance(reason, str) or not _REASON_PATTERN.fullmatch(reason):
+        raise ValueError(f"engines[{index}].reason_code is invalid")
+    _hash(
+        engine.get("result_sha256"),
+        f"engines[{index}].result_sha256",
+        allow_empty=True,
+    )
+    samples = _timing_samples(engine, index, required=False)
+    if samples:
+        summarize_timings(samples)
+
+
+def _validate_engine(
+    engine: Mapping[str, object],
+    index: int,
+    result_rows: int,
+) -> str | None:
+    if not isinstance(engine.get("version"), str) or not engine["version"]:
+        raise ValueError(f"engines[{index}].version must be a string")
+    status = engine.get("status")
+    if not isinstance(status, str) or status not in {"ok", "unavailable", "error"}:
+        raise ValueError(f"engines[{index}].status is invalid")
+    engine_rows = _integer(engine.get("result_rows"), f"engines[{index}].result_rows")
+    if status == "ok" and engine_rows != result_rows:
+        raise ValueError(f"engines[{index}].result_rows does not match workload.result_rows")
+    for field in ("startup_seconds", "warmup_seconds", "rows_per_second"):
+        _number(engine.get(field), f"engines[{index}].{field}")
+    if status == "ok":
+        return _validate_successful_engine(engine, index)
+    _validate_unavailable_engine(engine, index)
+    return None
+
+
+def _validate_engines(value: object, result_rows: int) -> list[str]:
+    if not isinstance(value, list) or not value:
         raise ValueError("engines must be a non-empty list")
-    engines = cast(list[object], engines_value)
     successful_hashes: list[str] = []
     seen_names: set[str] = set()
-    for index, raw_engine in enumerate(engines):
+    for index, raw_engine in enumerate(value):
         engine = _mapping(raw_engine, f"engines[{index}]")
         name = engine.get("name")
-        if name not in ENGINE_NAMES:
+        if not isinstance(name, str) or name not in ENGINE_NAMES:
             raise ValueError(f"unknown engine: {name}")
         if name in seen_names:
             raise ValueError(f"duplicate engine: {name}")
         seen_names.add(name)
-        if not isinstance(engine.get("version"), str) or not engine["version"]:
-            raise ValueError(f"engines[{index}].version must be a string")
-        status = engine.get("status")
-        if status not in {"ok", "unavailable", "error"}:
-            raise ValueError(f"engines[{index}].status is invalid")
-        engine_rows = _integer(engine.get("result_rows"), f"engines[{index}].result_rows")
-        if status == "ok" and engine_rows != result_rows:
-            raise ValueError(f"engines[{index}].result_rows does not match workload.result_rows")
-        for field in ("startup_seconds", "warmup_seconds", "rows_per_second"):
-            _number(engine.get(field), f"engines[{index}].{field}")
-        timed = engine.get("timed_seconds")
-        if not isinstance(timed, list):
-            raise ValueError(f"engines[{index}].timed_seconds must be a list")
-        if status == "ok":
-            if not timed:
-                raise ValueError(f"engines[{index}].timed_seconds must not be empty")
-            samples = [float(value) for value in timed]
-            summary = summarize_timings(samples)
-            median_seconds = _number(
-                engine.get("median_seconds"),
-                f"engines[{index}].median_seconds",
-            )
-            if abs(median_seconds - summary.median_seconds) > 1e-9:
-                raise ValueError(f"engines[{index}].median_seconds is invalid")
-            p95_seconds = _number(
-                engine.get("p95_seconds"),
-                f"engines[{index}].p95_seconds",
-            )
-            if abs(p95_seconds - summary.p95_seconds) > 1e-9:
-                raise ValueError(f"engines[{index}].p95_seconds is invalid")
-            result_hash = _hash(engine.get("result_sha256"), f"engines[{index}].result_sha256")
+        result_hash = _validate_engine(engine, index, result_rows)
+        if result_hash is not None:
             successful_hashes.append(result_hash)
-            if engine.get("reason_code") not in (None, ""):
-                raise ValueError(f"engines[{index}].reason_code must be empty for ok status")
-        else:
-            reason = engine.get("reason_code")
-            if not isinstance(reason, str) or not _REASON_PATTERN.fullmatch(reason):
-                raise ValueError(f"engines[{index}].reason_code is invalid")
-            _hash(engine.get("result_sha256"), f"engines[{index}].result_sha256", allow_empty=True)
-            if timed:
-                summarize_timings([float(value) for value in timed])
+    return successful_hashes
 
+
+def validate_report(report: Mapping[str, object]) -> None:
+    """Validate the shareable benchmark report contract."""
+    if _contains_absolute_path(report):
+        raise ValueError("absolute path is not allowed in a report")
+    if report.get("schema_version") != REPORT_SCHEMA_VERSION:
+        raise ValueError("invalid schema_version")
+    _validate_fixture(_mapping(report.get("fixture"), "fixture"))
+    workload = _mapping(report.get("workload"), "workload")
+    result_rows = _validate_workload(workload)
+    successful_hashes = _validate_engines(report.get("engines"), result_rows)
     workload_hash = _hash(
         workload.get("result_sha256"),
         "workload.result_sha256",
@@ -152,19 +194,26 @@ def validate_report(report: Mapping[str, object]) -> None:
         raise ValueError("engine result hashes do not match workload.result_sha256")
 
 
-def write_report(report: Mapping[str, object], path: Path) -> None:
+def write_report(
+    report: Mapping[str, object],
+    path: Path,
+    *,
+    artifact_root: Path | None = None,
+) -> None:
     """Validate and write a stable JSON report."""
     validate_report(report)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
+    target = _resolve_report_path(path, artifact_root)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
         json.dumps(report, ensure_ascii=True, sort_keys=True, indent=2) + "\n",
         encoding="utf-8",
     )
 
 
-def read_report(path: Path) -> dict[str, object]:
+def read_report(path: Path, *, artifact_root: Path | None = None) -> dict[str, object]:
     """Read a JSON report as an object."""
-    value: Any = json.loads(path.read_text(encoding="utf-8"))
+    target = _resolve_report_path(path, artifact_root)
+    value: Any = json.loads(target.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise ValueError("report must be a JSON object")
     return cast(dict[str, object], value)

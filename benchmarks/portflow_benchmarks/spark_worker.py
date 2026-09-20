@@ -9,6 +9,7 @@ from time import perf_counter
 from typing import Any, cast
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+_OUTPUT_ROOT = Path("/workspace/output")
 if __package__:
     from .canonical import canonicalize_rows, result_sha256  # noqa: E402
 else:
@@ -66,21 +67,39 @@ def _run_query(
 
 
 def _write_payload(path: Path, payload: dict[str, object]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
+    target = _resolve_output_path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
         json.dumps(payload, ensure_ascii=True, sort_keys=True, separators=(",", ":")),
         encoding="utf-8",
     )
 
 
+def _resolve_output_path(path: Path) -> Path:
+    root = _OUTPUT_ROOT.resolve(strict=False)
+    candidate = path.resolve(strict=False)
+    try:
+        candidate.relative_to(root)
+    except ValueError as error:
+        raise ValueError("output path must remain within Spark output") from error
+    return candidate
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    output_path = Path(args.output)
+    try:
+        output_path = _resolve_output_path(Path(args.output))
+    except ValueError:
+        return 2
     try:
         from pyspark.sql import SparkSession
 
         startup_started = perf_counter()
-        spark = SparkSession.builder.appName("portflow-pf105-benchmark").getOrCreate()
+        spark = (
+            SparkSession.builder.master("local[2]")
+            .appName("portflow-pf105-benchmark")
+            .getOrCreate()
+        )
         startup_seconds = perf_counter() - startup_started
         warmup_started = perf_counter()
         rows: list[dict[str, object]] = []

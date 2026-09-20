@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
-from benchmarks.portflow_benchmarks.report import validate_report, write_report
+from benchmarks.portflow_benchmarks.report import read_report, validate_report, write_report
 
 RESULT_HASH = "a" * 64
 
@@ -56,11 +56,20 @@ def test_valid_report_passes_and_serializes_without_payloads(tmp_path: Path) -> 
     validate_report(report)
 
     path = tmp_path / "report.json"
-    write_report(report, path)
+    write_report(report, path, artifact_root=tmp_path)
     loaded = json.loads(path.read_text(encoding="utf-8"))
 
     assert loaded == report
     assert "rows" not in loaded["engines"][0]
+
+
+def test_report_reader_rejects_traversal_outside_artifact_root(tmp_path: Path) -> None:
+    report_root = tmp_path / "reports"
+    outside = tmp_path / "secret.json"
+    outside.write_text(json.dumps(valid_report()), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="report path"):
+        read_report(report_root / ".." / "secret.json", artifact_root=report_root)
 
 
 def test_report_rejects_absolute_paths() -> None:

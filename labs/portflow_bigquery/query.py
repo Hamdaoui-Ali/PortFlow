@@ -8,7 +8,7 @@ from sqlglot import exp
 from sqlglot.errors import ParseError, TokenError
 
 _PROJECT_ID = re.compile(r"^[A-Za-z0-9_-]+$")
-_DATASET = re.compile(r"^[A-Za-z0-9_]+$")
+_DATASET = re.compile(r"^\w+$", re.ASCII)
 _TOKENS = ("{{ project_id }}", "{{ dataset }}")
 _FORBIDDEN_DUCKDB = re.compile(r"\b(?:read_parquet|date_diff|filter)\s*\(", re.IGNORECASE)
 _SELECT_STAR = re.compile(r"\bSELECT\s+(?:DISTINCT\s+)?\*", re.IGNORECASE)
@@ -52,19 +52,26 @@ def render_query(template: str, *, project_id: str, dataset: str) -> str:
     return template.replace(_TOKENS[0], project_id).replace(_TOKENS[1], dataset)
 
 
+def _is_star_projection(projection: exp.Expr) -> bool:
+    expression = projection.this if isinstance(projection, exp.Alias) else projection
+    return isinstance(expression, exp.Star) or (
+        isinstance(expression, exp.Column) and isinstance(expression.this, exp.Star)
+    )
+
+
+def _validate_no_select_star(statement: exp.Expr) -> None:
+    for node in statement.walk():
+        if isinstance(node, exp.Select) and any(
+            _is_star_projection(projection) for projection in node.expressions
+        ):
+            raise QueryValidationError("implicit_select_star")
+
+
 def _validate_output_fields(statement: exp.Expr) -> None:
     select = statement if isinstance(statement, exp.Select) else statement.find(exp.Select)
     if select is None:
         raise QueryValidationError("missing_output_field")
-    for node in statement.walk():
-        if not isinstance(node, exp.Select):
-            continue
-        for projection in node.expressions:
-            expression = projection.this if isinstance(projection, exp.Alias) else projection
-            if isinstance(expression, exp.Star) or (
-                isinstance(expression, exp.Column) and isinstance(expression.this, exp.Star)
-            ):
-                raise QueryValidationError("implicit_select_star")
+    _validate_no_select_star(statement)
     output_fields = tuple(expression.alias_or_name for expression in select.expressions)
     if output_fields != _OUTPUT_FIELDS:
         raise QueryValidationError("missing_output_field")
