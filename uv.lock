@@ -1562,6 +1562,7 @@ dev = [
     { name = "pytest" },
     { name = "pyyaml" },
     { name = "ruff" },
+    { name = "sqlglot" },
 ]
 orchestration = [
     { name = "dagster" },
@@ -1584,6 +1585,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3,<10" },
     { name = "pyyaml", marker = "extra == 'dev'", specifier = ">=6.0,<7" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11,<1" },
+    { name = "sqlglot", marker = "extra == 'dev'", specifier = ">=26" },
 ]
 provides-extras = ["dev", "orchestration"]
 
