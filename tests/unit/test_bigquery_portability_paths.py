@@ -22,6 +22,15 @@ def test_explicit_root_must_remain_below_repository_portability_directory(
         resolve_artifact_root(tmp_path / "outside", repository_root=tmp_path)
 
 
+def test_valid_looking_root_outside_repository_is_rejected(tmp_path: Path) -> None:
+    outside_repository = (
+        tmp_path.parent / "other-repository" / ".portability" / "bigquery"
+    )
+
+    with pytest.raises(ArtifactPathError, match="artifact root"):
+        resolve_artifact_root(outside_repository, repository_root=tmp_path)
+
+
 @pytest.mark.parametrize("relative_path", ["../escape.json", "..\\escape.json", "/tmp/escape.json"])
 def test_child_path_rejects_traversal_and_absolute_paths(
     tmp_path: Path,

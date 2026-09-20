@@ -13,12 +13,16 @@ def resolve_artifact_root(
     repository_root: Path | None = None,
 ) -> Path:
     base = (repository_root or Path.cwd()).resolve()
+    artifact_root = (base / DEFAULT_ARTIFACT_ROOT).resolve()
     if candidate is None:
-        requested = (base / DEFAULT_ARTIFACT_ROOT).resolve()
-    else:
-        requested = candidate.resolve()
-        if requested.name != "bigquery" or requested.parent.name != ".portability":
-            raise ArtifactPathError("artifact root must remain below .portability/bigquery")
+        return artifact_root
+    requested = candidate.resolve()
+    try:
+        requested.relative_to(artifact_root)
+    except ValueError as error:
+        raise ArtifactPathError(
+            "artifact root must remain below .portability/bigquery"
+        ) from error
     return requested
 
 
