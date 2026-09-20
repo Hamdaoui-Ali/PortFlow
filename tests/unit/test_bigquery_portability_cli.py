@@ -37,7 +37,7 @@ def test_cli_failure_does_not_print_exception_text(monkeypatch, capsys) -> None:
         reason_code = "query_hash_mismatch"
 
     def fail(*args, **kwargs):
-        raise Failure("raw secret text")
+        raise Failure("query_hash_mismatch")
 
     monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
 
@@ -112,7 +112,7 @@ def test_cli_failure_rejects_reason_code_metaclass_dict_accessor(monkeypatch, ca
         reason_code = "query_hash_mismatch"
 
     def fail(*args, **kwargs):
-        raise Failure("raw secret text")
+        raise Failure("query_hash_mismatch")
 
     monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
 
@@ -134,7 +134,7 @@ def test_cli_failure_rejects_reason_code_metaclass_mro_accessor(monkeypatch, cap
         reason_code = "query_hash_mismatch"
 
     def fail(*args, **kwargs):
-        raise Failure("raw secret text")
+        raise Failure("query_hash_mismatch")
 
     monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
 
@@ -143,3 +143,21 @@ def test_cli_failure_rejects_reason_code_metaclass_mro_accessor(monkeypatch, cap
     assert output == "portability verification failed: query_hash_mismatch\n"
     assert "alice" not in output
     assert "mro-secret" not in output
+
+
+def test_cli_failure_rejects_reason_code_dict_descriptor(monkeypatch, capsys) -> None:
+    class Failure(ValueError):
+        @property
+        def __dict__(self):
+            raise RuntimeError("C:\\Users\\alice\\dict-secret")
+
+    def fail(*args, **kwargs):
+        raise Failure("query_hash_mismatch")
+
+    monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
+
+    assert main(["verify", "--manifest", ".portability/bigquery/manifest.json"]) == 1
+    output = capsys.readouterr().out
+    assert output == "portability verification failed: query_hash_mismatch\n"
+    assert "alice" not in output
+    assert "dict-secret" not in output

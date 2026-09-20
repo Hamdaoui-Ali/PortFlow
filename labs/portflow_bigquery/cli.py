@@ -43,20 +43,13 @@ class _ArgumentParser(argparse.ArgumentParser):
 
 def _safe_reason_code(error: BaseException, fallback: str) -> str:
     try:
-        instance_dict = object.__getattribute__(error, "__dict__")
-    except (AttributeError, TypeError):
-        instance_dict = None
-    if type(instance_dict) is dict and "reason_code" in instance_dict:
-        reason_code = instance_dict["reason_code"]
-    else:
-        reason_code = None
-        for error_type in type.mro(type(error)):
-            class_dict = type.__getattribute__(error_type, "__dict__")
-            if "reason_code" in class_dict:
-                reason_code = class_dict["reason_code"]
-                break
-    if type(reason_code) is str and reason_code in _SAFE_REASON_CODES:
-        return reason_code
+        args = BaseException.__getattribute__(error, "args")
+    except Exception:
+        return fallback
+    if type(args) is tuple and args and type(args[0]) is str:
+        reason_code = args[0]
+        if reason_code in _SAFE_REASON_CODES:
+            return reason_code
     return fallback
 
 
