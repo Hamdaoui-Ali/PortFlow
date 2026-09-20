@@ -9,6 +9,7 @@ __pycache__/
 web/node_modules/
 web/dist/
 .lighthouseci/
+.benchmarks/
 analytics/target/
 analytics/logs/
 analytics/.user.yml

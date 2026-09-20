@@ -26,3 +26,5 @@ The public site remains static and reads versioned JSON only. For local developm
 Follow the complete [local development runbook](docs/runbooks/local-development.md). The browser never connects directly to PostgreSQL, and the hosted/static site intentionally shows **Local API unavailable** because it has no database connection.
 
 For the opt-in Kafka-compatible telemetry path, follow the [local Redpanda streaming runbook](docs/runbooks/local-streaming.md). PF-102 adds restart-safe event state, bounded lateness, and a canonical dead-letter topic while writing disposable stream output to local Bronze only; PF-103 adds optional manual Dagster orchestration and run metadata; PF-104 adds optional local Prometheus and Grafana engineering observability over `stream_runs`. The public browser remains static and the committed public snapshot is unchanged.
+
+For reproducible local engine comparisons, follow the [benchmark runbook](docs/runbooks/benchmarks.md). PF-105 compares DuckDB, Polars, and optional Docker-isolated PySpark over the same deterministic fixture; benchmark artifacts remain disposable under .benchmarks/ and are separate from public data.
