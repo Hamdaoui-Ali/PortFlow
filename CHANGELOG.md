@@ -1,5 +1,20 @@
 # Changelog
 
+## PF-106 BigQuery portability evidence - 2026-09-20
+
+PortFlow now includes a local, credential-free BigQuery portability bundle that
+generates GoogleSQL-ready SQL and verifies its manifest without sending work to
+BigQuery.
+
+### PF-106 boundaries
+
+- Portability artifacts are disposable local engineering evidence under
+  `.portability/`, are not public data, and never update `web/public/data`.
+- The default workflow is offline: it neither requires nor inspects credentials,
+  and the manifest records `cloud_execution` as `not_run`.
+- A future authenticated BigQuery dry run remains an explicit handoff, outside
+  the default workflow.
+
 ## PF-105 benchmark evidence - 2026-09-20
 
 PortFlow now includes an opt-in benchmark harness for comparing the shared telemetry
