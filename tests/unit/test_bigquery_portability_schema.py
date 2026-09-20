@@ -84,3 +84,37 @@ def test_schema_loader_rejects_invalid_table_or_field_contract(
 
     with pytest.raises(ValueError, match="invalid portability schema"):
         load_schema(invalid_schema)
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        {"name": "alarm_id", "type": [], "mode": "REQUIRED"},
+        {"name": "alarm_id", "type": "STRING", "mode": {}},
+    ],
+)
+def test_schema_loader_rejects_non_string_type_or_mode(tmp_path: Path, field: object) -> None:
+    invalid_schema = tmp_path / "schema.json"
+    invalid_schema.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "tables": {
+                    "telemetry_events": [
+                        {"name": "event_id", "type": "STRING", "mode": "REQUIRED"}
+                    ],
+                    "container_movements": [
+                        {"name": "movement_id", "type": "STRING", "mode": "REQUIRED"}
+                    ],
+                    "incidents": [
+                        {"name": "incident_id", "type": "STRING", "mode": "REQUIRED"}
+                    ],
+                    "alarms": [field],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="invalid portability schema"):
+        load_schema(invalid_schema)

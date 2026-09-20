@@ -54,6 +54,8 @@ def load_schema(path: Path) -> dict[str, tuple[SchemaField, ...]]:
                 not isinstance(name, str)
                 or not name
                 or name in seen_names
+                or not isinstance(bigquery_type, str)
+                or not isinstance(mode, str)
                 or bigquery_type not in _BIGQUERY_TYPES
                 or mode not in _BIGQUERY_MODES
             ):

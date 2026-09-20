@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import polars as pl
+import pytest
 
 from labs.portflow_bigquery.fixture import (
     FixtureSpec,
@@ -16,8 +17,12 @@ SCHEMA_PATH = ROOT / "analytics" / "portability" / "bigquery" / "schema.json"
 
 def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
     schema = load_schema(SCHEMA_PATH)
+    fixture_root = tmp_path / ".portability" / "bigquery" / "fixture"
     metadata = generate_fixture(
-        FixtureSpec(seed=42), tmp_path / "fixture", schema_path=SCHEMA_PATH
+        FixtureSpec(seed=42),
+        fixture_root,
+        schema_path=SCHEMA_PATH,
+        repository_root=tmp_path,
     )
 
     assert metadata.rows_by_table == {
@@ -27,7 +32,7 @@ def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
         "alarms": 2,
     }
     telemetry = pl.read_parquet(
-        tmp_path / "fixture" / "telemetry_events" / "part-000000.parquet"
+        fixture_root / "telemetry_events" / "part-000000.parquet"
     )
     assert telemetry.select("state", "available").to_dicts() == [
         {"state": "ACTIVE", "available": True},
@@ -36,7 +41,7 @@ def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
         {"state": "ACTIVE", "available": True},
     ]
     assert pl.read_parquet(
-        tmp_path / "fixture" / "container_movements" / "part-000000.parquet"
+        fixture_root / "container_movements" / "part-000000.parquet"
     ).select("movement_type", "container_ref", "event_timestamp").to_dicts() == [
         {
             "movement_type": "GATE_IN",
@@ -70,16 +75,40 @@ def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
 def test_fixture_hash_is_repeatable_and_independent_of_file_names(tmp_path: Path) -> None:
     first = tmp_path / "first"
     second = tmp_path / "second"
+    first_fixture = first / ".portability" / "bigquery" / "fixture"
+    second_fixture = second / ".portability" / "bigquery" / "fixture"
     schema = load_schema(SCHEMA_PATH)
 
-    first_metadata = generate_fixture(FixtureSpec(seed=42), first, schema_path=SCHEMA_PATH)
-    second_metadata = generate_fixture(FixtureSpec(seed=42), second, schema_path=SCHEMA_PATH)
+    first_metadata = generate_fixture(
+        FixtureSpec(seed=42),
+        first_fixture,
+        schema_path=SCHEMA_PATH,
+        repository_root=first,
+    )
+    second_metadata = generate_fixture(
+        FixtureSpec(seed=42),
+        second_fixture,
+        schema_path=SCHEMA_PATH,
+        repository_root=second,
+    )
 
     assert first_metadata.logical_sha256 == second_metadata.logical_sha256
 
-    telemetry_root = first / "telemetry_events"
+    telemetry_root = first_fixture / "telemetry_events"
     telemetry = pl.read_parquet(telemetry_root / "part-000000.parquet")
     telemetry.tail(2).write_parquet(telemetry_root / "part-000000.parquet")
     telemetry.head(2).write_parquet(telemetry_root / "part-000001.parquet")
-    assert logical_fixture_hash(first, schema) == second_metadata.logical_sha256
-    assert logical_fixture_hash(first, schema) == logical_fixture_hash(second, schema)
+    assert logical_fixture_hash(first_fixture, schema) == second_metadata.logical_sha256
+    assert logical_fixture_hash(first_fixture, schema) == logical_fixture_hash(
+        second_fixture, schema
+    )
+
+
+def test_fixture_writer_rejects_output_outside_artifact_root(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="artifact root"):
+        generate_fixture(
+            FixtureSpec(seed=42),
+            tmp_path / "outside" / "fixture",
+            schema_path=SCHEMA_PATH,
+            repository_root=tmp_path,
+        )

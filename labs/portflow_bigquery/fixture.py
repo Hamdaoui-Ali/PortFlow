@@ -8,6 +8,7 @@ from pathlib import Path
 
 import polars as pl
 
+from .paths import resolve_artifact_path, resolve_artifact_root
 from .schema import SchemaField, load_schema
 
 _FIXTURE_START = datetime(2026, 1, 1, tzinfo=UTC)
@@ -258,16 +259,25 @@ def logical_fixture_hash(
 
 
 def generate_fixture(
-    spec: FixtureSpec, output_root: Path, *, schema_path: Path
+    spec: FixtureSpec,
+    output_root: Path,
+    *,
+    schema_path: Path,
+    repository_root: Path | None = None,
 ) -> FixtureMetadata:
     """Write one deterministic Parquet part per mapped Silver logical table."""
+    artifact_root = resolve_artifact_root(
+        output_root.parent,
+        repository_root=repository_root or Path.cwd(),
+    )
+    fixture_root = resolve_artifact_path(artifact_root, output_root.name)
     schema = load_schema(schema_path)
     fixture_rows = _fixture_rows()
     rows_by_table: dict[str, int] = {}
     schema_columns: dict[str, tuple[str, ...]] = {}
 
     for table_name in sorted(schema):
-        table_root = output_root / table_name
+        table_root = fixture_root / table_name
         table_root.mkdir(parents=True, exist_ok=True)
         for parquet_path in table_root.glob("*.parquet"):
             parquet_path.unlink()
@@ -281,7 +291,7 @@ def generate_fixture(
         seed=spec.seed,
         generator_version=_GENERATOR_VERSION,
         rows_by_table=rows_by_table,
-        logical_sha256=logical_fixture_hash(output_root, schema),
+        logical_sha256=logical_fixture_hash(fixture_root, schema),
         schema_sha256=hashlib.sha256(schema_path.read_bytes()).hexdigest(),
         schema=schema_columns,
     )
