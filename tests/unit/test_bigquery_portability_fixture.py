@@ -4,7 +4,6 @@ from pathlib import Path
 
 import polars as pl
 import pytest
-
 from labs.portflow_bigquery.fixture import (
     FixtureSpec,
     generate_fixture,
@@ -19,14 +18,14 @@ SCHEMA_PATH = ROOT / "analytics" / "portability" / "bigquery" / "schema.json"
 def _link_directory(link: Path, target: Path) -> None:
     try:
         link.symlink_to(target, target_is_directory=True)
-    except OSError:
+    except OSError as error:
         if os.name != "nt":
-            raise
+            raise OSError("directory links unavailable") from error
         result = os.system(
             f'cmd.exe /c mklink /J "{link}" "{target}" >nul 2>nul'
         )
         if result != 0:
-            raise OSError("directory links unavailable")
+            raise OSError("directory links unavailable") from error
 
 
 def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:

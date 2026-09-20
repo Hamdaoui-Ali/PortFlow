@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from labs.portflow_bigquery.schema import load_schema
 
 ROOT = Path(__file__).parents[2]
@@ -37,6 +36,35 @@ def test_schema_loader_rejects_unknown_type(tmp_path: Path) -> None:
                     "alarms": [
                         {"name": "alarm_id", "type": "BYTES", "mode": "REQUIRED"}
                     ]
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="invalid portability schema"):
+        load_schema(invalid_schema)
+
+
+def test_schema_loader_rejects_boolean_schema_version(tmp_path: Path) -> None:
+    invalid_schema = tmp_path / "schema.json"
+    invalid_schema.write_text(
+        json.dumps(
+            {
+                "schema_version": True,
+                "tables": {
+                    "telemetry_events": [
+                        {"name": "event_id", "type": "STRING", "mode": "REQUIRED"}
+                    ],
+                    "container_movements": [
+                        {"name": "movement_id", "type": "STRING", "mode": "REQUIRED"}
+                    ],
+                    "incidents": [
+                        {"name": "incident_id", "type": "STRING", "mode": "REQUIRED"}
+                    ],
+                    "alarms": [
+                        {"name": "alarm_id", "type": "STRING", "mode": "REQUIRED"}
+                    ],
                 },
             }
         ),

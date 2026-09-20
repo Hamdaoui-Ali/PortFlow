@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from labs.portflow_bigquery.paths import (
     ArtifactPathError,
     resolve_artifact_path,

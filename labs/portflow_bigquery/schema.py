@@ -31,7 +31,12 @@ def load_schema(path: Path) -> dict[str, tuple[SchemaField, ...]]:
     except (OSError, json.JSONDecodeError) as error:
         raise _invalid_schema() from error
 
-    if not isinstance(document, dict) or document.get("schema_version") != 1:
+    schema_version = document.get("schema_version") if isinstance(document, dict) else None
+    if (
+        not isinstance(schema_version, int)
+        or isinstance(schema_version, bool)
+        or schema_version != 1
+    ):
         raise _invalid_schema()
     tables = document.get("tables")
     if not isinstance(tables, dict) or set(tables) != _TABLE_NAMES:
