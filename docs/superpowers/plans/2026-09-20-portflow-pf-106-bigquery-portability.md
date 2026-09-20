@@ -446,8 +446,12 @@ git commit -m "feat: add deterministic BigQuery portability fixture"
 
 - [ ] **Step 1: Add the local parser dependency and write query tests**
 
-Add `sqlglot>=26,<30` to the existing `dev` optional dependency list and run
+Add `sqlglot>=26` to the existing `dev` optional dependency list and run
 `uv lock` after the source change. Do not add `sqlglot` to `[project].dependencies`.
+The repository's current dbt/MetricFlow resolution already requires the locked
+30.x parser when all project extras are resolved together; a direct `<30` cap
+would make the committed lock unsatisfiable. Record this compatibility ruling
+in the task report and keep the dependency dev-only.
 
 Write tests that pin the renderer and validator:
 
@@ -604,11 +608,14 @@ def render_query(template: str, *, project_id: str, dataset: str) -> str:
 `validate_google_sql` must first reject unrendered tokens, `read_parquet`,
 `date_diff(`, `FILTER (`, and any `SELECT *` with the stable reason codes
 `unrendered_template`, `forbidden_duckdb_construct`, and
-`implicit_select_star`. Then call `sqlglot.parse_one(sql, read="bigquery")` and
+`implicit_select_star`. Inspect the parsed final projection for wildcard AST
+nodes, including qualified forms such as `table.*`; do not rely only on a
+regular expression for bare `SELECT *`. Require the final projection to contain
+exactly the 19 documented aliases in the documented order, with no reordered or
+extra expressions, and raise `missing_output_field` for any mismatch. Then call
+`sqlglot.parse_one(sql, read="bigquery")` and
 translate `sqlglot.errors.ParseError` into `QueryValidationError("invalid_google_sql")`.
-The function must also require the 19 output aliases and raise
-`missing_output_field` if any alias is absent. `query_sha256` hashes UTF-8 SQL
-bytes with `hashlib.sha256`.
+`query_sha256` hashes UTF-8 SQL bytes with `hashlib.sha256`.
 
 - [ ] **Step 5: Run parser, lint, and type checks**
 
