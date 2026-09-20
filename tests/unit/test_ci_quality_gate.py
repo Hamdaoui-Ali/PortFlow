@@ -50,3 +50,14 @@ def test_ci_quality_gate_runs_required_stages_and_failure_suite() -> None:
     assert command_positions == sorted(command_positions)
     for stage_label in REQUIRED_STAGE_LABELS:
         assert stage_label in script
+
+
+def test_ci_quality_gate_installs_optional_orchestration_dependencies() -> None:
+    workflow = yaml.safe_load(CI_WORKFLOW.read_text(encoding="utf-8"))
+    install_step = next(
+        step
+        for step in workflow["jobs"]["verify"]["steps"]
+        if step["name"] == "Install locked dependencies"
+    )
+
+    assert "python -m uv sync --extra dev --extra orchestration --frozen" in install_step["run"]

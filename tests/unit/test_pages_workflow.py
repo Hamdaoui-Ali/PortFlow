@@ -44,6 +44,17 @@ def test_pages_build_uses_base_path_and_one_validated_artifact() -> None:
     assert upload_steps[0]["with"]["path"] == "web/dist"
 
 
+def test_pages_quality_gate_installs_optional_orchestration_dependencies() -> None:
+    workflow = _load_pages_workflow()
+    install_step = next(
+        step
+        for step in workflow["jobs"]["build"]["steps"]
+        if step["name"] == "Install locked dependencies"
+    )
+
+    assert "python -m uv sync --extra dev --extra orchestration --frozen" in install_step["run"]
+
+
 def test_pages_deploy_requires_main_and_pages_environment_protection() -> None:
     workflow = _load_pages_workflow()
     deploy_job = workflow["jobs"]["deploy"]

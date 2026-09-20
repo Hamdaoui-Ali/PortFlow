@@ -5,10 +5,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 from portflow.domain.models import TelemetryEvent
 from portflow.streaming.codec import telemetry_payload_sha256
+
+if TYPE_CHECKING:
+    from portflow.streaming.consumer import ConsumeReport
 
 EventOutcome = Literal["bronze", "dead_letter"]
 
@@ -25,6 +28,29 @@ CREATE TABLE IF NOT EXISTS watermarks (
     topic TEXT PRIMARY KEY,
     max_ingestion_timestamp TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS stream_runs (
+    run_id TEXT PRIMARY KEY,
+    topic TEXT NOT NULL,
+    bronze_dir TEXT NOT NULL,
+    batch_size INTEGER NOT NULL,
+    max_messages INTEGER NOT NULL,
+    allowed_lateness_seconds INTEGER NOT NULL,
+    poll_timeout_seconds REAL NOT NULL,
+    idle_timeout_seconds REAL NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('running', 'succeeded', 'failed')),
+    started_at TEXT NOT NULL,
+    finished_at TEXT,
+    consumed_count INTEGER,
+    bronze_row_count INTEGER,
+    committed_count INTEGER,
+    batch_count INTEGER,
+    duplicate_count INTEGER,
+    late_count INTEGER,
+    dead_letter_count INTEGER,
+    error_type TEXT,
+    error_message TEXT
+);
 """
 
 
@@ -37,6 +63,48 @@ class ProcessedEventState:
     ingestion_timestamp: datetime
     outcome: EventOutcome
     reason_code: str | None
+
+
+StreamRunStatus = Literal["running", "succeeded", "failed"]
+
+
+@dataclass(frozen=True, slots=True)
+class StreamRunInputs:
+    """Normalized non-secret inputs for one Dagster-managed stream run."""
+
+    topic: str
+    bronze_dir: Path
+    batch_size: int
+    max_messages: int
+    allowed_lateness_seconds: int
+    poll_timeout_seconds: float
+    idle_timeout_seconds: float
+
+
+@dataclass(frozen=True, slots=True)
+class StreamRun:
+    """Persisted lifecycle and outcome metadata for one stream run."""
+
+    run_id: str
+    topic: str
+    bronze_dir: Path
+    batch_size: int
+    max_messages: int
+    allowed_lateness_seconds: int
+    poll_timeout_seconds: float
+    idle_timeout_seconds: float
+    status: StreamRunStatus
+    started_at: datetime
+    finished_at: datetime | None
+    consumed_count: int | None
+    bronze_row_count: int | None
+    committed_count: int | None
+    batch_count: int | None
+    duplicate_count: int | None
+    late_count: int | None
+    dead_letter_count: int | None
+    error_type: str | None
+    error_message: str | None
 
 
 class StreamStateError(RuntimeError):
@@ -92,6 +160,177 @@ class StreamStateStore:
         if row is None:
             return None
         return _parse_timestamp(cast(str, row["max_ingestion_timestamp"]))
+
+    def start_run(self, *, run_id: str, inputs: StreamRunInputs) -> None:
+        """Persist a new Dagster-managed run in the running state."""
+        _require_text(run_id, "run_id")
+        _validate_stream_run_inputs(inputs)
+        try:
+            with self._connection:
+                self._connection.execute(
+                    """
+                    INSERT INTO stream_runs(
+                        run_id,
+                        topic,
+                        bronze_dir,
+                        batch_size,
+                        max_messages,
+                        allowed_lateness_seconds,
+                        poll_timeout_seconds,
+                        idle_timeout_seconds,
+                        status,
+                        started_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'running', ?)
+                    """,
+                    (
+                        run_id,
+                        inputs.topic,
+                        str(inputs.bronze_dir),
+                        inputs.batch_size,
+                        inputs.max_messages,
+                        inputs.allowed_lateness_seconds,
+                        inputs.poll_timeout_seconds,
+                        inputs.idle_timeout_seconds,
+                        _timestamp_text(datetime.now(UTC)),
+                    ),
+                )
+        except sqlite3.IntegrityError as exc:
+            raise StreamStateError(f"stream run already exists: {run_id}") from exc
+        except sqlite3.Error as exc:
+            raise StreamStateError(f"could not start stream run {run_id}") from exc
+
+    def get_run(self, run_id: str) -> StreamRun | None:
+        """Return run metadata by Dagster run ID, if present."""
+        _require_text(run_id, "run_id")
+        try:
+            row = self._connection.execute(
+                """
+                SELECT
+                    run_id,
+                    topic,
+                    bronze_dir,
+                    batch_size,
+                    max_messages,
+                    allowed_lateness_seconds,
+                    poll_timeout_seconds,
+                    idle_timeout_seconds,
+                    status,
+                    started_at,
+                    finished_at,
+                    consumed_count,
+                    bronze_row_count,
+                    committed_count,
+                    batch_count,
+                    duplicate_count,
+                    late_count,
+                    dead_letter_count,
+                    error_type,
+                    error_message
+                FROM stream_runs
+                WHERE run_id = ?
+                """,
+                (run_id,),
+            ).fetchone()
+        except sqlite3.Error as exc:
+            raise StreamStateError(f"could not read stream run {run_id}") from exc
+        return None if row is None else _row_to_stream_run(row)
+
+    def record_run_success(
+        self,
+        *,
+        run_id: str,
+        report: "ConsumeReport",
+        finished_at: datetime,
+    ) -> None:
+        """Mark a running Dagster execution successful with its report counters."""
+        _require_text(run_id, "run_id")
+        finished_at_text = _timestamp_text(finished_at)
+        try:
+            with self._connection:
+                cursor = self._connection.execute(
+                    """
+                    UPDATE stream_runs
+                    SET
+                        status = 'succeeded',
+                        finished_at = ?,
+                        consumed_count = ?,
+                        bronze_row_count = ?,
+                        committed_count = ?,
+                        batch_count = ?,
+                        duplicate_count = ?,
+                        late_count = ?,
+                        dead_letter_count = ?,
+                        error_type = NULL,
+                        error_message = NULL
+                    WHERE run_id = ? AND status = 'running'
+                    """,
+                    (
+                        finished_at_text,
+                        report.consumed_count,
+                        report.bronze_row_count,
+                        report.committed_count,
+                        report.batch_count,
+                        report.duplicate_count,
+                        report.late_count,
+                        report.dead_letter_count,
+                        run_id,
+                    ),
+                )
+                if cursor.rowcount != 1:
+                    self._raise_run_transition_error(run_id)
+        except StreamStateError:
+            raise
+        except sqlite3.Error as exc:
+            raise StreamStateError(f"could not record successful stream run {run_id}") from exc
+
+    def record_run_failure(
+        self,
+        *,
+        run_id: str,
+        error_type: str,
+        error_message: str,
+        finished_at: datetime,
+    ) -> None:
+        """Mark a running Dagster execution failed with terminal error details."""
+        _require_text(run_id, "run_id")
+        _require_text(error_type, "error_type")
+        finished_at_text = _timestamp_text(finished_at)
+        try:
+            with self._connection:
+                cursor = self._connection.execute(
+                    """
+                    UPDATE stream_runs
+                    SET
+                        status = 'failed',
+                        finished_at = ?,
+                        consumed_count = NULL,
+                        bronze_row_count = NULL,
+                        committed_count = NULL,
+                        batch_count = NULL,
+                        duplicate_count = NULL,
+                        late_count = NULL,
+                        dead_letter_count = NULL,
+                        error_type = ?,
+                        error_message = ?
+                    WHERE run_id = ? AND status = 'running'
+                    """,
+                    (finished_at_text, error_type, error_message, run_id),
+                )
+                if cursor.rowcount != 1:
+                    self._raise_run_transition_error(run_id)
+        except StreamStateError:
+            raise
+        except sqlite3.Error as exc:
+            raise StreamStateError(f"could not record failed stream run {run_id}") from exc
+
+    def _raise_run_transition_error(self, run_id: str) -> None:
+        row = self._connection.execute(
+            "SELECT status FROM stream_runs WHERE run_id = ?",
+            (run_id,),
+        ).fetchone()
+        if row is None:
+            raise StreamStateError(f"stream run not found: {run_id}")
+        raise StreamStateError(f"stream run is terminal: {run_id}")
 
     def record_bronze(
         self,
@@ -234,6 +473,35 @@ def _row_to_event_state(row: sqlite3.Row) -> ProcessedEventState:
     )
 
 
+def _row_to_stream_run(row: sqlite3.Row) -> StreamRun:
+    raw_status = cast(str, row["status"])
+    if raw_status not in {"running", "succeeded", "failed"}:
+        raise StreamStateError(f"invalid stored stream run status: {raw_status}")
+    raw_finished_at = cast(str | None, row["finished_at"])
+    return StreamRun(
+        run_id=cast(str, row["run_id"]),
+        topic=cast(str, row["topic"]),
+        bronze_dir=Path(cast(str, row["bronze_dir"])),
+        batch_size=cast(int, row["batch_size"]),
+        max_messages=cast(int, row["max_messages"]),
+        allowed_lateness_seconds=cast(int, row["allowed_lateness_seconds"]),
+        poll_timeout_seconds=cast(float, row["poll_timeout_seconds"]),
+        idle_timeout_seconds=cast(float, row["idle_timeout_seconds"]),
+        status=cast(StreamRunStatus, raw_status),
+        started_at=_parse_timestamp(cast(str, row["started_at"])),
+        finished_at=None if raw_finished_at is None else _parse_timestamp(raw_finished_at),
+        consumed_count=cast(int | None, row["consumed_count"]),
+        bronze_row_count=cast(int | None, row["bronze_row_count"]),
+        committed_count=cast(int | None, row["committed_count"]),
+        batch_count=cast(int | None, row["batch_count"]),
+        duplicate_count=cast(int | None, row["duplicate_count"]),
+        late_count=cast(int | None, row["late_count"]),
+        dead_letter_count=cast(int | None, row["dead_letter_count"]),
+        error_type=cast(str | None, row["error_type"]),
+        error_message=cast(str | None, row["error_message"]),
+    )
+
+
 def _validate_existing_bronze_event(
     existing: ProcessedEventState,
     event_id: str,
@@ -270,3 +538,18 @@ def _parse_timestamp(value: str) -> datetime:
 def _require_text(value: str, name: str) -> None:
     if not value.strip():
         raise ValueError(f"{name} must not be empty")
+
+
+def _validate_stream_run_inputs(inputs: StreamRunInputs) -> None:
+    _require_text(inputs.topic, "topic")
+    _require_text(str(inputs.bronze_dir), "bronze_dir")
+    if inputs.batch_size <= 0:
+        raise ValueError("batch_size must be greater than zero")
+    if inputs.max_messages <= 0:
+        raise ValueError("max_messages must be greater than zero")
+    if inputs.allowed_lateness_seconds < 0:
+        raise ValueError("allowed_lateness_seconds must not be negative")
+    if inputs.poll_timeout_seconds < 0:
+        raise ValueError("poll_timeout_seconds must not be negative")
+    if inputs.idle_timeout_seconds < 0:
+        raise ValueError("idle_timeout_seconds must not be negative")

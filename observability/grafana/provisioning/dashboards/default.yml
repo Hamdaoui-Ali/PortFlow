@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: PortFlow
+    orgId: 1
+    folder: PortFlow
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /var/lib/grafana/dashboards

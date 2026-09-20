@@ -54,7 +54,7 @@ jobs:
 
       - name: Install locked dependencies
         run: |
-          python -m uv sync --extra dev --frozen
+          python -m uv sync --extra dev --extra orchestration --frozen
           npm --prefix web ci
 
       - name: Run complete R2 quality gate
