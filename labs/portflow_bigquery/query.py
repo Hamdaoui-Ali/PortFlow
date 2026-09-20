@@ -5,7 +5,7 @@ import re
 
 import sqlglot
 from sqlglot import exp
-from sqlglot.errors import ParseError
+from sqlglot.errors import ParseError, TokenError
 
 _PROJECT_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 _DATASET = re.compile(r"^[A-Za-z0-9_]+$")
@@ -56,12 +56,15 @@ def _validate_output_fields(statement: exp.Expr) -> None:
     select = statement if isinstance(statement, exp.Select) else statement.find(exp.Select)
     if select is None:
         raise QueryValidationError("missing_output_field")
-    for projection in select.expressions:
-        expression = projection.this if isinstance(projection, exp.Alias) else projection
-        if isinstance(expression, exp.Star) or (
-            isinstance(expression, exp.Column) and isinstance(expression.this, exp.Star)
-        ):
-            raise QueryValidationError("implicit_select_star")
+    for node in statement.walk():
+        if not isinstance(node, exp.Select):
+            continue
+        for projection in node.expressions:
+            expression = projection.this if isinstance(projection, exp.Alias) else projection
+            if isinstance(expression, exp.Star) or (
+                isinstance(expression, exp.Column) and isinstance(expression.this, exp.Star)
+            ):
+                raise QueryValidationError("implicit_select_star")
     output_fields = tuple(expression.alias_or_name for expression in select.expressions)
     if output_fields != _OUTPUT_FIELDS:
         raise QueryValidationError("missing_output_field")
@@ -77,7 +80,7 @@ def validate_google_sql(sql: str) -> None:
         raise QueryValidationError("implicit_select_star")
     try:
         statement = sqlglot.parse_one(sql, read="bigquery")
-    except ParseError as error:
+    except (ParseError, TokenError) as error:
         raise QueryValidationError("invalid_google_sql") from error
     _validate_output_fields(statement)
 

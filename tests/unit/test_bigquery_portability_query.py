@@ -38,6 +38,32 @@ def test_validator_rejects_qualified_projection_wildcard() -> None:
     assert error.value.reason_code == "implicit_select_star"
 
 
+def test_validator_rejects_nested_qualified_projection_wildcard() -> None:
+    sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
+    sql = sql.replace(
+        "WITH telemetry_period AS (\n  SELECT\n",
+        "WITH telemetry_period AS (\n  SELECT p.*,\n",
+    )
+
+    with pytest.raises(QueryValidationError) as error:
+        validate_google_sql(sql)
+
+    assert error.value.reason_code == "implicit_select_star"
+
+
+def test_validator_rejects_comment_separated_nested_wildcard() -> None:
+    sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
+    sql = sql.replace(
+        "WITH telemetry_period AS (\n  SELECT\n",
+        "WITH telemetry_period AS (\n  SELECT /* nested wildcard */ *,\n",
+    )
+
+    with pytest.raises(QueryValidationError) as error:
+        validate_google_sql(sql)
+
+    assert error.value.reason_code == "implicit_select_star"
+
+
 def test_validator_rejects_reordered_projection() -> None:
     sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
     sql = sql.replace(
@@ -98,6 +124,16 @@ def test_validator_rejects_nonportable_sql(fragment: str, reason_code: str) -> N
     assert error.value.reason_code == reason_code
 
 
+@pytest.mark.parametrize(
+    "fragment",
+    ["SELECT '", "SELECT /*"],
+    ids=["unterminated_string", "unterminated_comment"],
+)
+def test_validator_reports_tokenization_failures_as_invalid_google_sql(fragment: str) -> None:
+    with pytest.raises(QueryValidationError) as error:
+        validate_google_sql(fragment)
+
+    assert error.value.reason_code == "invalid_google_sql"
 def test_validator_reports_invalid_google_sql() -> None:
     with pytest.raises(QueryValidationError) as error:
         validate_google_sql("SELECT FROM")
