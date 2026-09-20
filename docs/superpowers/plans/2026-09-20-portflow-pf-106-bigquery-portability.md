@@ -762,7 +762,8 @@ integer fields, naive datetimes, non-finite floats, and nulls outside
 `NULLABLE_FIELDS`. Convert aware datetimes to UTC ISO-8601 with a trailing `Z`;
 round numeric metrics to six decimals; sort rows by `terminal_id`; serialize
 with sorted JSON keys and a final newline before hashing. Duplicate terminal
-IDs must raise a bounded `ValueError` rather than relying on input order.
+IDs must raise a fixed, bounded `ValueError` without interpolating raw input
+values rather than relying on input order.
 
 - [ ] **Step 4: Run focused checks and commit**
 
