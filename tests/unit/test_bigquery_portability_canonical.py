@@ -91,16 +91,24 @@ def test_canonicalizer_sorts_rows_by_terminal_id() -> None:
     assert [row["terminal_id"] for row in result] == ["TM-001", "TM-002"]
 
 
-def test_duplicate_terminal_ids_are_rejected_in_any_input_order() -> None:
-    first = _row("TM-001")
-    second = _row("TM-001")
+def test_duplicate_terminal_ids_are_rejected_with_bounded_error() -> None:
+    terminal_id = "TM-" + ("X" * 4093)
+    first = _row(terminal_id)
+    second = _row(terminal_id)
     second["availability"] = 0.5
     rows = [first, second]
 
-    with pytest.raises(ValueError, match=r"duplicate terminal_id.*TM-001"):
+    with pytest.raises(ValueError, match=r"^duplicate terminal_id$") as canonical_error:
         canonicalize_rows(rows)
-    with pytest.raises(ValueError, match=r"duplicate terminal_id.*TM-001"):
+    assert str(canonical_error.value) == "duplicate terminal_id"
+    assert terminal_id not in str(canonical_error.value)
+    assert len(str(canonical_error.value)) < 100
+
+    with pytest.raises(ValueError, match=r"^duplicate terminal_id$") as hash_error:
         result_sha256(list(reversed(rows)))
+    assert str(hash_error.value) == "duplicate terminal_id"
+    assert terminal_id not in str(hash_error.value)
+    assert len(str(hash_error.value)) < 100
 
 
 def test_result_hash_is_independent_of_input_order() -> None:

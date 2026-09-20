@@ -57,7 +57,7 @@ def canonicalize_rows(rows: Iterable[Mapping[str, object]]) -> list[dict[str, ob
     for row in canonical:
         terminal_id = cast(str, row["terminal_id"])
         if terminal_id in seen_terminal_ids:
-            raise ValueError(f"duplicate terminal_id: {terminal_id}")
+            raise ValueError("duplicate terminal_id")
         seen_terminal_ids.add(terminal_id)
     canonical.sort(key=lambda row: cast(str, row["terminal_id"]))
     return canonical
