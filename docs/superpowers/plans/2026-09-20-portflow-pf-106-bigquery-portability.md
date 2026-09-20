@@ -251,6 +251,17 @@ def test_schema_loader_rejects_unknown_type(tmp_path: Path) -> None:
         load_schema(invalid_schema)
 
 
+def test_schema_loader_rejects_boolean_schema_version(tmp_path: Path) -> None:
+    invalid_schema = tmp_path / "schema.json"
+    invalid_schema.write_text(
+        '{"schema_version": true, "tables": {}}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="invalid portability schema"):
+        load_schema(invalid_schema)
+
+
 def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
     schema = load_schema(SCHEMA_PATH)
     fixture_root = tmp_path / ".portability" / "bigquery" / "fixture"
@@ -365,7 +376,9 @@ metadata. The four table names and their required analytic columns must be:
 The implementation must retain types and modes in the actual JSON rather than
 reducing the committed mapping to names only. `load_schema` must reject missing
 tables, duplicate field names, unknown types, and malformed modes with
-`ValueError("invalid portability schema")`.
+`ValueError("invalid portability schema")`. Treat `schema_version` as an exact
+integer contract: JSON `true`/`false` and other values must not compare equal
+to version `1` through host-language coercion.
 
 - [ ] **Step 4: Implement deterministic fixture generation**
 
