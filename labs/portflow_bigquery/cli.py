@@ -43,7 +43,7 @@ class _ArgumentParser(argparse.ArgumentParser):
 
 def _safe_reason_code(error: BaseException, fallback: str) -> str:
     reason_code = getattr(error, "reason_code", None)
-    if isinstance(reason_code, str) and reason_code in _SAFE_REASON_CODES:
+    if type(reason_code) is str and reason_code in _SAFE_REASON_CODES:
         return reason_code
     return fallback
 

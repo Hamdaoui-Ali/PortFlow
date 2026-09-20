@@ -61,3 +61,23 @@ def test_cli_failure_rejects_unsafe_reason_code(monkeypatch, capsys) -> None:
     assert output == "portability verification failed: verification_failed\n"
     assert "secret text" not in output
     assert "alice" not in output
+
+
+def test_cli_failure_rejects_reason_code_str_subclass(monkeypatch, capsys) -> None:
+    class MaliciousReasonCode(str):
+        def __str__(self) -> str:
+            return "C:\\Users\\alice\\secret"
+
+    class Failure(ValueError):
+        reason_code = MaliciousReasonCode("query_hash_mismatch")
+
+    def fail(*args, **kwargs):
+        raise Failure("raw secret text")
+
+    monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
+
+    assert main(["verify", "--manifest", ".portability/bigquery/manifest.json"]) == 1
+    output = capsys.readouterr().out
+    assert output == "portability verification failed: verification_failed\n"
+    assert "alice" not in output
+    assert "secret" not in output
