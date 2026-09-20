@@ -15,7 +15,7 @@
 - The verifier is always offline: no BigQuery API, `bq` process, Google Cloud SDK, credential lookup, account, project, dataset, upload, or network access.
 - Keep the production `analytics/models/` dbt project and existing Gold SQL unchanged.
 - Keep portability code in `labs/portflow_bigquery/`; do not add it to `src/portflow/` or the PortFlow wheel.
-- Generate artifacts only below `.portability/bigquery/`, and reject paths outside that directory.
+- Generate artifacts only below the repository root's `.portability/bigquery/`, and reject paths outside that directory.
 - Preserve the explicit `overview_kpis` output fields, UTC timestamps, stable ordering, six-decimal numeric canonicalization, and null handling.
 - The committed GoogleSQL query must use explicit columns and BigQuery equivalents such as `COUNTIF`, `TIMESTAMP_DIFF`, and `SAFE_DIVIDE`; it must not contain `read_parquet`, `FILTER (...)`, `date_diff(...)`, unrendered template tokens, or implicit `SELECT *`.
 - Record `cloud_execution: "not_run"` in every successful manifest.
@@ -26,7 +26,7 @@
 
 ## Review Focus
 
-- Output path traversal or an absolute custom path must fail closed; Task 1 pins this with path-containment tests.
+- Output path traversal, an absolute custom path, or a valid-looking `.portability/bigquery` path outside the repository must fail closed; Task 1 pins this with path-containment tests.
 - Repeated fixture generation and Parquet file ordering must produce the same logical hash; Task 2 pins this with repeat-run and reordered-file tests.
 - Invalid identifiers, unrendered template tokens, invalid GoogleSQL, and DuckDB-only syntax must fail with stable reason codes; Task 3 pins each case.
 - A failed dbt subprocess must return `dbt_reference_failed` without copying stdout/stderr into the manifest; Task 5 pins this with a mocked subprocess failure.
@@ -75,6 +75,13 @@ def test_explicit_root_must_remain_below_repository_portability_directory(
         resolve_artifact_root(tmp_path / "outside", repository_root=tmp_path)
 
 
+def test_explicit_named_root_outside_repository_is_rejected(tmp_path: Path) -> None:
+    outside_repository = tmp_path.parent / "other-repository" / ".portability" / "bigquery"
+
+    with pytest.raises(ArtifactPathError, match="artifact root"):
+        resolve_artifact_root(outside_repository, repository_root=tmp_path)
+
+
 @pytest.mark.parametrize("relative_path", ["../escape.json", "..\\escape.json", "/tmp/escape.json"])
 def test_child_path_rejects_traversal_and_absolute_paths(
     tmp_path: Path,
@@ -118,12 +125,12 @@ def resolve_artifact_root(
     repository_root: Path | None = None,
 ) -> Path:
     base = (repository_root or Path.cwd()).resolve()
-    if candidate is None:
-        requested = (base / DEFAULT_ARTIFACT_ROOT).resolve()
-    else:
-        requested = candidate.resolve()
-        if requested.name != "bigquery" or requested.parent.name != ".portability":
-            raise ArtifactPathError("artifact root must remain below .portability/bigquery")
+    allowed = (base / ".portability" / "bigquery").resolve()
+    requested = (allowed if candidate is None else candidate).resolve()
+    try:
+        requested.relative_to(allowed)
+    except ValueError as error:
+        raise ArtifactPathError("artifact root must remain below .portability/bigquery") from error
     return requested
 
 
@@ -824,8 +831,12 @@ from labs.portflow_bigquery.runner import RunSpec, run_bundle, verify_bundle
 ROOT = Path(__file__).parents[2]
 
 
+def _output_root() -> Path:
+    return ROOT / ".portability" / "test-bigquery"
+
+
 def test_run_bundle_writes_offline_manifest(tmp_path: Path) -> None:
-    output = tmp_path / ".portability" / "bigquery"
+    output = _output_root()
     manifest = run_bundle(RunSpec(repository_root=ROOT, output_root=output))
 
     assert manifest["task"] == "PF-106"
@@ -836,7 +847,7 @@ def test_run_bundle_writes_offline_manifest(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("relative_path", ["overview_kpis.sql", "schema.json"])
 def test_verify_rejects_tampered_text_artifacts(tmp_path: Path, relative_path: str) -> None:
-    output = tmp_path / ".portability" / "bigquery"
+    output = _output_root()
     run_bundle(RunSpec(repository_root=ROOT, output_root=output))
     artifact = output / relative_path
     artifact.write_text(artifact.read_text(encoding="utf-8") + "\n", encoding="utf-8")
@@ -846,7 +857,7 @@ def test_verify_rejects_tampered_text_artifacts(tmp_path: Path, relative_path: s
 
 
 def test_verify_rejects_tampered_expected_result(tmp_path: Path) -> None:
-    output = tmp_path / ".portability" / "bigquery"
+    output = _output_root()
     run_bundle(RunSpec(repository_root=ROOT, output_root=output))
     expected_path = output / "expected-result.json"
     expected = json.loads(expected_path.read_text(encoding="utf-8"))
@@ -860,7 +871,7 @@ def test_verify_rejects_tampered_expected_result(tmp_path: Path) -> None:
 def test_verify_rejects_tampered_fixture(tmp_path: Path) -> None:
     import polars as pl
 
-    output = tmp_path / ".portability" / "bigquery"
+    output = _output_root()
     run_bundle(RunSpec(repository_root=ROOT, output_root=output))
     fixture_path = output / "fixture" / "telemetry_events" / "part-000000.parquet"
     frame = pl.read_parquet(fixture_path).with_columns(pl.lit(False).alias("available"))
@@ -871,7 +882,7 @@ def test_verify_rejects_tampered_fixture(tmp_path: Path) -> None:
 
 
 def test_manifest_contains_no_absolute_paths_or_raw_errors(tmp_path: Path) -> None:
-    output = tmp_path / ".portability" / "bigquery"
+    output = _output_root()
     run_bundle(RunSpec(repository_root=ROOT, output_root=output))
     manifest_text = (output / "manifest.json").read_text(encoding="utf-8")
 
@@ -884,7 +895,7 @@ def test_failed_run_writes_bounded_error_manifest(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    output = tmp_path / ".portability" / "bigquery"
+    output = _output_root()
 
     def fail(*args, **kwargs):
         raise ValueError("dbt_reference_failed")
