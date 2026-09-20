@@ -181,7 +181,7 @@ git commit -m "feat: add BigQuery portability artifact boundary"
 - Produces `FixtureSpec(seed: int = 42)`.
 - Produces `FixtureMetadata(seed: int, generator_version: str, rows_by_table: dict[str, int], logical_sha256: str, schema_sha256: str, schema: dict[str, tuple[str, ...]])` with `as_json() -> dict[str, object]`.
 - Produces `load_schema(path: Path) -> dict[str, tuple[SchemaField, ...]]`.
-- Produces `generate_fixture(spec: FixtureSpec, output_root: Path, *, schema_path: Path) -> FixtureMetadata`.
+- Produces `generate_fixture(spec: FixtureSpec, output_root: Path, *, schema_path: Path, repository_root: Path | None = None) -> FixtureMetadata`.
 - Produces `logical_fixture_hash(output_root: Path, schema: dict[str, tuple[SchemaField, ...]]) -> str`.
 
 - [ ] **Step 1: Write schema and fixture contract tests**
@@ -230,7 +230,13 @@ def test_schema_loader_rejects_unknown_type(tmp_path: Path) -> None:
 
 def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
     schema = load_schema(SCHEMA_PATH)
-    metadata = generate_fixture(FixtureSpec(seed=42), tmp_path / "fixture", schema_path=SCHEMA_PATH)
+    fixture_root = tmp_path / ".portability" / "bigquery" / "fixture"
+    metadata = generate_fixture(
+        FixtureSpec(seed=42),
+        fixture_root,
+        schema_path=SCHEMA_PATH,
+        repository_root=tmp_path,
+    )
 
     assert metadata.rows_by_table == {
         "telemetry_events": 4,
@@ -238,7 +244,7 @@ def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
         "incidents": 2,
         "alarms": 2,
     }
-    assert pl.read_parquet(tmp_path / "fixture" / "telemetry_events" / "part-000000.parquet").select(
+    assert pl.read_parquet(fixture_root / "telemetry_events" / "part-000000.parquet").select(
         "state", "available"
     ).to_dicts() == [
         {"state": "ACTIVE", "available": True},
@@ -252,19 +258,35 @@ def test_fixture_covers_kpi_edge_cases(tmp_path: Path) -> None:
 def test_fixture_hash_is_repeatable_and_independent_of_file_names(tmp_path: Path) -> None:
     first = tmp_path / "first"
     second = tmp_path / "second"
+    first_fixture = first / ".portability" / "bigquery" / "fixture"
+    second_fixture = second / ".portability" / "bigquery" / "fixture"
     schema = load_schema(SCHEMA_PATH)
 
-    first_metadata = generate_fixture(FixtureSpec(seed=42), first, schema_path=SCHEMA_PATH)
-    second_metadata = generate_fixture(FixtureSpec(seed=42), second, schema_path=SCHEMA_PATH)
+    first_metadata = generate_fixture(
+        FixtureSpec(seed=42), first_fixture, schema_path=SCHEMA_PATH, repository_root=first
+    )
+    second_metadata = generate_fixture(
+        FixtureSpec(seed=42), second_fixture, schema_path=SCHEMA_PATH, repository_root=second
+    )
 
     assert first_metadata.logical_sha256 == second_metadata.logical_sha256
 
-    telemetry_root = first / "telemetry_events"
+    telemetry_root = first_fixture / "telemetry_events"
     telemetry = pl.read_parquet(telemetry_root / "part-000000.parquet")
     telemetry.tail(2).write_parquet(telemetry_root / "part-000000.parquet")
     telemetry.head(2).write_parquet(telemetry_root / "part-000001.parquet")
-    assert logical_fixture_hash(first, schema) == second_metadata.logical_sha256
-    assert logical_fixture_hash(first, schema) == logical_fixture_hash(second, schema)
+    assert logical_fixture_hash(first_fixture, schema) == second_metadata.logical_sha256
+    assert logical_fixture_hash(first_fixture, schema) == logical_fixture_hash(second_fixture, schema)
+
+
+def test_fixture_writer_rejects_output_outside_artifact_root(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="artifact root"):
+        generate_fixture(
+            FixtureSpec(seed=42),
+            tmp_path / "outside" / "fixture",
+            schema_path=SCHEMA_PATH,
+            repository_root=tmp_path,
+        )
 ```
 
 - [ ] **Step 2: Run the schema and fixture tests to confirm the intended failure**
@@ -304,7 +326,10 @@ tables, duplicate field names, unknown types, and malformed modes with
 
 - [ ] **Step 4: Implement deterministic fixture generation**
 
-Use a fixed UTC start of `2026-01-01T00:00:00Z`. Generate exactly one terminal
+Use a fixed UTC start of `2026-01-01T00:00:00Z`. Resolve `output_root.parent`
+through `resolve_artifact_root(..., repository_root=repository_root or Path.cwd())`
+and then resolve the `fixture` child through `resolve_artifact_path` before
+creating or deleting any directory. Generate exactly one terminal
 `TM-001` and deterministic rows that exercise the current KPI rules:
 
 - telemetry at 00:00, 00:05, 00:10, and 00:15 with states `ACTIVE`, `IDLE`,
@@ -964,7 +989,12 @@ This string is metadata only and must never be passed to a subprocess.
 root = resolve_artifact_root(spec.output_root, repository_root=spec.repository_root)
 schema_path = spec.repository_root / "analytics" / "portability" / "bigquery" / "schema.json"
 query_path = spec.repository_root / "analytics" / "portability" / "bigquery" / "overview_kpis.sql"
-fixture = generate_fixture(FixtureSpec(seed=spec.seed), root / "fixture", schema_path=schema_path)
+fixture = generate_fixture(
+    FixtureSpec(seed=spec.seed),
+    root / "fixture",
+    schema_path=schema_path,
+    repository_root=spec.repository_root,
+)
 template = query_path.read_text(encoding="utf-8")
 query = render_query(template, project_id=spec.project_id, dataset=spec.dataset)
 validate_google_sql(query)
