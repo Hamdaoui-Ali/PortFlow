@@ -608,13 +608,15 @@ def render_query(template: str, *, project_id: str, dataset: str) -> str:
 `validate_google_sql` must first reject unrendered tokens, `read_parquet`,
 `date_diff(`, `FILTER (`, and any `SELECT *` with the stable reason codes
 `unrendered_template`, `forbidden_duckdb_construct`, and
-`implicit_select_star`. Inspect the parsed final projection for wildcard AST
-nodes, including qualified forms such as `table.*`; do not rely only on a
-regular expression for bare `SELECT *`. Require the final projection to contain
-exactly the 19 documented aliases in the documented order, with no reordered or
-extra expressions, and raise `missing_output_field` for any mismatch. Then call
-`sqlglot.parse_one(sql, read="bigquery")` and
-translate `sqlglot.errors.ParseError` into `QueryValidationError("invalid_google_sql")`.
+`implicit_select_star`. Inspect every parsed `SELECT` projection in the full
+AST for wildcard nodes, including qualified forms such as `table.*` and
+comment-separated wildcards; do not rely only on a regular expression for bare
+`SELECT *`. Require the final projection to contain exactly the 19 documented
+aliases in the documented order, with no reordered or extra expressions, and
+raise `missing_output_field` for any mismatch. Then call
+`sqlglot.parse_one(sql, read="bigquery")` and translate both parser and
+tokenizer failures (including `sqlglot.errors.ParseError` and
+`sqlglot.errors.TokenError`) into `QueryValidationError("invalid_google_sql")`.
 `query_sha256` hashes UTF-8 SQL bytes with `hashlib.sha256`.
 
 - [ ] **Step 5: Run parser, lint, and type checks**
