@@ -8,6 +8,30 @@ from typing import Never
 
 from .runner import RunSpec, run_bundle, verify_bundle
 
+_SAFE_REASON_CODES = frozenset(
+    {
+        "artifact_path_invalid",
+        "cloud_execution_not_offline",
+        "dbt_reference_failed",
+        "fixture_hash_mismatch",
+        "fixture_missing",
+        "forbidden_duckdb_construct",
+        "gold_output_missing",
+        "implicit_select_star",
+        "invalid_dataset",
+        "invalid_google_sql",
+        "invalid_project_id",
+        "manifest_invalid",
+        "missing_output_field",
+        "query_hash_mismatch",
+        "result_hash_mismatch",
+        "run_failed",
+        "schema_hash_mismatch",
+        "unrendered_template",
+        "verification_failed",
+    }
+)
+
 
 class _ArgumentParser(argparse.ArgumentParser):
     def error(self, message: str) -> Never:
@@ -15,6 +39,13 @@ class _ArgumentParser(argparse.ArgumentParser):
         self.print_usage()
         print("invalid command-line arguments")
         raise SystemExit(2)
+
+
+def _safe_reason_code(error: BaseException, fallback: str) -> str:
+    reason_code = getattr(error, "reason_code", None)
+    if isinstance(reason_code, str) and reason_code in _SAFE_REASON_CODES:
+        return reason_code
+    return fallback
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -54,7 +85,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             )
         except (OSError, ValueError) as error:
-            reason_code = getattr(error, "reason_code", "run_failed")
+            reason_code = _safe_reason_code(error, "run_failed")
             print(f"portability run failed: {reason_code}")
             return 1
         print("portability bundle verified")
@@ -63,7 +94,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         try:
             verify_bundle(args.manifest, repository_root=Path.cwd())
         except (OSError, ValueError, json.JSONDecodeError) as error:
-            reason_code = getattr(error, "reason_code", "verification_failed")
+            reason_code = _safe_reason_code(error, "verification_failed")
             print(f"portability verification failed: {reason_code}")
             return 1
         print("portability bundle verified")

@@ -45,3 +45,19 @@ def test_cli_failure_does_not_print_exception_text(monkeypatch, capsys) -> None:
     output = capsys.readouterr().out
     assert "query_hash_mismatch" in output
     assert "raw secret text" not in output
+
+
+def test_cli_failure_rejects_unsafe_reason_code(monkeypatch, capsys) -> None:
+    class Failure(ValueError):
+        reason_code = "secret text C:\\Users\\alice\\token"
+
+    def fail(*args, **kwargs):
+        raise Failure("raw secret text")
+
+    monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
+
+    assert main(["verify", "--manifest", ".portability/bigquery/manifest.json"]) == 1
+    output = capsys.readouterr().out
+    assert output == "portability verification failed: verification_failed\n"
+    assert "secret text" not in output
+    assert "alice" not in output
