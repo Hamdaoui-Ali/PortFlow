@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
 
+from .paths import reject_reparse_components
 from .timing import summarize_timings
 
 REPORT_SCHEMA_VERSION = 1
@@ -66,7 +67,16 @@ def _integer(value: object, field: str) -> int:
 
 
 def _resolve_report_path(path: Path, artifact_root: Path | None = None) -> Path:
-    root = (artifact_root or REPORT_ROOT).resolve(strict=False)
+    root_candidate = artifact_root or REPORT_ROOT
+    reject_reparse_components(
+        root_candidate,
+        message="report root must not contain symbolic links or reparse points",
+    )
+    reject_reparse_components(
+        path,
+        message="report path must not contain symbolic links or reparse points",
+    )
+    root = root_candidate.resolve(strict=False)
     candidate = path.resolve(strict=False)
     try:
         candidate.relative_to(root)

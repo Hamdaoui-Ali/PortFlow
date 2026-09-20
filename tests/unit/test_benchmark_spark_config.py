@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from benchmarks.portflow_benchmarks import spark_worker
+from benchmarks.portflow_benchmarks import spark_runner, spark_worker
 from benchmarks.portflow_benchmarks.models import WorkloadSpec
 from benchmarks.portflow_benchmarks.spark_runner import (
     build_compose_command,
@@ -91,3 +91,21 @@ def test_spark_worker_rejects_output_outside_mount(tmp_path: Path, monkeypatch) 
 
     with pytest.raises(ValueError, match="within Spark output"):
         spark_worker._write_payload(tmp_path / "outside" / "result.json", {})
+
+
+def test_spark_runner_rejects_symlinked_output_root(tmp_path: Path, monkeypatch) -> None:
+    fixture_root = tmp_path / "fixtures"
+    fixture_dir = fixture_root / "smoke"
+    fixture_dir.mkdir(parents=True)
+    target_root = tmp_path / "target-spark"
+    target_root.mkdir()
+    linked_root = tmp_path / "spark"
+    try:
+        linked_root.symlink_to(target_root, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"directory links unavailable: {error}")
+
+    monkeypatch.setattr(spark_runner, "FIXTURE_ROOT", fixture_root)
+    monkeypatch.setattr(spark_runner, "SPARK_ROOT", linked_root)
+    with pytest.raises(ValueError, match="artifact root"):
+        spark_runner.validate_artifact_paths(fixture_dir, linked_root / "run")

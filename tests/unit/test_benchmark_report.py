@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+from benchmarks.portflow_benchmarks import report as report_module
 from benchmarks.portflow_benchmarks.report import read_report, validate_report, write_report
 
 RESULT_HASH = "a" * 64
@@ -70,6 +71,24 @@ def test_report_reader_rejects_traversal_outside_artifact_root(tmp_path: Path) -
 
     with pytest.raises(ValueError, match="report path"):
         read_report(report_root / ".." / "secret.json", artifact_root=report_root)
+
+
+def test_report_rejects_symlinked_artifact_root(tmp_path: Path, monkeypatch) -> None:
+    target_root = tmp_path / "target-reports"
+    target_root.mkdir()
+    linked_root = tmp_path / "reports"
+    try:
+        linked_root.symlink_to(target_root, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"directory links unavailable: {error}")
+    monkeypatch.setattr(report_module, "REPORT_ROOT", linked_root)
+
+    report = valid_report()
+    with pytest.raises(ValueError, match="report root"):
+        write_report(report, linked_root / "report.json")
+    (target_root / "report.json").write_text(json.dumps(report), encoding="utf-8")
+    with pytest.raises(ValueError, match="report root"):
+        read_report(linked_root / "report.json")
 
 
 def test_report_rejects_absolute_paths() -> None:

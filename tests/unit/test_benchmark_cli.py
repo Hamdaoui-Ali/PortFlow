@@ -17,6 +17,12 @@ def test_cli_help_returns_success(capsys) -> None:
     assert "run" in capsys.readouterr().out
 
 
+def test_cli_rejects_invalid_arguments() -> None:
+    with pytest.raises(SystemExit) as error:
+        main(["--unknown-option"])
+    assert error.value.code == 2
+
+
 def test_cli_verify_returns_success_for_valid_report(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:

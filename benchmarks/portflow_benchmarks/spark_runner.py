@@ -12,6 +12,7 @@ from typing import Any, cast
 
 from .canonical import canonicalize_rows, result_sha256
 from .models import EngineExecution, WorkloadSpec
+from .paths import reject_reparse_components
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_ROOT = REPOSITORY_ROOT / ".benchmarks" / "fixtures"
@@ -23,6 +24,14 @@ _REASON_PATTERN = re.compile(r"^[a-z0-9_]{1,64}$")
 
 
 def _relative_under(path: Path, root: Path) -> str:
+    reject_reparse_components(
+        root,
+        message="benchmark artifact root must not contain symbolic links or reparse points",
+    )
+    reject_reparse_components(
+        path,
+        message="benchmark artifact path must not contain symbolic links or reparse points",
+    )
     try:
         return path.resolve(strict=False).relative_to(root.resolve(strict=False)).as_posix()
     except ValueError as error:

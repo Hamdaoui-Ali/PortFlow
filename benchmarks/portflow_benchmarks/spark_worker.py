@@ -12,11 +12,15 @@ _PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 _OUTPUT_ROOT = Path("/workspace/output")
 if __package__:
     from .canonical import canonicalize_rows, result_sha256  # noqa: E402
+    from .paths import reject_reparse_components  # noqa: E402
 else:
     sys.path.insert(0, str(_PACKAGE_ROOT))
     from portflow_benchmarks.canonical import (  # type: ignore[import-not-found, no-redef]  # noqa: E402
         canonicalize_rows,
         result_sha256,
+    )
+    from portflow_benchmarks.paths import (
+        reject_reparse_components,  # type: ignore[import-not-found, no-redef]  # noqa: E402
     )
 
 _CANONICALIZE_ROWS = cast(
@@ -76,6 +80,14 @@ def _write_payload(path: Path, payload: dict[str, object]) -> None:
 
 
 def _resolve_output_path(path: Path) -> Path:
+    reject_reparse_components(
+        _OUTPUT_ROOT,
+        message="Spark output root must not contain symbolic links or reparse points",
+    )
+    reject_reparse_components(
+        path,
+        message="Spark output path must not contain symbolic links or reparse points",
+    )
     root = _OUTPUT_ROOT.resolve(strict=False)
     candidate = path.resolve(strict=False)
     try:
