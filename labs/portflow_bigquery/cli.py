@@ -51,7 +51,7 @@ def _safe_reason_code(error: BaseException, fallback: str) -> str:
     else:
         reason_code = None
         for error_type in type(error).__mro__:
-            class_dict = vars(error_type)
+            class_dict = type.__getattribute__(error_type, "__dict__")
             if "reason_code" in class_dict:
                 reason_code = class_dict["reason_code"]
                 break

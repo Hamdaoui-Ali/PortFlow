@@ -99,3 +99,25 @@ def test_cli_failure_rejects_reason_code_property(monkeypatch, capsys) -> None:
     assert output == "portability verification failed: verification_failed\n"
     assert "alice" not in output
     assert "sensitive-secret" not in output
+
+
+def test_cli_failure_rejects_reason_code_metaclass_dict_accessor(monkeypatch, capsys) -> None:
+    class MaliciousMeta(type):
+        def __getattribute__(cls, name: str):
+            if name == "__dict__":
+                raise RuntimeError("C:\\Users\\alice\\metaclass-secret")
+            return super().__getattribute__(name)
+
+    class Failure(ValueError, metaclass=MaliciousMeta):
+        reason_code = "query_hash_mismatch"
+
+    def fail(*args, **kwargs):
+        raise Failure("raw secret text")
+
+    monkeypatch.setattr("labs.portflow_bigquery.cli.verify_bundle", fail)
+
+    assert main(["verify", "--manifest", ".portability/bigquery/manifest.json"]) == 1
+    output = capsys.readouterr().out
+    assert output == "portability verification failed: query_hash_mismatch\n"
+    assert "alice" not in output
+    assert "metaclass-secret" not in output
