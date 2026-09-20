@@ -849,7 +849,8 @@ Expected: FAIL because the reference module and error type do not exist yet.
 Run the existing dbt project exactly as the integration Gold test does:
 
 ```python
-subprocess.run(
+try:
+    subprocess.run(
     [
         "dbt", "build",
         "--project-dir", str(repository_root / "analytics"),
@@ -861,10 +862,13 @@ subprocess.run(
     cwd=repository_root,
     env={**os.environ, "PORTFLOW_SILVER_DIR": fixture_root.as_posix(), "PORTFLOW_GOLD_DB": gold_db.as_posix()},
 )
+except OSError:
+    raise ReferenceExecutionError("dbt_reference_failed") from None
 ```
 
 Raise `ReferenceExecutionError("dbt_reference_failed")` for a non-zero return
-code and never include stdout or stderr in the exception message. Raise
+code or an unlaunchable dbt process, and never include stdout or stderr in the
+exception message. Raise
 `ReferenceExecutionError("fixture_missing")` before launching dbt when the
 fixture root is absent, and `ReferenceExecutionError("gold_output_missing")`
 when dbt succeeds without creating the expected DuckDB file. Open the Gold file
