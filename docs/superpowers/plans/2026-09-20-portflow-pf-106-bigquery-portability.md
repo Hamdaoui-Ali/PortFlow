@@ -82,6 +82,20 @@ def test_explicit_named_root_outside_repository_is_rejected(tmp_path: Path) -> N
         resolve_artifact_root(outside_repository, repository_root=tmp_path)
 
 
+def test_linked_artifact_root_is_rejected(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    artifact_root = tmp_path / ".portability" / "bigquery"
+    artifact_root.parent.mkdir()
+    try:
+        artifact_root.symlink_to(outside, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"directory links unavailable: {error}")
+
+    with pytest.raises(ArtifactPathError, match="artifact root"):
+        resolve_artifact_root(repository_root=tmp_path)
+
+
 @pytest.mark.parametrize("relative_path", ["../escape.json", "..\\escape.json", "/tmp/escape.json"])
 def test_child_path_rejects_traversal_and_absolute_paths(
     tmp_path: Path,
@@ -143,6 +157,15 @@ def resolve_artifact_path(root: Path, relative_path: str) -> Path:
         raise ArtifactPathError("artifact path must remain below artifact root") from error
     return candidate
 ```
+
+The boundary must also reject existing symbolic-link, junction, or other
+reparse-point components before resolving or mutating them. A link inside the
+repository that redirects `.portability/bigquery` or a child path outside the
+repository must raise `ArtifactPathError`; do not rely only on
+`Path.resolve()` because resolving both the allowed root and the requested
+candidate can make an external junction appear to be the allowed root. Add a
+focused child-link regression test and keep the checks platform-portable; a
+test may skip only when the host cannot create directory links.
 
 Export `ArtifactPathError`, `DEFAULT_ARTIFACT_ROOT`, `resolve_artifact_root`, and
 `resolve_artifact_path` from `labs/portflow_bigquery/__init__.py`. Keep both
@@ -287,6 +310,26 @@ def test_fixture_writer_rejects_output_outside_artifact_root(tmp_path: Path) -> 
             schema_path=SCHEMA_PATH,
             repository_root=tmp_path,
         )
+
+
+def test_fixture_writer_rejects_linked_table_root(tmp_path: Path) -> None:
+    fixture_root = tmp_path / ".portability" / "bigquery" / "fixture"
+    fixture_root.mkdir(parents=True)
+    outside = tmp_path / "outside-table"
+    outside.mkdir()
+    try:
+        (fixture_root / "telemetry_events").symlink_to(outside, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"directory links unavailable: {error}")
+
+    with pytest.raises(ValueError, match="artifact path"):
+        generate_fixture(
+            FixtureSpec(seed=42),
+            fixture_root,
+            schema_path=SCHEMA_PATH,
+            repository_root=tmp_path,
+        )
+    assert not list(outside.iterdir())
 ```
 
 - [ ] **Step 2: Run the schema and fixture tests to confirm the intended failure**
@@ -329,7 +372,11 @@ tables, duplicate field names, unknown types, and malformed modes with
 Use a fixed UTC start of `2026-01-01T00:00:00Z`. Resolve `output_root.parent`
 through `resolve_artifact_root(..., repository_root=repository_root or Path.cwd())`
 and then resolve the `fixture` child through `resolve_artifact_path` before
-creating or deleting any directory. Generate exactly one terminal
+creating or deleting any directory. Before each table directory is created or
+cleaned, resolve the table child with `resolve_artifact_path`; likewise resolve
+the final Parquet target before writing it. These checks must reject linked
+directory/file paths that resolve outside the repository-local artifact root.
+Generate exactly one terminal
 `TM-001` and deterministic rows that exercise the current KPI rules:
 
 - telemetry at 00:00, 00:05, 00:10, and 00:15 with states `ACTIVE`, `IDLE`,
