@@ -45,6 +45,7 @@ _ALLOWED_FROM_IMPORTS = {
     "pyspark.sql.window": frozenset({"Window"}),
 }
 _DYNAMIC_CALLS = frozenset({"eval", "exec", "compile", "__import__"})
+_FILE_IO_CALLS = frozenset({"open"})
 _DYNAMIC_ATTRIBUTE_CALLS = frozenset(
     {
         ("os", "system"),
@@ -120,7 +121,9 @@ def _validate_ast_surface(source: str) -> None:
                 ):
                     raise NotebookValidationError("unsupported_api")
         elif isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Name) and node.func.id in _DYNAMIC_CALLS:
+            if isinstance(node.func, ast.Name) and node.func.id in (
+                _DYNAMIC_CALLS | _FILE_IO_CALLS
+            ):
                 raise NotebookValidationError("unsupported_api")
             if (
                 isinstance(node.func, ast.Attribute)

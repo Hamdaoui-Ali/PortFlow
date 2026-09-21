@@ -103,6 +103,14 @@ def test_notebook_rejects_non_pyspark_imports() -> None:
         validate_notebook_source(SAFE_NOTEBOOK + "\nimport os\n")
 
 
+def test_notebook_rejects_builtin_open_file_write() -> None:
+    file_write = '''with open("/tmp/pf107-escape", "w", encoding="utf-8") as handle:
+    handle.write("payload")
+'''
+    with pytest.raises(NotebookValidationError, match="unsupported_api"):
+        validate_notebook_source(SAFE_NOTEBOOK + f"\n{file_write}")
+
+
 def test_notebook_allows_required_pyspark_import_surface() -> None:
     pyspark_imports = """from pyspark.sql import functions as F
 from pyspark.sql.functions import col, when
