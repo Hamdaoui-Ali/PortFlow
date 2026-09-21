@@ -3,10 +3,13 @@
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import cast
 
 import jsonschema  # type: ignore[import-untyped]
+
+from labs.portflow_bigquery.canonical import canonicalize_rows
 
 from .paths import ArtifactPathError, resolve_comparison_path
 
@@ -185,6 +188,29 @@ def build_mismatch_report(
         cloud_rows=cloud_rows,
         cloud_result_sha256=cloud_result_sha256,
     )
+
+
+def load_result_rows(path: Path) -> list[dict[str, object]]:
+    """Load and validate the JSON row list used by the shared KPI contract."""
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(raw, list):
+            raise ValueError
+        rows: list[dict[str, object]] = []
+        for item in raw:
+            if not isinstance(item, dict):
+                raise ValueError
+            row = dict(item)
+            for field in ("source_period_start", "source_period_end"):
+                value = row.get(field)
+                if not isinstance(value, str) or not value.endswith("Z"):
+                    raise ValueError
+                row[field] = datetime.fromisoformat(value[:-1] + "+00:00")
+            rows.append(row)
+        canonicalize_rows(rows)
+        return rows
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError, TypeError, OverflowError):
+        raise ComparisonVerificationError("cloud_result_invalid") from None
 
 
 def _target_path(path: Path, artifact_root: Path) -> Path:
