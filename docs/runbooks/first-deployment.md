@@ -33,7 +33,7 @@ The expected project path is /PortFlow/. The Pages build fails if compiled asset
 
     docker compose up -d --wait postgres
     python -m uv sync --extra dev --frozen
-    npm --prefix web ci
+    npm --prefix web ci --ignore-scripts
     ./scripts/verify_r2.ps1
     docker compose down
 

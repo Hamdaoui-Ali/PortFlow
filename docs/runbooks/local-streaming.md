@@ -21,13 +21,13 @@ decisions.
 ## Prerequisites
 
 - Python `3.12` or newer with the locked project environment.
-- `uv` installed; use `python -m pip install uv` if it is not already available.
+- `uv` installed; use the pinned binary-only install if it is not already available.
 - Docker Desktop running with its Linux engine enabled.
 - The repository's development dependencies installed:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
-python -m pip install uv
+python -m pip install --only-binary=:all: uv==0.12.12
 python -m uv sync --extra dev --frozen
 ```
 
@@ -37,6 +37,9 @@ These commands publish and consume twelve deterministic events:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
+if (-not $env:PORTFLOW_POSTGRES_PASSWORD) {
+    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+}
 docker compose --profile streaming up -d --wait redpanda
 $env:PORTFLOW_REDPANDA_BROKERS = "localhost:19092"
 $env:PORTFLOW_REDPANDA_DLQ_TOPIC = "portflow.telemetry.dlq"
@@ -64,6 +67,9 @@ extra and start the disposable broker before launching a run:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
+if (-not $env:PORTFLOW_POSTGRES_PASSWORD) {
+    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+}
 python -m uv sync --extra dev --extra orchestration
 $env:PORTFLOW_REDPANDA_BROKERS = "localhost:19092"
 $env:PORTFLOW_REDPANDA_GROUP = "portflow-bronze"
@@ -131,6 +137,9 @@ Start the broker and observability services from the repository root:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
+if (-not $env:PORTFLOW_POSTGRES_PASSWORD) {
+    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+}
 docker compose --profile streaming --profile observability up -d --wait redpanda portflow-metrics prometheus grafana
 ```
 
@@ -145,9 +154,8 @@ Open the local tools at:
 - Prometheus: `http://127.0.0.1:9090`
 - Grafana: `http://127.0.0.1:3000`
 
-Grafana uses the disposable local default password `portflow`. Set
-`$env:PORTFLOW_GRAFANA_ADMIN_PASSWORD` before starting the profile when a different local
-password is needed. The ports are bound to loopback and are not a hosted or public service.
+Set `$env:PORTFLOW_GRAFANA_ADMIN_PASSWORD` to a disposable local value before starting the
+profile. The ports are bound to loopback and are not a hosted or public service.
 
 The dashboard reports state-store availability, active/succeeded/failed run counts, latest run
 duration, and aggregate consumed, Bronze, committed, duplicate, late, and dead-letter totals. It
