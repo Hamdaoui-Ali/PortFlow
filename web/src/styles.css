@@ -280,7 +280,7 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .stream-runs-header { max-width: 720px; }
 .stream-runs-header h2 { margin: 0; color: var(--ink); font-size: clamp(22px, 3vw, 30px); line-height: 1.15; letter-spacing: -0.035em; }
 .stream-runs-header > p:not(.section-kicker) { margin: 12px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
-.stream-runs-status { margin: 22px 0 0; padding: 14px 16px; color: var(--muted); background: var(--pale-blue); border-left: 4px solid var(--cobalt); font-size: 13px; line-height: 1.45; }
+.stream-runs-status { display: block; margin: 22px 0 0; padding: 14px 16px; color: var(--muted); background: var(--pale-blue); border-left: 4px solid var(--cobalt); font-size: 13px; line-height: 1.45; }
 .stream-runs-table-scroll { margin-top: 18px; overflow-x: auto; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overscroll-behavior-inline: contain; }
 .stream-runs-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13px; }
 .stream-runs-table caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

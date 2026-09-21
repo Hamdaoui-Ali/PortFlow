@@ -3,7 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { createLocalApi, type LocalApiClient, type StreamRunSummary, type StreamRunsResponse } from "../../data/localApi";
 
 interface LocalStreamRunsProps {
-  api?: LocalApiClient;
+  readonly api?: LocalApiClient;
+}
+
+interface RunRowProps {
+  readonly run: StreamRunSummary;
 }
 
 function statusLabel(status: StreamRunSummary["status"]): string {
@@ -30,7 +34,7 @@ function statusMessage(status: Exclude<StreamRunsResponse["status"], "ready">): 
   return `Local stream run history is ${status}. The published snapshot is unchanged.`;
 }
 
-function RunRow({ run }: { run: StreamRunSummary }) {
+function RunRow({ run }: Readonly<RunRowProps>) {
   return (
     <tr>
       <th scope="row">
@@ -52,7 +56,7 @@ function RunRow({ run }: { run: StreamRunSummary }) {
   );
 }
 
-export function LocalStreamRuns({ api }: LocalStreamRunsProps) {
+export function LocalStreamRuns({ api }: Readonly<LocalStreamRunsProps>) {
   const client = useMemo(() => api ?? createLocalApi(), [api]);
   const [response, setResponse] = useState<StreamRunsResponse | null>(null);
 
@@ -84,23 +88,22 @@ export function LocalStreamRuns({ api }: LocalStreamRunsProps) {
       </header>
 
       {!response && (
-        <p className="stream-runs-status" role="status" aria-label="Checking local stream runs">
+        <output className="stream-runs-status" aria-label="Checking local stream runs">
           Checking local stream runs
-        </p>
+        </output>
       )}
 
       {response && response.status !== "ready" && (
-        <p
+        <output
           className="stream-runs-status"
-          role="status"
           aria-label={statusMessage(response.status)}
         >
           {statusMessage(response.status)}
-        </p>
+        </output>
       )}
 
       {response?.status === "ready" && response.runs.length === 0 && (
-        <p className="stream-runs-status" role="status">No local stream runs yet.</p>
+        <output className="stream-runs-status">No local stream runs yet.</output>
       )}
 
       {response?.status === "ready" && response.runs.length > 0 && (
