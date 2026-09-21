@@ -42,6 +42,7 @@ def _write_result(path: Path, rows: list[dict[str, object]] | dict[str, object])
 
 def test_match_report_is_versioned_and_bounded() -> None:
     report = build_comparison_report(
+        reference_manifest_path="handoff/manifest.json",
         reference_manifest_sha256="a" * 64,
         reference_rows=1,
         reference_result_sha256="b" * 64,
@@ -99,6 +100,7 @@ def test_invalid_cloud_rows_have_one_bounded_reason(tmp_path: Path, mutate) -> N
 
 def test_different_canonical_hashes_build_a_mismatch_report() -> None:
     report = build_mismatch_report(
+        reference_manifest_path="handoff/manifest.json",
         reference_manifest_sha256="a" * 64,
         reference_rows=1,
         reference_result_sha256="b" * 64,

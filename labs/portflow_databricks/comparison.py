@@ -9,9 +9,17 @@ from typing import cast
 
 import jsonschema  # type: ignore[import-untyped]
 
-from labs.portflow_bigquery.canonical import canonicalize_rows
+from labs.portflow_bigquery.canonical import canonicalize_rows, result_sha256
 
-from .paths import ArtifactPathError, resolve_comparison_path
+from .manifest import file_sha256, validate_manifest
+from .paths import (
+    ArtifactPathError,
+    resolve_artifact_path,
+    resolve_artifact_root,
+    resolve_comparison_path,
+    resolve_comparison_root,
+)
+from .runner import verify_bundle
 
 REPORT_FILE = "comparison.json"
 CLOUD_RESULT_FILE = "cloud-result.json"
@@ -64,6 +72,7 @@ _SCHEMA: dict[str, object] = _object_schema(
         "reference": _object_schema(
             {
                 "task": {"const": "PF-107"},
+                "manifest_path": {"type": "string", "minLength": 1},
                 "manifest_sha256": _HASH,
                 "result_rows": _COUNT,
                 "result_sha256": _HASH,
@@ -129,6 +138,7 @@ def _validate_report_paths(document: Mapping[str, object], artifact_root: Path) 
 
 def build_comparison_report(
     *,
+    reference_manifest_path: str,
     reference_manifest_sha256: str,
     reference_rows: int,
     reference_result_sha256: str,
@@ -147,6 +157,7 @@ def build_comparison_report(
         "cloud_execution": "result_supplied",
         "reference": {
             "task": "PF-107",
+            "manifest_path": reference_manifest_path,
             "manifest_sha256": reference_manifest_sha256,
             "result_rows": reference_rows,
             "result_sha256": reference_result_sha256,
@@ -168,6 +179,7 @@ def build_comparison_report(
 
 def build_mismatch_report(
     *,
+    reference_manifest_path: str,
     reference_manifest_sha256: str,
     reference_rows: int,
     reference_result_sha256: str,
@@ -180,6 +192,7 @@ def build_mismatch_report(
     if reference_rows == cloud_rows and reference_result_sha256 == cloud_result_sha256:
         raise ComparisonVerificationError("comparison_invalid")
     return build_comparison_report(
+        reference_manifest_path=reference_manifest_path,
         reference_manifest_sha256=reference_manifest_sha256,
         reference_rows=reference_rows,
         reference_result_sha256=reference_result_sha256,
@@ -222,6 +235,138 @@ def _target_path(path: Path, artifact_root: Path) -> Path:
         return resolve_comparison_path(artifact_root, relative)
     except ArtifactPathError:
         raise ComparisonVerificationError("artifact_path_invalid") from None
+
+
+def _repository_path(path: Path, repository_root: Path) -> Path:
+    return path if path.is_absolute() else repository_root / path
+
+
+def _resolve_handoff(
+    manifest_path: Path,
+    *,
+    repository_root: Path,
+) -> tuple[Path, Path, str]:
+    try:
+        handoff_root = resolve_artifact_root(repository_root=repository_root)
+        absolute_manifest = _repository_path(manifest_path, repository_root)
+        relative = absolute_manifest.absolute().relative_to(handoff_root.absolute()).as_posix()
+        target = resolve_artifact_path(handoff_root, relative)
+    except (ArtifactPathError, ValueError):
+        raise ComparisonVerificationError("handoff_invalid") from None
+    return handoff_root, target, relative
+
+
+def compare_result(spec: ComparisonSpec) -> dict[str, object]:
+    """Compare one supplied result with a verified PF-107 handoff."""
+    try:
+        comparison_root = resolve_comparison_root(repository_root=spec.repository_root)
+        cloud_result = _target_path(
+            _repository_path(spec.cloud_result, spec.repository_root), comparison_root
+        )
+        output_path = _target_path(
+            _repository_path(spec.output_path, spec.repository_root), comparison_root
+        )
+    except ComparisonVerificationError:
+        raise
+    except (ArtifactPathError, OSError):
+        raise ComparisonVerificationError("artifact_path_invalid") from None
+
+    handoff_root, handoff_path, handoff_relative = _resolve_handoff(
+        spec.handoff_manifest,
+        repository_root=spec.repository_root,
+    )
+    try:
+        verify_bundle(handoff_path, repository_root=spec.repository_root)
+        handoff_manifest = validate_manifest(handoff_path, artifact_root=handoff_root)
+        expected = cast(dict[str, object], handoff_manifest["expected_result"])
+        reference_rows = cast(int, expected["rows"])
+        reference_result_hash = cast(str, expected["result_sha256"])
+        reference_manifest_hash = file_sha256(handoff_path)
+    except (OSError, ValueError, TypeError, KeyError):
+        raise ComparisonVerificationError("handoff_invalid") from None
+
+    cloud_rows = load_result_rows(cloud_result)
+    try:
+        cloud_file_hash = file_sha256(cloud_result)
+        cloud_result_hash = result_sha256(cloud_rows)
+    except (OSError, ValueError, TypeError, OverflowError):
+        raise ComparisonVerificationError("cloud_result_invalid") from None
+
+    report = build_comparison_report(
+        reference_manifest_path=handoff_relative,
+        reference_manifest_sha256=reference_manifest_hash,
+        reference_rows=reference_rows,
+        reference_result_sha256=reference_result_hash,
+        cloud_result_path=cloud_result.relative_to(comparison_root).as_posix(),
+        cloud_file_sha256=cloud_file_hash,
+        cloud_rows=len(cloud_rows),
+        cloud_result_sha256=cloud_result_hash,
+    )
+    write_comparison_report(output_path, report, artifact_root=comparison_root)
+    verify_comparison(output_path, repository_root=spec.repository_root)
+    return report
+
+
+def _comparison_report(path: Path, repository_root: Path) -> tuple[Path, Path, dict[str, object]]:
+    try:
+        root = resolve_comparison_root(repository_root=repository_root)
+        target = _target_path(_repository_path(path, repository_root), root)
+        document = json.loads(target.read_text(encoding="utf-8"))
+        validated = _validate_document(document)
+        _validate_report_paths(validated, root)
+    except ComparisonVerificationError:
+        raise
+    except (ArtifactPathError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
+        raise ComparisonVerificationError("comparison_invalid") from None
+    return root, target, validated
+
+
+def verify_comparison(path: Path, *, repository_root: Path) -> None:
+    """Verify a PF-108 report, its supplied result, and its PF-107 handoff."""
+    comparison_root, _, report = _comparison_report(path, repository_root)
+    reference = cast(dict[str, object], report["reference"])
+    cloud = cast(dict[str, object], report["cloud_result"])
+    try:
+        handoff_root = resolve_artifact_root(repository_root=repository_root)
+        manifest_relative = reference["manifest_path"]
+        if not isinstance(manifest_relative, str):
+            raise ValueError
+        handoff_path = resolve_artifact_path(handoff_root, manifest_relative)
+    except (ArtifactPathError, ValueError, TypeError):
+        raise ComparisonVerificationError("comparison_invalid") from None
+
+    try:
+        verify_bundle(handoff_path, repository_root=repository_root)
+    except (OSError, ValueError, TypeError, KeyError):
+        raise ComparisonVerificationError("handoff_invalid") from None
+
+    try:
+        handoff_manifest = validate_manifest(handoff_path, artifact_root=handoff_root)
+        expected = cast(dict[str, object], handoff_manifest["expected_result"])
+        if (
+            reference["task"] != "PF-107"
+            or file_sha256(handoff_path) != reference["manifest_sha256"]
+            or expected["rows"] != reference["result_rows"]
+            or expected["result_sha256"] != reference["result_sha256"]
+        ):
+            raise ValueError
+    except (OSError, ValueError, TypeError, KeyError):
+        raise ComparisonVerificationError("comparison_invalid") from None
+
+    try:
+        cloud_relative = cloud["path"]
+        if not isinstance(cloud_relative, str):
+            raise ValueError
+        cloud_path = resolve_comparison_path(comparison_root, cloud_relative)
+        if file_sha256(cloud_path) != cloud["sha256"]:
+            raise ValueError
+        rows = load_result_rows(cloud_path)
+        if len(rows) != cloud["result_rows"] or result_sha256(rows) != cloud["result_sha256"]:
+            raise ValueError
+    except ComparisonVerificationError:
+        raise ComparisonVerificationError("cloud_result_hash_mismatch") from None
+    except (ArtifactPathError, OSError, ValueError, TypeError, OverflowError):
+        raise ComparisonVerificationError("cloud_result_hash_mismatch") from None
 
 
 def write_comparison_report(
