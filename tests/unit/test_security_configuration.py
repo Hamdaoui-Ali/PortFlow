@@ -61,7 +61,10 @@ def test_workflows_harden_python_and_frontend_installation() -> None:
     ):
         content = _read(relative_path)
         assert "python -m pip install --only-binary=:all: uv==0.12.12" in content
-        assert "npm --prefix web ci --ignore-scripts" in content or "npm --prefix web ci" not in content
+        assert (
+            "npm --prefix web ci --ignore-scripts" in content
+            or "npm --prefix web ci" not in content
+        )
         assert "python -m pip install uv\n" not in content
 
     for relative_path in (".github/workflows/ci.yml", ".github/workflows/pages.yml"):
@@ -90,11 +93,24 @@ def test_coderabbit_is_configured_for_security_review_without_auto_commits() -> 
     assert "!**/*.lock" in reviews["path_filters"]
     assert "!web/dist/**" in reviews["path_filters"]
 
-    required_tools = {"ruff", "semgrep", "trufflehog", "gitleaks", "actionlint", "zizmor", "checkov", "yamllint", "eslint"}
+    required_tools = {
+        "ruff",
+        "semgrep",
+        "trufflehog",
+        "gitleaks",
+        "actionlint",
+        "zizmor",
+        "checkov",
+        "yamllint",
+        "eslint",
+    }
     assert required_tools <= set(reviews["tools"])
     assert {item["path"] for item in reviews["path_instructions"]} >= {
         "**/*.py",
         ".github/workflows/**/*.{yml,yaml}",
-        "web/**/*.{ts,tsx}"
+        "web/**/*.{ts,tsx}",
     }
-    assert "finishing_touches" not in reviews or "auto_commit" not in str(reviews["finishing_touches"])
+    assert (
+        "finishing_touches" not in reviews
+        or "auto_commit" not in str(reviews["finishing_touches"])
+    )
