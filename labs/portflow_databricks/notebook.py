@@ -142,9 +142,9 @@ _DATA_KINDS = frozenset({"scalar", "sequence", "mapping", "frame", "column", "wi
 _PARAMETERS = frozenset({"input_root", "catalog", "schema", "table_prefix"})
 _INPUT_TABLES = "(?:telemetry_events|container_movements|incidents|alarms)"
 _VOLUME_ROOT = r"/Volumes/[A-Za-z0-9_]+/[A-Za-z0-9_]+/[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*"
-_INPUT_PATH = re.compile(r"(?:\{input_root\}|" + _VOLUME_ROOT + ")/" + _INPUT_TABLES + r"/?")
+_INPUT_PATH = re.compile(r"\{input_root\}/" + _INPUT_TABLES + r"/?")
 _TABLE_NAME = re.compile(
-    r"(?:\{catalog\}\.\{schema\}\.\{(?:prefix|table_prefix)\}|catalog\.schema\.prefix)"
+    r"\{catalog\}\.\{schema\}\.\{(?:prefix|table_prefix)\}"
     r"_(?:(?:bronze|silver)_" + _INPUT_TABLES + r"|gold_overview_kpis)"
 )
 
@@ -189,6 +189,22 @@ def _require_contract(source: str) -> None:
     if not re.search(r"dbutils\.widgets\.[A-Za-z_]+\s*\(", source):
         raise NotebookValidationError("notebook_contract_invalid")
     if not re.search(r"dbutils\.widgets\.get\s*\(", source):
+        raise NotebookValidationError("notebook_contract_invalid")
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, ValueError, RecursionError):
+        raise NotebookValidationError("notebook_contract_invalid") from None
+    widget_methods = {
+        node.func.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and isinstance(node.func.value, ast.Attribute)
+        and isinstance(node.func.value.value, ast.Name)
+        and node.func.value.value.id == "dbutils"
+        and node.func.value.attr == "widgets"
+    }
+    if not {"text", "get"} <= widget_methods:
         raise NotebookValidationError("notebook_contract_invalid")
     parquet_read = r"spark\.read(?:\.format\s*\(\s*[\"']parquet[\"']\s*\)|\.parquet)\s*\("
     if not re.search(parquet_read, source, re.IGNORECASE):

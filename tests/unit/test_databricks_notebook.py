@@ -410,6 +410,50 @@ display(loaded)
 
 
 @pytest.mark.parametrize(
+    "payload",
+    [
+        'gold.write.format("delta").mode("overwrite").saveAsTable("catalog.schema.prefix_gold_overview_kpis")',
+        (
+            'literal = "catalog.schema.prefix_gold_overview_kpis"\n'
+            'gold.write.format("delta").mode("overwrite").saveAsTable(literal)'
+        ),
+        (
+            'literal = "catalog.schema." + "prefix_gold_overview_kpis"\n'
+            'gold.write.format("delta").mode("overwrite").saveAsTable(literal)'
+        ),
+        (
+            'catalog = "catalog"\nschema = "schema"\nprefix = "prefix"\n'
+            'gold.write.format("delta").mode("overwrite").saveAsTable('
+            'f"{catalog}.{schema}.{prefix}_gold_overview_kpis")'
+        ),
+    ],
+)
+def test_notebook_rejects_executable_literal_table_provenance(payload: str) -> None:
+    source = SAFE_NOTEBOOK + "\n" + payload + "\n"
+    with pytest.raises(NotebookValidationError, match="^table_contract$"):
+        validate_notebook_source(source)
+
+
+@pytest.mark.parametrize(
+    "read_expression",
+    [
+        'spark.read.parquet("/Volumes/other/default/private/telemetry_events")',
+        (
+            'literal = "/Volumes/other/default/private/telemetry_events"\n'
+            'spark.read.parquet(literal)'
+        ),
+        (
+            'input_root = "/Volumes/other/default/private"\n'
+            'spark.read.parquet(f"{input_root}/telemetry_events")'
+        ),
+    ],
+)
+def test_notebook_rejects_executable_literal_input_provenance(read_expression: str) -> None:
+    with pytest.raises(NotebookValidationError, match="^unsupported_api$"):
+        validate_notebook_source(SAFE_NOTEBOOK + "\n" + read_expression)
+
+
+@pytest.mark.parametrize(
     "fragment",
     [
         "# Databricks notebook source",
