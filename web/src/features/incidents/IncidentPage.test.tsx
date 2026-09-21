@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { IncidentDatasetState, IncidentRecordV1, SnapshotV1 } from "../../data/schema";
@@ -85,7 +85,7 @@ describe("IncidentPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Back to incident list/ }));
     expect(await screen.findByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
-    expect(document.activeElement).toBe(screen.getByRole("link", { name: "inc-000001" }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("link", { name: "inc-000001" })));
     window.history.back();
     expect(window.history.state?.incidentDetail).toBeUndefined();
   });
