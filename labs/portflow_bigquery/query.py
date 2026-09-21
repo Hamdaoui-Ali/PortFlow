@@ -11,6 +11,7 @@ _PROJECT_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 _DATASET = re.compile(r"^\w+$", re.ASCII)
 _TOKENS = ("{{ project_id }}", "{{ dataset }}")
 _FORBIDDEN_DUCKDB = re.compile(r"\b(?:read_parquet|date_diff|filter)\s*\(", re.IGNORECASE)
+_FORBIDDEN_DUCKDB_EXPRESSIONS = (exp.DateDiff, exp.Filter, exp.ReadParquet)
 _SELECT_STAR = re.compile(r"\bSELECT\s+(?:DISTINCT\s+)?\*", re.IGNORECASE)
 _OUTPUT_FIELDS = (
     "terminal_id",
@@ -77,6 +78,11 @@ def _validate_output_fields(statement: exp.Expr) -> None:
         raise QueryValidationError("missing_output_field")
 
 
+def _validate_no_forbidden_expressions(statement: exp.Expr) -> None:
+    if any(isinstance(node, _FORBIDDEN_DUCKDB_EXPRESSIONS) for node in statement.walk()):
+        raise QueryValidationError("forbidden_duckdb_construct")
+
+
 def validate_google_sql(sql: str) -> None:
     """Reject nonportable SQL and parse the rendered query as BigQuery GoogleSQL."""
     if "{{" in sql or "}}" in sql:
@@ -86,9 +92,15 @@ def validate_google_sql(sql: str) -> None:
     if _SELECT_STAR.search(sql):
         raise QueryValidationError("implicit_select_star")
     try:
-        statement = sqlglot.parse_one(sql, read="bigquery")
+        statements = sqlglot.parse(sql, read="bigquery")
     except (ParseError, TokenError) as error:
         raise QueryValidationError("invalid_google_sql") from error
+    if len(statements) != 1:
+        raise QueryValidationError("invalid_google_sql")
+    statement = statements[0]
+    if statement is None:
+        raise QueryValidationError("invalid_google_sql")
+    _validate_no_forbidden_expressions(statement)
     _validate_output_fields(statement)
 
 

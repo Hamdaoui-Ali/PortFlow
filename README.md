@@ -28,3 +28,5 @@ Follow the complete [local development runbook](docs/runbooks/local-development.
 For the opt-in Kafka-compatible telemetry path, follow the [local Redpanda streaming runbook](docs/runbooks/local-streaming.md). PF-102 adds restart-safe event state, bounded lateness, and a canonical dead-letter topic while writing disposable stream output to local Bronze only; PF-103 adds optional manual Dagster orchestration and run metadata; PF-104 adds optional local Prometheus and Grafana engineering observability over `stream_runs`. The public browser remains static and the committed public snapshot is unchanged.
 
 For reproducible local engine comparisons, follow the [benchmark runbook](docs/runbooks/benchmarks.md). PF-105 compares DuckDB, Polars, and optional Docker-isolated PySpark over the same deterministic fixture; benchmark artifacts remain disposable under .benchmarks/ and are separate from public data.
+
+For PF-106 offline BigQuery portability evidence, follow the [BigQuery portability runbook](docs/runbooks/bigquery-portability.md). The local bundle is credential-free, remains offline, and is separate from public data.

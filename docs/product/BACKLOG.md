@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-106**, the BigQuery Sandbox portability lab. PF-030, PF-101, PF-102, PF-103, PF-104, and PF-105 are complete and PortFlow V1 is published.
+Start **PF-107**, the Databricks Free Edition Delta/PySpark lab. PF-030, PF-101, PF-102, PF-103, PF-104, PF-105, and PF-106 are complete and PortFlow V1 is published.
 The documented pull-request and green-CI branch-protection rule for `main` remains an outstanding
 repository-hardening follow-up.
 
@@ -614,7 +614,7 @@ These items are P2 and cannot block V1:
 - PF-103: **Complete** — Optional local Dagster orchestration and run metadata for bounded consumer runs.
 - PF-104: **Complete** — Prometheus and Grafana engineering observability.
 - PF-105: **Complete** — Deterministic DuckDB, Polars, and Docker-isolated PySpark benchmark evidence; design `e653555`, plan `88fc4c5`, and implementation through `7cc7cf1`.
-- PF-106: BigQuery Sandbox portability lab.
+- PF-106: **Complete** — Offline BigQuery Sandbox portability evidence with a local dbt/DuckDB bundle; design `843d610`, plan `30562b2`, and implementation through `4cff55b`.
 - PF-107: Databricks Free Edition Delta/PySpark lab.
 - PF-108: Optional time-limited cloud comparison.
 
