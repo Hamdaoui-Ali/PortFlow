@@ -614,7 +614,7 @@ These items are P2 and cannot block V1:
 - PF-103: **Complete** — Optional local Dagster orchestration and run metadata for bounded consumer runs.
 - PF-104: **Complete** — Prometheus and Grafana engineering observability.
 - PF-105: **Complete** — Deterministic DuckDB, Polars, and Docker-isolated PySpark benchmark evidence; design `e653555`, plan `88fc4c5`, and implementation through `7cc7cf1`.
-- PF-106: **Complete** — Offline BigQuery Sandbox portability evidence with a local dbt/DuckDB bundle; design `843d610`, plan `30562b2`, and implementation through `d8683d8`.
+- PF-106: **Complete** — Offline BigQuery Sandbox portability evidence with a local dbt/DuckDB bundle; design `843d610`, plan `30562b2`, and implementation through `4cff55b`.
 - PF-107: Databricks Free Edition Delta/PySpark lab.
 - PF-108: Optional time-limited cloud comparison.
 
