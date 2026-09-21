@@ -64,6 +64,25 @@ def test_notebook_allows_read_only_magic_inspection_query() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    "unsafe_magic_sql",
+    [
+        "# MAGIC SELECT * FROM catalog.schema.prefix_gold_overview_kpis; "
+        "DROP TABLE catalog.schema.important",
+        "# MAGIC DROP TABLE catalog.schema.prefix_gold_overview_kpis",
+    ],
+)
+def test_notebook_rejects_mutating_or_multi_statement_magic_sql(unsafe_magic_sql: str) -> None:
+    with pytest.raises(NotebookValidationError, match="unsupported_api"):
+        validate_notebook_source(SAFE_NOTEBOOK + f"\n{unsafe_magic_sql}\n")
+
+
+def test_notebook_rejects_standard_jdbc_datasource_form() -> None:
+    jdbc_read = 'spark.read.format("jdbc").option("url", "remote").load()'
+    with pytest.raises(NotebookValidationError, match="unsupported_api"):
+        validate_notebook_source(SAFE_NOTEBOOK + f"\n# {jdbc_read}\n")
+
+
 def test_notebook_sha256_hashes_utf8_source() -> None:
     expected = hashlib.sha256(SAFE_NOTEBOOK.encode("utf-8")).hexdigest()
     assert notebook_sha256(SAFE_NOTEBOOK) == expected

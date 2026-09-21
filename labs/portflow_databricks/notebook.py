@@ -18,13 +18,18 @@ _FORBIDDEN_PATTERNS = (
     re.compile(r"\bdbutils\.fs\b", re.IGNORECASE),
     re.compile(r"\bmaven\b|--packages\b|spark\.jars\.packages", re.IGNORECASE),
     re.compile(
-        r"https?://|\b(?:requests|urllib|httpx|socket)\b|\b(?:jdbc|url)\s*[:=]",
+        r"https?://|\bjdbc\b|\b(?:requests|urllib|httpx|socket)\b|\b(?:url)\s*[:=]",
         re.IGNORECASE,
     ),
     re.compile(r"\.(?:select|selectExpr)\s*\(\s*[\"']\s*\*[\"']", re.IGNORECASE),
 )
 _UNRENDERED_TEMPLATE = re.compile(r"\{\{.*?\}\}|\$\{.*?\}", re.DOTALL)
-_MAGIC_SELECT_STAR = re.compile(r"^\s*#\s*MAGIC\s+SELECT\s+\*\s+FROM\b", re.IGNORECASE)
+_MAGIC_SQL_PREFIX = re.compile(r"^\s*#\s*MAGIC\b", re.IGNORECASE)
+_MAGIC_INSPECTION = re.compile(
+    r"^\s*#\s*MAGIC\s+SELECT\s+\*\s+FROM\s+"
+    r"catalog\.schema\.prefix_gold_overview_kpis\s*$",
+    re.IGNORECASE,
+)
 _SQL_WILDCARD_PROJECTION = re.compile(r"\bSELECT\s+(?:DISTINCT\s+)?\*", re.IGNORECASE)
 
 
@@ -58,7 +63,9 @@ def _reject_unsupported_apis(source: str) -> None:
     if _UNRENDERED_TEMPLATE.search(source):
         raise NotebookValidationError("unsupported_api")
     for line in source.splitlines():
-        if _MAGIC_SELECT_STAR.match(line):
+        if _MAGIC_SQL_PREFIX.match(line):
+            if not _MAGIC_INSPECTION.fullmatch(line):
+                raise NotebookValidationError("unsupported_api")
             continue
         if _SQL_WILDCARD_PROJECTION.search(line) or any(
             pattern.search(line) for pattern in _FORBIDDEN_PATTERNS
