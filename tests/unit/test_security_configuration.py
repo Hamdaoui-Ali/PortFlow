@@ -87,6 +87,7 @@ def test_verify_script_generates_and_restores_local_database_password() -> None:
 
     assert "PORTFLOW_POSTGRES_PASSWORD" in content
     assert "[Guid]::NewGuid().ToString(\"N\")" in content
+    assert "[string]::IsNullOrWhiteSpace" in content
     assert "Remove-Item Env:PORTFLOW_POSTGRES_PASSWORD" in content
 
 

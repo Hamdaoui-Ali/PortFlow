@@ -5,11 +5,16 @@ $hadDatabaseUrl = Test-Path Env:PORTFLOW_DATABASE_URL
 $previousDatabasePassword = $env:PORTFLOW_POSTGRES_PASSWORD
 $hadDatabasePassword = Test-Path Env:PORTFLOW_POSTGRES_PASSWORD
 
-if ($hadDatabaseUrl -and -not $hadDatabasePassword) {
+if (
+    $hadDatabaseUrl -and
+    (-not $hadDatabasePassword -or [string]::IsNullOrWhiteSpace($env:PORTFLOW_POSTGRES_PASSWORD))
+) {
     throw "PORTFLOW_POSTGRES_PASSWORD must be set when PORTFLOW_DATABASE_URL is set."
 }
 if (-not $hadDatabaseUrl) {
-    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+    if (-not $hadDatabasePassword -or [string]::IsNullOrWhiteSpace($env:PORTFLOW_POSTGRES_PASSWORD)) {
+        $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+    }
     $env:PORTFLOW_DATABASE_URL = "postgresql://portflow:$($env:PORTFLOW_POSTGRES_PASSWORD)@localhost:5433/portflow"
 }
 
