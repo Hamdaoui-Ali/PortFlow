@@ -1,12 +1,16 @@
 $ErrorActionPreference = "Stop"
 
-docker compose up -d --wait postgres
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 $previousDatabaseUrl = $env:PORTFLOW_DATABASE_URL
 $hadDatabaseUrl = Test-Path Env:PORTFLOW_DATABASE_URL
+$previousDatabasePassword = $env:PORTFLOW_POSTGRES_PASSWORD
+$hadDatabasePassword = Test-Path Env:PORTFLOW_POSTGRES_PASSWORD
+
+if ($hadDatabaseUrl -and -not $hadDatabasePassword) {
+    throw "PORTFLOW_POSTGRES_PASSWORD must be set when PORTFLOW_DATABASE_URL is set."
+}
 if (-not $hadDatabaseUrl) {
-    $env:PORTFLOW_DATABASE_URL = "postgresql://portflow:portflow@localhost:5433/portflow"
+    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+    $env:PORTFLOW_DATABASE_URL = "postgresql://portflow:$($env:PORTFLOW_POSTGRES_PASSWORD)@localhost:5433/portflow"
 }
 
 $previousFailureTests = $env:PORTFLOW_FAILURE_TESTS
@@ -14,6 +18,9 @@ $hadFailureTests = Test-Path Env:PORTFLOW_FAILURE_TESTS
 $env:PORTFLOW_FAILURE_TESTS = "1"
 
 try {
+    docker compose up -d --wait postgres
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
     Write-Host "==> Generate deterministic public snapshot"
     python -m uv run python scripts/run_local_pipeline.py
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -60,6 +67,12 @@ try {
         $env:PORTFLOW_DATABASE_URL = $previousDatabaseUrl
     } else {
         Remove-Item Env:PORTFLOW_DATABASE_URL -ErrorAction SilentlyContinue
+    }
+
+    if ($hadDatabasePassword) {
+        $env:PORTFLOW_POSTGRES_PASSWORD = $previousDatabasePassword
+    } else {
+        Remove-Item Env:PORTFLOW_POSTGRES_PASSWORD -ErrorAction SilentlyContinue
     }
 
     if ($hadFailureTests) {

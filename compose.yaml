@@ -80,7 +80,7 @@ services:
       prometheus:
         condition: service_started
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: "${PORTFLOW_GRAFANA_ADMIN_PASSWORD:?Set PORTFLOW_GRAFANA_ADMIN_PASSWORD before starting Grafana}"
+      GF_SECURITY_ADMIN_PASSWORD: "${PORTFLOW_GRAFANA_ADMIN_PASSWORD-}"
     volumes:
       - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro

@@ -18,13 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      PORTFLOW_DATABASE_URL: postgresql://portflow:portflow@localhost:5432/portflow
+      PORTFLOW_POSTGRES_PASSWORD: ${{ github.run_id }}
+      PORTFLOW_DATABASE_URL: postgresql://portflow:${{ github.run_id }}@localhost:5432/portflow
     services:
       postgres:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: portflow
-          POSTGRES_PASSWORD: portflow
+          POSTGRES_PASSWORD: ${{ github.run_id }}
           POSTGRES_DB: portflow
         ports:
           - 5432:5432
