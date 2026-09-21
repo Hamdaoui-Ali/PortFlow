@@ -20,13 +20,14 @@
 
 ## Current next action
 
-The PF-108 repository-side comparison contract is complete. The optional
-time-limited Databricks workspace run remains an explicit operator handoff and
-was not executed by the repository workflow. PF-030, PF-101, PF-102, PF-103,
-PF-104, PF-105, PF-106, PF-107, and PF-108 are complete and PortFlow V1 is
-published. PF-031 is also complete: the documented pull-request and green-CI
-branch-protection rule for `main` is configured, with force pushes and
-deletions disabled.
+The PF-108 repository-side comparison contract and PF-109 Stream runs console
+are complete. The optional time-limited Databricks workspace run remains an
+explicit operator handoff and was not executed by the repository workflow.
+PF-030, PF-101, PF-102, PF-103, PF-104, PF-105, PF-106, PF-107, PF-108, and
+PF-109 are complete and PortFlow V1 is published. PF-031 is also complete: the
+documented pull-request and green-CI branch-protection rule for `main` is
+configured, with force pushes and deletions disabled. No subsequent post-V1
+specification is currently approved.
 
 ## Completed checkpoints
 
@@ -643,6 +644,12 @@ These items are P2 and cannot block V1:
   operator-supplied Databricks Gold export against PF-107, with bounded paths,
   report verification, CLI output, and manual-run documentation. No real
   Databricks workspace execution was performed.
+- PF-109: **Complete** — read-only `GET /api/stream-runs` history limited to
+  ten recent Dagster-managed runs, rendered in the existing Data Health page.
+  Design `9d6b37a`, plan `a99b8fc`, and implementation commits `3cb47a7`,
+  `8ff0ab4`, `542a460`, `dede0b8`, `5e905d8`, `8ab86a6`, and `21d0355`.
+  The local endpoint uses the SQLite state store without mutating it; no public
+  snapshot, hosted API, or public route changed.
 
 ## Specification coverage
 
