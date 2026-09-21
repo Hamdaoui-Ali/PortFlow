@@ -89,6 +89,28 @@ def test_notebook_rejects_standard_library_ftp_client() -> None:
         validate_notebook_source(SAFE_NOTEBOOK + f"\n{ftp_client}\n")
 
 
+def test_notebook_rejects_urllib3_pool_manager_network_client() -> None:
+    urllib3_client = """import urllib3
+client = urllib3.PoolManager()
+client.request("GET", "https" + "://" + "example.invalid")
+"""
+    with pytest.raises(NotebookValidationError, match="unsupported_api"):
+        validate_notebook_source(SAFE_NOTEBOOK + f"\n{urllib3_client}\n")
+
+
+def test_notebook_rejects_non_pyspark_imports() -> None:
+    with pytest.raises(NotebookValidationError, match="unsupported_api"):
+        validate_notebook_source(SAFE_NOTEBOOK + "\nimport os\n")
+
+
+def test_notebook_allows_required_pyspark_import_surface() -> None:
+    pyspark_imports = """from pyspark.sql import functions as F
+from pyspark.sql.functions import col, when
+from pyspark.sql.window import Window
+"""
+    validate_notebook_source(SAFE_NOTEBOOK + f"\n{pyspark_imports}\n")
+
+
 def test_notebook_sha256_hashes_utf8_source() -> None:
     expected = hashlib.sha256(SAFE_NOTEBOOK.encode("utf-8")).hexdigest()
     assert notebook_sha256(SAFE_NOTEBOOK) == expected

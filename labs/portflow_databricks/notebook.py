@@ -1,5 +1,6 @@
 """Static validation for the PF-107 Databricks source notebook."""
 
+import ast
 import hashlib
 import re
 from pathlib import Path
@@ -20,10 +21,11 @@ _FORBIDDEN_PATTERNS = (
     re.compile(
         r"https?://|\bjdbc\b|\bhttp\.client\b|"
         r"\b(?:ftplib|smtplib|imaplib|poplib|nntplib|telnetlib|socket|"
-        r"requests|urllib|httpx|aiohttp|websocket|websockets|paramiko|grpc|"
-        r"boto3|botocore)\b|"
+        r"requests|urllib|urllib3|httpx|aiohttp|websocket|websockets|"
+        r"paramiko|grpc|boto3|botocore|importlib|runpy|subprocess)\b|"
         r"\b(?:FTP|SMTP|HTTPConnection|HTTPSConnection|IMAP4|POP3|Telnet)\b|"
-        r"\b(?:url)\s*[:=]",
+        r"\b(?:url)\s*[:=]|\bos\.(?:system|popen|spawn|exec\w*)\b|"
+        r"\b(?:eval|exec|compile|__import__)\b",
         re.IGNORECASE,
     ),
     re.compile(r"\.(?:select|selectExpr)\s*\(\s*[\"']\s*\*[\"']", re.IGNORECASE),
@@ -36,6 +38,23 @@ _MAGIC_INSPECTION = re.compile(
     re.IGNORECASE,
 )
 _SQL_WILDCARD_PROJECTION = re.compile(r"\bSELECT\s+(?:DISTINCT\s+)?\*", re.IGNORECASE)
+_ALLOWED_IMPORTS = frozenset({"pyspark.sql.functions"})
+_ALLOWED_FROM_IMPORTS = {
+    "pyspark.sql": frozenset({"Window", "functions"}),
+    "pyspark.sql.functions": None,
+    "pyspark.sql.window": frozenset({"Window"}),
+}
+_DYNAMIC_CALLS = frozenset({"eval", "exec", "compile", "__import__"})
+_DYNAMIC_ATTRIBUTE_CALLS = frozenset(
+    {
+        ("os", "system"),
+        ("os", "popen"),
+        ("os", "spawn"),
+        ("subprocess", "run"),
+        ("subprocess", "Popen"),
+    }
+)
+_FORBIDDEN_IMPORT_NAMES = frozenset({"RDD", "SparkContext", "SQLContext", "udf", "pandas_udf"})
 
 
 class NotebookValidationError(ValueError):
@@ -67,6 +86,7 @@ def _require_contract(source: str) -> None:
 def _reject_unsupported_apis(source: str) -> None:
     if _UNRENDERED_TEMPLATE.search(source):
         raise NotebookValidationError("unsupported_api")
+    _validate_ast_surface(source)
     for line in source.splitlines():
         if _MAGIC_SQL_PREFIX.match(line):
             if not _MAGIC_INSPECTION.fullmatch(line):
@@ -76,6 +96,38 @@ def _reject_unsupported_apis(source: str) -> None:
             pattern.search(line) for pattern in _FORBIDDEN_PATTERNS
         ):
             raise NotebookValidationError("unsupported_api")
+
+
+def _validate_ast_surface(source: str) -> None:
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        raise NotebookValidationError("notebook_contract_invalid") from None
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            if any(alias.name not in _ALLOWED_IMPORTS for alias in node.names):
+                raise NotebookValidationError("unsupported_api")
+        elif isinstance(node, ast.ImportFrom):
+            if node.level or node.module not in _ALLOWED_FROM_IMPORTS:
+                raise NotebookValidationError("unsupported_api")
+            allowed_names = _ALLOWED_FROM_IMPORTS[node.module]
+            for alias in node.names:
+                if (
+                    alias.name == "*"
+                    or alias.name in _FORBIDDEN_IMPORT_NAMES
+                    or (allowed_names is not None and alias.name not in allowed_names)
+                ):
+                    raise NotebookValidationError("unsupported_api")
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name) and node.func.id in _DYNAMIC_CALLS:
+                raise NotebookValidationError("unsupported_api")
+            if (
+                isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and (node.func.value.id, node.func.attr) in _DYNAMIC_ATTRIBUTE_CALLS
+            ):
+                raise NotebookValidationError("unsupported_api")
 
 
 def _validate_table_contract(source: str) -> None:
