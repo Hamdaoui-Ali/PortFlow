@@ -73,6 +73,21 @@ describe("App", () => {
     await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
   });
 
+  it("resets the viewport before focusing main content after route navigation", async () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+
+    try {
+      render(<App loadData={() => new Promise(() => undefined)} />);
+
+      fireEvent.click(screen.getAllByRole("link", { name: "Data Health" })[0]);
+
+      await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
+      expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "auto" });
+    } finally {
+      scrollTo.mockRestore();
+    }
+  });
+
   it("keeps the active navigation link aligned with the selected route", async () => {
     render(
       <App
