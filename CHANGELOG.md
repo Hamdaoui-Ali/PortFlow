@@ -1,5 +1,18 @@
 # Changelog
 
+## PF-108 Databricks result comparison - 2026-09-21
+
+PortFlow now includes a local, credential-free comparator for an operator-supplied
+Databricks Gold result.
+
+- `python -m labs.portflow_databricks compare` verifies the PF-107 handoff,
+  canonicalizes the supplied `overview_kpis` rows, and writes deterministic
+  match or mismatch evidence below ignored `.databricks/pf108/`.
+- The comparison performs no cloud execution, credential lookup, workspace
+  API call, notebook upload, or public-data write.
+- A mismatch returns a non-zero status with the bounded
+  `result_hash_mismatch` reason and remains explicit manual evidence.
+
 ## PF-107 Databricks Free Edition Delta/PySpark lab - 2026-09-21
 
 PortFlow now includes a credential-free offline handoff bundle for validating

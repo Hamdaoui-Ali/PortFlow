@@ -31,4 +31,4 @@ For reproducible local engine comparisons, follow the [benchmark runbook](docs/r
 
 For PF-106 offline BigQuery portability evidence, follow the [BigQuery portability runbook](docs/runbooks/bigquery-portability.md). The local bundle is credential-free, remains offline, and is separate from public data.
 
-For PF-107 Databricks Free Edition Delta/PySpark handoff evidence, follow the [Databricks Free Edition runbook](docs/runbooks/databricks-free-edition.md). The default workflow is credential-free and offline; cloud execution remains a separate manual handoff.
+For PF-107 Databricks Free Edition Delta/PySpark handoff evidence and the PF-108 manual-result comparison, follow the [Databricks Free Edition runbook](docs/runbooks/databricks-free-edition.md). The default workflow is credential-free and offline; cloud execution remains a separate manual handoff.
