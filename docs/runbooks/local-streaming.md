@@ -185,6 +185,23 @@ files, or `web/public/data`.
 - **Loopback port already in use:** stop the local process using port `3000`, `9090`, or `9108`,
   or change the host-side binding in the disposable local Compose file before starting again.
 
+## Optional local Stream Runs console (PF-109)
+
+PF-109 adds a read-only Stream runs section to the existing Data Health page. Start the existing
+loopback API from the repository root, then open the local web application and select Data Health:
+
+```powershell
+Set-Location C:/Users/aliha/PortFlow
+python -m uv run python scripts/run_local_api.py
+```
+
+The page reads `GET /api/stream-runs` from the loopback API. It reads the local
+`data/bronze-stream/.stream-state.sqlite3` file; this read-only path does not change the published snapshot. An
+`absent` state is expected before the first Dagster-managed run; malformed or unavailable local
+state is shown as non-critical and does not invalidate the published snapshot. The view is
+limited to the ten most recent runs, while Grafana remains the detailed metrics surface for
+engineering observability. The public browser remains static, and this console uses no credentials.
+
 ## Configuration
 
 | Variable | Default | Purpose |

@@ -28,6 +28,10 @@ class FakeLocalDataService:
         self.calls.append(("schema", None))
         return {"tables": [{"table_name": "terminals"}]}
 
+    def stream_runs(self) -> dict[str, object]:
+        self.calls.append(("stream_runs", None))
+        return {"status": "ready", "limit": 10, "runs": []}
+
     def seed(self) -> dict[str, object]:
         self.calls.append(("seed", None))
         return {"seed": 42, "row_counts": {"terminals": 1}}
@@ -52,6 +56,54 @@ def test_dispatches_status_and_schema() -> None:
     assert schema.status == 200
     assert schema.body["tables"] == [{"table_name": "terminals"}]
     assert service.calls == [("status", None), ("schema", None)]
+
+
+def test_stream_runs_route_returns_read_model() -> None:
+    service = FakeLocalDataService()
+
+    response = dispatch_request(service, method="GET", path="/api/stream-runs")
+
+    assert response.status == 200
+    assert response.body == {
+        "status": "ready",
+        "limit": 10,
+        "runs": [],
+    }
+    assert service.calls == [("stream_runs", None)]
+
+
+def test_stream_runs_route_rejects_non_get_methods() -> None:
+    response = dispatch_request(
+        FakeLocalDataService(),
+        method="POST",
+        path="/api/stream-runs",
+        body=b"{}",
+    )
+
+    assert response.status == 405
+    assert response.body["error"] == "method_not_allowed"
+
+
+class UnavailableStreamRunsService(FakeLocalDataService):
+    def stream_runs(self) -> dict[str, object]:
+        self.calls.append(("stream_runs", None))
+        return {"status": "unavailable", "limit": 10, "runs": []}
+
+
+def test_stream_runs_unavailable_response_is_bounded() -> None:
+    response = dispatch_request(
+        UnavailableStreamRunsService(),
+        method="GET",
+        path="/api/stream-runs",
+    )
+
+    assert response.status == 200
+    assert set(response.body) == {"status", "limit", "runs"}
+    assert response.body == {
+        "status": "unavailable",
+        "limit": 10,
+        "runs": [],
+    }
 
 
 def test_dispatches_seed_import_and_refresh() -> None:
@@ -147,3 +199,17 @@ def test_postgres_status_uses_bounded_connection(monkeypatch) -> None:
 
     assert response["database"] == "unavailable"
     assert calls == [("postgresql://offline", 3)]
+
+
+def test_postgres_service_stream_runs_uses_configured_state_path(tmp_path: Path) -> None:
+    service = PostgresLocalDataService(
+        LocalApiConfig(
+            database_url="postgresql://unused",
+            output_dir=tmp_path / "public",
+            stream_state_path=tmp_path / ".stream-state.sqlite3",
+        )
+    )
+
+    response = service.stream_runs()
+
+    assert response["status"] == "absent"

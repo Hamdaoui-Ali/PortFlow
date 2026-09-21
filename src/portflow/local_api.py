@@ -7,6 +7,7 @@ import logging
 import threading
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Protocol, cast
@@ -21,6 +22,7 @@ from portflow.local_data import (
     get_local_schema,
     import_records,
 )
+from portflow.observability.runs import read_stream_runs, stream_run_history_payload
 from portflow.pipeline import PipelineError, run_local_pipeline
 from portflow.seed import seed_operational
 
@@ -41,6 +43,7 @@ class LocalApiConfig:
     max_body_bytes: int = 2_000_000
     database_connect_timeout_seconds: int = 3
     allowed_origins: frozenset[str] = DEFAULT_ALLOWED_ORIGINS
+    stream_state_path: Path | None = None
 
 
 class LocalDataService(Protocol):
@@ -50,6 +53,9 @@ class LocalDataService(Protocol):
         raise NotImplementedError
 
     def schema(self) -> dict[str, object]:
+        raise NotImplementedError
+
+    def stream_runs(self) -> dict[str, object]:
         raise NotImplementedError
 
     def seed(self) -> dict[str, object]:
@@ -145,6 +151,13 @@ class PostgresLocalDataService:
 
     def schema(self) -> dict[str, object]:
         return _schema_payload()
+
+    def stream_runs(self) -> dict[str, object]:
+        state_path = self._config.stream_state_path or (
+            _repository_root() / "data" / "bronze-stream" / ".stream-state.sqlite3"
+        )
+        history = read_stream_runs(state_path, now=datetime.now(UTC))
+        return stream_run_history_payload(history)
 
     def seed(self) -> dict[str, object]:
         repository_root = _repository_root()
@@ -282,7 +295,11 @@ def dispatch_request(
         return LocalApiResponse(413, {"error": "request_too_large"})
 
     request_path = urlsplit(path).path
-    get_routes = {"/api/status": service.status, "/api/schema": service.schema}
+    get_routes = {
+        "/api/status": service.status,
+        "/api/schema": service.schema,
+        "/api/stream-runs": service.stream_runs,
+    }
     post_routes = {
         "/api/seed": service.seed,
         "/api/refresh": service.refresh,
@@ -313,6 +330,7 @@ def dispatch_request(
     known_paths = {
         "/api/status",
         "/api/schema",
+        "/api/stream-runs",
         "/api/seed",
         "/api/import",
         "/api/refresh",

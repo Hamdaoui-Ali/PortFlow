@@ -16,6 +16,7 @@ def main() -> None:
             database_url=database_url,
             output_dir=repository_root / "web" / "public" / "data",
             port=port,
+            stream_state_path=repository_root / "data" / "bronze-stream" / ".stream-state.sqlite3",
         )
     )
     actual_port = server.server_address[1]

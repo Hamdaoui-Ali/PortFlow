@@ -48,6 +48,31 @@ export interface RefreshResponse {
   manifest_path: string;
 }
 
+export type StreamRunsStatus = "ready" | "absent" | "malformed" | "unavailable";
+
+export interface StreamRunSummary {
+  run_id: string;
+  topic: string;
+  status: "running" | "succeeded" | "failed";
+  started_at: string;
+  finished_at: string | null;
+  duration_seconds: number;
+  consumed_messages: number | null;
+  bronze_rows: number | null;
+  committed_batches: number | null;
+  duplicate_messages: number | null;
+  late_messages: number | null;
+  dead_letters: number | null;
+  error_type: string | null;
+  error_message: string | null;
+}
+
+export interface StreamRunsResponse {
+  status: StreamRunsStatus;
+  limit: number;
+  runs: StreamRunSummary[];
+}
+
 export type LocalApiResponseBody = Record<string, unknown>;
 export type LocalApiFetcher = (
   input: RequestInfo | URL,
@@ -72,6 +97,7 @@ export class LocalApiError extends Error {
 export interface LocalApiClient {
   getStatus(signal?: AbortSignal): Promise<LocalStatus>;
   getSchema(signal?: AbortSignal): Promise<LocalSchemaResponse>;
+  getStreamRuns(signal?: AbortSignal): Promise<StreamRunsResponse>;
   seed(): Promise<SeedResponse>;
   importRecords(payload: ImportPayload): Promise<ImportResponse>;
   refresh(): Promise<RefreshResponse>;
@@ -110,6 +136,10 @@ export function createLocalApi(
   return {
     getStatus: (signal) => request<LocalStatus>("/status", { method: "GET", signal }),
     getSchema: (signal) => request<LocalSchemaResponse>("/schema", { method: "GET", signal }),
+    getStreamRuns: (signal) => request<StreamRunsResponse>("/stream-runs", {
+      method: "GET",
+      signal,
+    }),
     seed: () => jsonPost("/seed", {}) as Promise<SeedResponse>,
     importRecords: (payload) => jsonPost("/import", payload) as Promise<ImportResponse>,
     refresh: () => jsonPost("/refresh", {}) as Promise<RefreshResponse>,

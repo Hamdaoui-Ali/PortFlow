@@ -60,6 +60,7 @@ describe("DataHealthPage", () => {
     expect(screen.getAllByText("305")).toHaveLength(2);
     expect(screen.getByText("No rejected records")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: /rejection reasons/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Stream runs" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Reason" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Rejected records" })).toBeInTheDocument();
     const kpiRail = screen.getByRole("region", { name: "Data Health KPIs" });

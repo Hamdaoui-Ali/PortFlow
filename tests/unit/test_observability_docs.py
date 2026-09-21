@@ -20,6 +20,9 @@ def test_streaming_runbook_documents_pf104_start_inspect_and_cleanup() -> None:
         "read-only",
         "stream_runs",
         "docker compose --profile observability down -v portflow-metrics prometheus grafana",
+        "/api/stream-runs",
+        "Stream runs",
+        "does not change the published snapshot",
     ):
         assert required in runbook
 
@@ -29,6 +32,8 @@ def test_public_docs_keep_observability_local_only() -> None:
     changelog = (REPOSITORY_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
     assert "PF-104" in readme
+    assert "PF-109" in readme
+    assert "Data Health" in readme
     assert "Prometheus" in readme
     assert "Grafana" in readme
     assert "PF-104" in changelog
