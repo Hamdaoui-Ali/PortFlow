@@ -103,9 +103,7 @@ def resolve_artifact_root(
     try:
         requested.relative_to(artifact_root)
     except ValueError as error:
-        raise ArtifactPathError(
-            "artifact root must remain below .databricks/pf107"
-        ) from error
+        raise ArtifactPathError("artifact root must remain below .databricks/pf107") from error
     return requested
 
 
