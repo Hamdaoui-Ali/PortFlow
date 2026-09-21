@@ -64,7 +64,8 @@ export function AppShell({ children, onNavigate }: AppShellProps) {
   useEffect(() => {
     const syncRoute = () => {
       setActiveHref(window.location.hash || "#overview");
-      mainRef.current?.focus();
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      mainRef.current?.focus({ preventScroll: true });
     };
     window.addEventListener("hashchange", syncRoute);
     return () => window.removeEventListener("hashchange", syncRoute);
