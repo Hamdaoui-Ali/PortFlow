@@ -20,7 +20,7 @@
 
 ## Current next action
 
-Start **PF-107**, the Databricks Free Edition Delta/PySpark lab. PF-030, PF-101, PF-102, PF-103, PF-104, PF-105, and PF-106 are complete and PortFlow V1 is published.
+Start **PF-108**, the optional time-limited cloud comparison. PF-030, PF-101, PF-102, PF-103, PF-104, PF-105, PF-106, and PF-107 are complete and PortFlow V1 is published.
 The documented pull-request and green-CI branch-protection rule for `main` remains an outstanding
 repository-hardening follow-up.
 
@@ -615,7 +615,7 @@ These items are P2 and cannot block V1:
 - PF-104: **Complete** — Prometheus and Grafana engineering observability.
 - PF-105: **Complete** — Deterministic DuckDB, Polars, and Docker-isolated PySpark benchmark evidence; design `e653555`, plan `88fc4c5`, and implementation through `7cc7cf1`.
 - PF-106: **Complete** — Offline BigQuery Sandbox portability evidence with a local dbt/DuckDB bundle; design `843d610`, plan `30562b2`, and implementation through `4cff55b`.
-- PF-107: Databricks Free Edition Delta/PySpark lab.
+- PF-107: **Complete** — Credential-free Databricks Free Edition Delta/PySpark handoff with a statically validated Serverless notebook, deterministic fixture, local expected Gold result, bounded manifest, CLI, and runbook; design `4cdf5d2`, plan `3870200`, and implementation through `2582e58`. The focused PF-107 suite passed (`192 passed, 1 skipped`), the full Python suite passed (`515 passed, 11 skipped`), and Ruff, Ruff format, and mypy passed. No Databricks workspace execution or credential lookup was performed; the manifest remains `cloud_execution: not_run`.
 - PF-108: Optional time-limited cloud comparison.
 
 ## Specification coverage
