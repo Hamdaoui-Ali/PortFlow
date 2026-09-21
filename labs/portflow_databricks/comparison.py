@@ -102,10 +102,15 @@ def _validate_document(document: object) -> dict[str, object]:
         jsonschema.validate(document, _SCHEMA)
     except jsonschema.ValidationError:
         raise ComparisonVerificationError("comparison_invalid") from None
-    return cast(dict[str, object], document)
+    validated = cast(dict[str, object], document)
+    reference = cast(dict[str, object], validated["reference"])
+    cloud_result = cast(dict[str, object], validated["cloud_result"])
+    _validate_relative_name(reference["manifest_path"])
+    _validate_relative_name(cloud_result["path"])
+    return validated
 
 
-def _validate_relative_path(value: object, artifact_root: Path) -> str:
+def _validate_relative_name(value: object) -> str:
     if not isinstance(value, str):
         raise ComparisonVerificationError("artifact_path_invalid")
     windows = PureWindowsPath(value)
@@ -122,6 +127,11 @@ def _validate_relative_path(value: object, artifact_root: Path) -> str:
         or ":" in value
     ):
         raise ComparisonVerificationError("artifact_path_invalid")
+    return value
+
+
+def _validate_relative_path(value: object, artifact_root: Path) -> str:
+    value = _validate_relative_name(value)
     try:
         resolve_comparison_path(artifact_root, value)
     except ArtifactPathError:

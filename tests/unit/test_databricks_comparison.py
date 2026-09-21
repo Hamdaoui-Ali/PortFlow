@@ -115,3 +115,27 @@ def test_different_canonical_hashes_build_a_mismatch_report() -> None:
         "reason_code": "result_hash_mismatch",
         "verifier_version": "1",
     }
+
+
+@pytest.mark.parametrize(
+    ("reference_manifest_path", "cloud_result_path"),
+    [
+        ("../manifest.json", "cloud-result.json"),
+        ("handoff/manifest.json", r"C:\\tmp\\cloud-result.json"),
+    ],
+)
+def test_report_builder_rejects_unsafe_paths(
+    reference_manifest_path: str,
+    cloud_result_path: str,
+) -> None:
+    with pytest.raises(ComparisonVerificationError, match="^artifact_path_invalid$"):
+        build_comparison_report(
+            reference_manifest_path=reference_manifest_path,
+            reference_manifest_sha256="a" * 64,
+            reference_rows=1,
+            reference_result_sha256="b" * 64,
+            cloud_result_path=cloud_result_path,
+            cloud_file_sha256="c" * 64,
+            cloud_rows=1,
+            cloud_result_sha256="b" * 64,
+        )
