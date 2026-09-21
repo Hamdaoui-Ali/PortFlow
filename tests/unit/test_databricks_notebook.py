@@ -83,6 +83,12 @@ def test_notebook_rejects_standard_jdbc_datasource_form() -> None:
         validate_notebook_source(SAFE_NOTEBOOK + f"\n# {jdbc_read}\n")
 
 
+def test_notebook_rejects_standard_library_ftp_client() -> None:
+    ftp_client = 'from ftplib import FTP\nFTP("example.invalid")'
+    with pytest.raises(NotebookValidationError, match="unsupported_api"):
+        validate_notebook_source(SAFE_NOTEBOOK + f"\n{ftp_client}\n")
+
+
 def test_notebook_sha256_hashes_utf8_source() -> None:
     expected = hashlib.sha256(SAFE_NOTEBOOK.encode("utf-8")).hexdigest()
     assert notebook_sha256(SAFE_NOTEBOOK) == expected

@@ -18,7 +18,12 @@ _FORBIDDEN_PATTERNS = (
     re.compile(r"\bdbutils\.fs\b", re.IGNORECASE),
     re.compile(r"\bmaven\b|--packages\b|spark\.jars\.packages", re.IGNORECASE),
     re.compile(
-        r"https?://|\bjdbc\b|\b(?:requests|urllib|httpx|socket)\b|\b(?:url)\s*[:=]",
+        r"https?://|\bjdbc\b|\bhttp\.client\b|"
+        r"\b(?:ftplib|smtplib|imaplib|poplib|nntplib|telnetlib|socket|"
+        r"requests|urllib|httpx|aiohttp|websocket|websockets|paramiko|grpc|"
+        r"boto3|botocore)\b|"
+        r"\b(?:FTP|SMTP|HTTPConnection|HTTPSConnection|IMAP4|POP3|Telnet)\b|"
+        r"\b(?:url)\s*[:=]",
         re.IGNORECASE,
     ),
     re.compile(r"\.(?:select|selectExpr)\s*\(\s*[\"']\s*\*[\"']", re.IGNORECASE),
