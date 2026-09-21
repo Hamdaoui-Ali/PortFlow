@@ -37,6 +37,9 @@ These commands publish and consume twelve deterministic events:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
+if (-not $env:PORTFLOW_POSTGRES_PASSWORD) {
+    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+}
 docker compose --profile streaming up -d --wait redpanda
 $env:PORTFLOW_REDPANDA_BROKERS = "localhost:19092"
 $env:PORTFLOW_REDPANDA_DLQ_TOPIC = "portflow.telemetry.dlq"
@@ -64,6 +67,9 @@ extra and start the disposable broker before launching a run:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
+if (-not $env:PORTFLOW_POSTGRES_PASSWORD) {
+    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+}
 python -m uv sync --extra dev --extra orchestration
 $env:PORTFLOW_REDPANDA_BROKERS = "localhost:19092"
 $env:PORTFLOW_REDPANDA_GROUP = "portflow-bronze"
@@ -131,6 +137,9 @@ Start the broker and observability services from the repository root:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
+if (-not $env:PORTFLOW_POSTGRES_PASSWORD) {
+    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+}
 docker compose --profile streaming --profile observability up -d --wait redpanda portflow-metrics prometheus grafana
 ```
 
