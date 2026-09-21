@@ -239,4 +239,3 @@ boundary, the Data Health location, expected absent state, and the fact that
 Grafana remains the detailed observability surface. Update `README.md` with a
 short pointer. Add PF-109 to `docs/product/BACKLOG.md` as complete only after
 the implementation and verification gates pass.
-
