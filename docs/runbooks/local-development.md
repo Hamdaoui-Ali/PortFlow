@@ -30,11 +30,12 @@ npm install
 Set-Location ..
 ```
 
-The repository's `.env.example` records the local defaults. The scripts read process environment variables directly, so set the database URL in the terminal that starts the API:
+The repository's `.env.example` records the non-secret local defaults. Generate a disposable password in the terminal that starts PostgreSQL and the API; do not commit or print it:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
-$env:PORTFLOW_DATABASE_URL = "postgresql://portflow:portflow@localhost:5433/portflow"
+$env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+$env:PORTFLOW_DATABASE_URL = "postgresql://portflow:$($env:PORTFLOW_POSTGRES_PASSWORD)@localhost:5433/portflow"
 $env:PORTFLOW_LOCAL_API_PORT = "8000"
 ```
 
@@ -45,7 +46,12 @@ Use two terminals. In terminal 1, start PostgreSQL and keep the API running:
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
 ./.venv/Scripts/python.exe -m pip install -e ".[dev]"
-$env:PORTFLOW_DATABASE_URL = "postgresql://portflow:portflow@localhost:5433/portflow"
+if (-not $env:PORTFLOW_POSTGRES_PASSWORD) {
+    $env:PORTFLOW_POSTGRES_PASSWORD = [Guid]::NewGuid().ToString("N")
+}
+if (-not $env:PORTFLOW_DATABASE_URL) {
+    $env:PORTFLOW_DATABASE_URL = "postgresql://portflow:$($env:PORTFLOW_POSTGRES_PASSWORD)@localhost:5433/portflow"
+}
 docker compose up -d --wait postgres
 ./.venv/Scripts/python.exe scripts/run_local_api.py
 ```

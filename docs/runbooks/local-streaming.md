@@ -145,9 +145,8 @@ Open the local tools at:
 - Prometheus: `http://127.0.0.1:9090`
 - Grafana: `http://127.0.0.1:3000`
 
-Grafana uses the disposable local default password `portflow`. Set
-`$env:PORTFLOW_GRAFANA_ADMIN_PASSWORD` before starting the profile when a different local
-password is needed. The ports are bound to loopback and are not a hosted or public service.
+Set `$env:PORTFLOW_GRAFANA_ADMIN_PASSWORD` to a disposable local value before starting the
+profile. The ports are bound to loopback and are not a hosted or public service.
 
 The dashboard reports state-store availability, active/succeeded/failed run counts, latest run
 duration, and aggregate consumed, Bronze, committed, duplicate, late, and dead-letter totals. It

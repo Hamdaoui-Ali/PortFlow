@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 
 import psycopg
 
-from portflow.db.connection import get_connection
+from portflow.db.connection import DEFAULT_DATABASE_URL, get_connection
 from portflow.db.migrations import apply_migrations
 from portflow.local_data import (
     ImportValidationError,
@@ -25,7 +25,6 @@ from portflow.pipeline import PipelineError, run_local_pipeline
 from portflow.seed import seed_operational
 
 LOGGER = logging.getLogger(__name__)
-DEFAULT_DATABASE_URL = "postgresql://portflow:portflow@localhost:5433/portflow"
 DEFAULT_ALLOWED_ORIGINS = frozenset({
     "http://localhost:5173",
     "http://127.0.0.1:5173",

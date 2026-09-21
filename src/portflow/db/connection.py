@@ -4,7 +4,7 @@ import os
 
 import psycopg
 
-DEFAULT_DATABASE_URL = "postgresql://portflow:portflow@localhost:5433/portflow"
+DEFAULT_DATABASE_URL = "postgresql://portflow@localhost:5433/portflow"
 
 
 def get_connection(

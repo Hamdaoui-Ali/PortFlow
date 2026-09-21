@@ -25,7 +25,7 @@ def test_runtime_database_defaults_do_not_embed_passwords() -> None:
 
     for relative_path in paths:
         content = _read(relative_path)
-        assert not re.search(r"postgresql://[^\s]+:[^\s@]+@", content), relative_path
+        assert not re.search(r"postgresql://[^\s$]+:[^\s$@]+@", content), relative_path
         assert "POSTGRES_PASSWORD: portflow" not in content, relative_path
         assert "PORTFLOW_GRAFANA_ADMIN_PASSWORD:-portflow" not in content, relative_path
 

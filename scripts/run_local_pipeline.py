@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 
+from portflow.db.connection import DEFAULT_DATABASE_URL
 from portflow.pipeline import run_local_pipeline
 
 
@@ -10,7 +11,7 @@ def main() -> None:
     repository_root = Path(__file__).resolve().parents[1]
     database_url = os.environ.get(
         "PORTFLOW_DATABASE_URL",
-        "postgresql://portflow:portflow@localhost:5433/portflow",
+        DEFAULT_DATABASE_URL,
     )
     manifest_path = run_local_pipeline(
         database_url=database_url,

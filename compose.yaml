@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: portflow
-      POSTGRES_PASSWORD: portflow
+      POSTGRES_PASSWORD: "${PORTFLOW_POSTGRES_PASSWORD:?Set PORTFLOW_POSTGRES_PASSWORD before starting PostgreSQL}"
       POSTGRES_DB: portflow
     ports:
       - "5433:5432"
@@ -80,7 +80,7 @@ services:
       prometheus:
         condition: service_started
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: "${PORTFLOW_GRAFANA_ADMIN_PASSWORD:-portflow}"
+      GF_SECURITY_ADMIN_PASSWORD: "${PORTFLOW_GRAFANA_ADMIN_PASSWORD:?Set PORTFLOW_GRAFANA_ADMIN_PASSWORD before starting Grafana}"
     volumes:
       - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
