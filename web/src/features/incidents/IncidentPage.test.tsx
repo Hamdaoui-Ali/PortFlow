@@ -86,7 +86,6 @@ describe("IncidentPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Back to incident list/ }));
     expect(await screen.findByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("link", { name: "inc-000001" })));
-    window.history.back();
     expect(window.history.state?.incidentDetail).toBeUndefined();
   });
 
