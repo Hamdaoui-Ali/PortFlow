@@ -57,22 +57,46 @@ function readFilter(name: string, fallback: string): string {
 
 export function AppShell({ children, onNavigate }: AppShellProps) {
   const mainRef = useRef<HTMLElement>(null);
+  const routeFocusTimerRef = useRef<number | null>(null);
+  const clickNavigationRef = useRef(false);
   const [terminal, setTerminal] = useState(() => readFilter("terminal", "all"));
   const [range, setRange] = useState(() => readFilter("range", "24h"));
   const [activeHref, setActiveHref] = useState(() => window.location.hash || "#overview");
 
+  const scheduleRouteFocus = () => {
+    if (routeFocusTimerRef.current !== null) {
+      window.clearTimeout(routeFocusTimerRef.current);
+    }
+    routeFocusTimerRef.current = window.setTimeout(() => {
+      routeFocusTimerRef.current = null;
+      clickNavigationRef.current = false;
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      mainRef.current?.focus({ preventScroll: true });
+    }, 0);
+  };
+
   useEffect(() => {
     const syncRoute = () => {
       setActiveHref(window.location.hash || "#overview");
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      mainRef.current?.focus({ preventScroll: true });
+      if (clickNavigationRef.current) {
+        clickNavigationRef.current = false;
+        return;
+      }
+      scheduleRouteFocus();
     };
     window.addEventListener("hashchange", syncRoute);
-    return () => window.removeEventListener("hashchange", syncRoute);
+    return () => {
+      window.removeEventListener("hashchange", syncRoute);
+      if (routeFocusTimerRef.current !== null) {
+        window.clearTimeout(routeFocusTimerRef.current);
+      }
+    };
   }, []);
 
   const handleNavigate = (hash: string) => {
+    clickNavigationRef.current = window.location.hash !== hash;
     setActiveHref(hash);
+    scheduleRouteFocus();
     onNavigate?.(hash);
   };
 
