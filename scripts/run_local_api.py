@@ -3,7 +3,8 @@
 import os
 from pathlib import Path
 
-from portflow.local_api import DEFAULT_DATABASE_URL, LocalApiConfig, create_server
+from portflow.db.connection import DEFAULT_DATABASE_URL
+from portflow.local_api import LocalApiConfig, create_server
 
 
 def main() -> None:

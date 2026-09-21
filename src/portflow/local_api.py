@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 
 import psycopg
 
-from portflow.db.connection import DEFAULT_DATABASE_URL, get_connection
+from portflow.db.connection import get_connection
 from portflow.db.migrations import apply_migrations
 from portflow.local_data import (
     ImportValidationError,
