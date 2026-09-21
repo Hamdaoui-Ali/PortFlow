@@ -170,6 +170,7 @@ def test_reference_runs_dbt_with_fixture_and_returns_canonical_gold_rows(
 
     monkeypatch.setattr("labs.portflow_bigquery.reference.subprocess.run", fake_run)
     monkeypatch.setattr("labs.portflow_bigquery.reference.duckdb.connect", fake_connect)
+    monkeypatch.setenv("DBT_SEND_ANONYMOUS_USAGE_STATS", "true")
     fixture_root = tmp_path / "fixture"
     fixture_root.mkdir()
     gold_db = tmp_path / "gold" / "portflow.duckdb"
@@ -201,6 +202,7 @@ def test_reference_runs_dbt_with_fixture_and_returns_canonical_gold_rows(
     }
     environment = captured["kwargs"]["env"]
     assert isinstance(environment, dict)
+    assert environment["DBT_SEND_ANONYMOUS_USAGE_STATS"] == "false"
     assert environment["PORTFLOW_SILVER_DIR"] == fixture_root.as_posix()
     assert environment["PORTFLOW_GOLD_DB"] == gold_db.as_posix()
     assert captured["connect_args"] == (str(gold_db),)

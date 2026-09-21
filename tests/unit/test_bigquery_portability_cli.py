@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import duckdb
+import polars as pl
+import pytest
 from labs.portflow_bigquery.cli import main
 
 
@@ -179,3 +182,26 @@ def test_cli_failure_rejects_args_descriptor_base_exception(monkeypatch, capsys)
     assert output == "portability verification failed: verification_failed\n"
     assert "alice" not in output
     assert "args-secret" not in output
+
+
+@pytest.mark.parametrize(
+    "engine_error",
+    [
+        duckdb.IOException("C:\\Users\\alice\\duckdb-secret"),
+        pl.exceptions.ComputeError("C:\\Users\\alice\\polars-secret"),
+    ],
+)
+def test_cli_contains_engine_failures(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    engine_error: Exception,
+) -> None:
+    def fail(*args: object, **kwargs: object) -> None:
+        raise engine_error
+
+    monkeypatch.setattr("labs.portflow_bigquery.cli.run_bundle", fail)
+
+    assert main(["run"]) == 1
+    captured = capsys.readouterr()
+    assert captured.out == "portability run failed: run_failed\n"
+    assert captured.err == ""

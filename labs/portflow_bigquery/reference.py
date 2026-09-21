@@ -49,6 +49,7 @@ def run_local_reference(
             cwd=repository_root,
             env={
                 **os.environ,
+                "DBT_SEND_ANONYMOUS_USAGE_STATS": "false",
                 "PORTFLOW_SILVER_DIR": fixture_root.as_posix(),
                 "PORTFLOW_GOLD_DB": gold_db.as_posix(),
             },

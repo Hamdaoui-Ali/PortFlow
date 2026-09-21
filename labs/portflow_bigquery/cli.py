@@ -6,6 +6,9 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Never
 
+import duckdb
+import polars as pl
+
 from .runner import RunSpec, run_bundle, verify_bundle
 
 _SAFE_REASON_CODES = frozenset(
@@ -90,7 +93,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     seed=args.seed,
                 )
             )
-        except (OSError, ValueError) as error:
+        except (OSError, ValueError, pl.exceptions.PolarsError, duckdb.Error) as error:
             reason_code = _safe_reason_code(error, "run_failed")
             print(f"portability run failed: {reason_code}")
             return 1

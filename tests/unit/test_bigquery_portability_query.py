@@ -64,6 +64,42 @@ def test_validator_rejects_comment_separated_nested_wildcard() -> None:
     assert error.value.reason_code == "implicit_select_star"
 
 
+@pytest.mark.parametrize(
+    ("replacement", "reason_code"),
+    [
+        (
+            "`demo-project.portflow.fct_equipment_telemetry`",
+            "forbidden_duckdb_construct",
+        ),
+        ("COUNTIF(available)", "forbidden_duckdb_construct"),
+    ],
+)
+def test_validator_rejects_commented_duckdb_constructs(
+    replacement: str, reason_code: str
+) -> None:
+    sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
+    if replacement.startswith("`"):
+        sql = sql.replace(replacement, "read_parquet /* comment */ ('x')")
+    else:
+        sql = sql.replace(
+            replacement, "COUNT(*) FILTER /* comment */ (WHERE available)"
+        )
+
+    with pytest.raises(QueryValidationError) as error:
+        validate_google_sql(sql)
+
+    assert error.value.reason_code == reason_code
+
+
+def test_validator_rejects_trailing_statement() -> None:
+    sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
+
+    with pytest.raises(QueryValidationError) as error:
+        validate_google_sql(f"{sql}\nDROP TABLE sensitive_table;")
+
+    assert error.value.reason_code == "invalid_google_sql"
+
+
 def test_validator_rejects_reordered_projection() -> None:
     sql = render_query(TEMPLATE, project_id="demo-project", dataset="portflow")
     sql = sql.replace(
