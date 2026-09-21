@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+early_access: false
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  commit_status: true
+  path_filters:
+    - "!**/*.lock"
+    - "!web/dist/**"
+    - "!web/public/data/**"
+    - "!.databricks/**"
+  path_instructions:
+    - path: "**/*.py"
+      instructions: "Check input validation, secret handling, exception boundaries, deterministic behavior, and type safety. Prefer small testable functions and preserve offline boundaries."
+    - path: "tests/**/*.py"
+      instructions: "Require regression coverage for changed behavior. Keep exception assertions to one possibly-throwing invocation and avoid leaking paths or credentials."
+    - path: ".github/workflows/**/*.{yml,yaml}"
+      instructions: "Review dependency pinning, binary-only installs, lifecycle-script controls, least-privilege permissions, secret handling, and untrusted input boundaries."
+    - path: "compose.yaml"
+      instructions: "Review credential interpolation, service isolation, loopback exposure, image pinning, and profile boundaries. Never accept committed default passwords."
+    - path: "web/**/*.{ts,tsx}"
+      instructions: "Review accessibility, input validation, XSS-safe rendering, error states, and type-safe React behavior."
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+  tools:
+    ruff:
+      enabled: true
+    semgrep:
+      enabled: true
+    trufflehog:
+      enabled: true
+    gitleaks:
+      enabled: true
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    checkov:
+      enabled: true
+    yamllint:
+      enabled: true
+    eslint:
+      enabled: true
+
+chat:
+  auto_reply: true
