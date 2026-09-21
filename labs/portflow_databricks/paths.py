@@ -4,6 +4,7 @@ import stat
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 DEFAULT_ARTIFACT_ROOT = Path(".databricks") / "pf107"
+DEFAULT_COMPARISON_ROOT = Path(".databricks") / "pf108"
 _REPARSE_POINT_ATTRIBUTE = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
 
 
@@ -128,3 +129,38 @@ def resolve_artifact_path(root: Path, relative_path: str) -> Path:
     except ValueError as error:
         raise ArtifactPathError("artifact path must remain below artifact root") from error
     return candidate
+
+
+def resolve_comparison_root(
+    candidate: Path | None = None,
+    *,
+    repository_root: Path | None = None,
+) -> Path:
+    """Resolve the PF-108 root while rejecting reparse points and escapes."""
+    base = _absolute_without_resolving(repository_root or Path.cwd())
+    comparison_candidate = base / DEFAULT_COMPARISON_ROOT
+    _reject_reparse_components(
+        comparison_candidate,
+        "comparison root must not contain symbolic links or reparse points",
+    )
+    comparison_root = comparison_candidate.resolve()
+
+    if candidate is None:
+        return comparison_root
+
+    requested_candidate = _absolute_without_resolving(candidate)
+    _reject_reparse_components(
+        requested_candidate,
+        "comparison root must not contain symbolic links or reparse points",
+    )
+    requested = requested_candidate.resolve()
+    try:
+        requested.relative_to(comparison_root)
+    except ValueError as error:
+        raise ArtifactPathError("comparison root must remain below .databricks/pf108") from error
+    return requested
+
+
+def resolve_comparison_path(root: Path, relative_path: str) -> Path:
+    """Resolve a PF-108 file below a previously validated comparison root."""
+    return resolve_artifact_path(root, relative_path)
