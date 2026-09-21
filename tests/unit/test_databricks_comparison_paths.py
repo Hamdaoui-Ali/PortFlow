@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 from labs.portflow_databricks.paths import (
-    ArtifactPathError,
     DEFAULT_COMPARISON_ROOT,
+    ArtifactPathError,
     resolve_comparison_path,
     resolve_comparison_root,
 )
@@ -11,7 +11,7 @@ from labs.portflow_databricks.paths import (
 
 def test_comparison_root_is_below_databricks_root(tmp_path: Path) -> None:
     root = resolve_comparison_root(repository_root=tmp_path)
-    assert DEFAULT_COMPARISON_ROOT == Path(".databricks") / "pf108"
+    assert Path(".databricks") / "pf108" == DEFAULT_COMPARISON_ROOT
     assert root == (tmp_path / ".databricks" / "pf108").resolve()
 
 
