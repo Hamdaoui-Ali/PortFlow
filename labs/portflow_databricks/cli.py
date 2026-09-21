@@ -60,10 +60,14 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _reason_code(error: BaseException, fallback: str = "run_failed") -> str:
-    try:
-        candidate = BaseException.__getattribute__(error, "reason_code")
-    except BaseException:
-        return fallback
+    missing = object()
+    namespace = BaseException.__getattribute__(error, "__dict__")
+    candidate = namespace.get("reason_code", missing)
+    if candidate is missing:
+        for error_type in type(error).__mro__:
+            candidate = error_type.__dict__.get("reason_code", missing)
+            if candidate is not missing:
+                break
     if type(candidate) is str and candidate in _SAFE_REASON_CODES:
         return candidate
     return fallback
