@@ -7,6 +7,7 @@ import {
   type LocalSchemaResponse,
   type LocalStatus,
   type ImportPayload,
+  type StreamRunsResponse,
 } from "../../data/localApi";
 import { LocalDataWorkspace } from "./LocalDataWorkspace";
 
@@ -42,6 +43,10 @@ class FakeLocalApi implements LocalApiClient {
 
   getSchema(): Promise<LocalSchemaResponse> {
     return Promise.resolve(schema);
+  }
+
+  getStreamRuns(): Promise<StreamRunsResponse> {
+    return Promise.resolve({ status: "absent", limit: 10, runs: [] });
   }
 
   seed(): Promise<{ seed: number; row_counts: Record<string, number>; digest_sha256: string }> {
