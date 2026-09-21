@@ -26,10 +26,38 @@ gold.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.{schema}.{p
 gold.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.{schema}.{prefix}_gold_overview_kpis")
 # COMMAND ----------
 """
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_notebook_contract_accepts_serverless_shape() -> None:
     validate_notebook_source(SAFE_NOTEBOOK)
+
+
+def test_committed_notebook_has_bronze_silver_gold_cells() -> None:
+    source = (ROOT / "labs/portflow_databricks/notebooks/portflow_delta_lab.py").read_text(
+        encoding="utf-8"
+    )
+    validate_notebook_source(source)
+    for token in (
+        "bronze_telemetry_events",
+        "silver_telemetry_events",
+        "gold_overview_kpis",
+        "available_intervals",
+        "average_dwell_minutes",
+        "mttr_minutes",
+        "mtbf_hours",
+        "# MAGIC SELECT * FROM",
+    ):
+        assert token in source
+
+
+def test_notebook_uses_widgets_for_workspace_inputs() -> None:
+    source = (ROOT / "labs/portflow_databricks/notebooks/portflow_delta_lab.py").read_text(
+        encoding="utf-8"
+    )
+    for widget in ("input_root", "catalog", "schema", "table_prefix"):
+        assert f'dbutils.widgets.text("{widget}"' in source
+        assert f'dbutils.widgets.get("{widget}")' in source
 
 
 @pytest.mark.parametrize(
@@ -440,7 +468,7 @@ def test_notebook_rejects_executable_literal_table_provenance(payload: str) -> N
         'spark.read.parquet("/Volumes/other/default/private/telemetry_events")',
         (
             'literal = "/Volumes/other/default/private/telemetry_events"\n'
-            'spark.read.parquet(literal)'
+            "spark.read.parquet(literal)"
         ),
         (
             'input_root = "/Volumes/other/default/private"\n'
