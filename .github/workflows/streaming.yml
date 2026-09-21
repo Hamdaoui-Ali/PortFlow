@@ -13,6 +13,8 @@ jobs:
   verify-streaming:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      PORTFLOW_POSTGRES_PASSWORD: ${{ github.run_id }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
