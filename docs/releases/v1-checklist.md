@@ -16,6 +16,7 @@
 | Pages path | `/PortFlow/` |
 | Pages source | GitHub Actions |
 | `github-pages` deployment branch | `main` |
+| Main branch protection | Classic rule matching `main`; pull request and `verify` required; force pushes and deletions disabled |
 
 The evidence below covers the merged release commit and the publication follow-up. The public site is now
 available at the expected Pages URL.
@@ -36,6 +37,7 @@ available at the expected Pages URL.
 | Pages-path asset/data verification | `npm --prefix web run verify:pages` | 2026-09-16 | PASS | `Verified /PortFlow/ asset and data paths.` |
 | CI on merged `main` | [GitHub Actions run #17](https://github.com/Hamdaoui-Ali/PortFlow/actions/runs/35089136861) | 2026-09-16 | PASS | The merged commit completed the `verify` job successfully in 3m 12s; 32 frontend files and 189 frontend tests passed. |
 | Publish PortFlow on merged `main` | [GitHub Actions run #16](https://github.com/Hamdaoui-Ali/PortFlow/actions/runs/35089136870) | 2026-09-16 | PASS | The `build` job passed in 2m 46s and the `deploy` job passed in 8s. The Pages artifact was 361 KB with digest `sha256:fe0d87e3b366aeebfe9c19ca2396261c8b43f9abdf3cb3dbef684d93a44e594a`. |
+| Main branch protection | [Settings > Branches](https://github.com/Hamdaoui-Ali/PortFlow/settings/branches) | 2026-09-16 | PASS | The classic rule for `main` applies to 1 branch; pull requests and the `verify` status check are required. No human approval count is required, and force pushes and deletions are disabled. |
 | Public HTTP 200 matrix | PowerShell `Invoke-WebRequest -Method Head` against the expected URL and required asset/data paths | 2026-09-16 | PASS | The root, `index.html`, hashed assets, manifest, all `demo-v2` datasets, and brand mark returned HTTP 200 after publication. |
 | Diff whitespace check | `git diff --check` | 2026-09-16 | PASS | Exit code 0. Git emitted only its normal LF/CRLF advice for four modified files. |
 | Trend-label regression | `npm test -- --run src/features/overview/AvailabilityTrend.test.tsx src/styles.test.ts` | 2026-09-16 | PASS | 2 files and 2 tests passed. All 24 hourly points remain in the DOM; seven checkpoint labels are visible. |
@@ -128,7 +130,7 @@ not a fresh vendor-policy re-verification.
 - There is no production API, database, broker, authentication layer, or server process in the public build.
 - The local API is loopback-only and requires disposable local PostgreSQL state; it is never exposed to the public browser.
 - `demo-v2` was generated on 2026-09-02 and is labelled stale by Data Health relative to the 2026-09-16 review date.
-- The repository's `main` branch protection rules are not configured; the `github-pages` environment is restricted to `main` and the deploy job is also guarded to `refs/heads/main`. Configure the documented pull-request and green-CI rules before the next production change.
+- The repository's `main` branch is protected by a classic rule requiring a pull request and the `verify` status check; the rule does not require a human approval count, and force pushes and deletions are disabled. The `github-pages` environment is also restricted to `main`, and the deploy job is guarded to `refs/heads/main`.
 - The local environment did not expose a `pwsh` executable, so the PowerShell wrapper was invoked through Windows PowerShell with `COMPOSE_PROJECT_NAME='portflow'` while reusing the healthy database container.
 
 ## Release decision
@@ -137,9 +139,8 @@ not a fresh vendor-policy re-verification.
 
 The local build, deterministic data pipeline, frontend suite, Pages-path checks, performance budgets, Lighthouse
 assertions, responsive checks, keyboard skip-link behavior, detail return focus, reduced-motion probe, public HTTP
-matrix, simulated-data disclosure, and core route checks all pass. PF-030 is complete. Main branch protection is a
-separate repository-hardening follow-up and does not change the published static product or this PF-030 acceptance
-decision.
+matrix, simulated-data disclosure, and core route checks all pass. PF-030 is complete. Main branch protection is now
+configured with the documented pull-request and green-CI requirements; this does not change the published static
+product or the PF-030 acceptance decision.
 
-Next action: configure the documented pull-request and green-CI protection rule for `main`, then begin the post-V1
-backlog with PF-101.
+Next action: begin the post-V1 backlog with PF-101.

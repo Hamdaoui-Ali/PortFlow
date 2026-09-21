@@ -23,9 +23,10 @@
 The PF-108 repository-side comparison contract is complete. The optional
 time-limited Databricks workspace run remains an explicit operator handoff and
 was not executed by the repository workflow. PF-030, PF-101, PF-102, PF-103,
-PF-104, PF-105, PF-106, and PF-107 are complete and PortFlow V1 is published.
-The documented pull-request and green-CI branch-protection rule for `main` remains an outstanding
-repository-hardening follow-up.
+PF-104, PF-105, PF-106, PF-107, and PF-108 are complete and PortFlow V1 is
+published. PF-031 is also complete: the documented pull-request and green-CI
+branch-protection rule for `main` is configured, with force pushes and
+deletions disabled.
 
 ## Completed checkpoints
 
@@ -40,11 +41,12 @@ repository-hardening follow-up.
 - **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`, `978fa43`.
 - **PF-029 Local data workspace and navigation reliability:** `f5312ad`, `7325f4d`, `85e17dc`, `24b4b21`, `9f19551`, `827d8d7`, and `d310109`; deterministic menu routing, a loopback-only local API, schema-allowlisted transactional JSON imports, bounded database waits, Data Health controls, a Vite proxy, and a complete local runbook are delivered. Unit, static, frontend, build, Pages-path, and browser checks pass. The real PostgreSQL integration check is included but could not run in this environment because Docker Desktop's Linux engine was unavailable.
 - **PF-030 V1 release gate:** `4156222` and merged release commit `c735701`; local quality gates, public HTTP 200 checks, public route checks, responsive/accessibility evidence, reduced-motion emulation, and GitHub Actions Pages publication all pass.
-- **PF-101 local Redpanda streaming:** design `06c0570`, plan `a205df8`, implementation commits `96ad360`, `c65bb37`, `c89de5a`, `c08411e`, `236a277`, `e0e8ca7`, and `511c52f`; canonical telemetry publishing, manual-commit consumption, deterministic Bronze writes, an opt-in Compose profile, broker-optional integration coverage, and separate CI verification are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The main branch-protection rule remains outstanding.
-- **PF-102 stream safety:** design `9a5dfca`, plan `b5bcd6a`, implementation commits `edc7b6b`, `1367a53`, `b3f304a`, `bad4b87`, `b33f3d3`, and `1508582`; durable SQLite event state, exact-duplicate suppression, bounded lateness, canonical dead-letter envelopes, safe commit ordering, runner wiring, and broker-optional round-trip coverage are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The main branch-protection rule remains outstanding.
-- **PF-103 local orchestration:** design `5508ab0`, plan `5bfaefe`, implementation commits `1d59781`, `502317b`, `63a0063`, and `c56113f`; optional local Dagster consumer orchestration, canonical Dagster run IDs, SQLite run lifecycle metadata, manual execution documentation, full Python verification (`142 passed, 2 skipped`), and both Redpanda round-trip checks are delivered. Producer orchestration, schedules, retries, hosted Dagster, and a public streaming UI remain out of scope. The main branch-protection rule remains outstanding.
-- **PF-104 engineering observability:** design and plan `7faa6a9`, implementation commits `1518c98`, `eb5e47b`, `9f36112`, `3f7ab58`, and `6c4f678`; read-only stream-run metrics, optional Prometheus/Grafana Compose services, a local dashboard, bounded-label contracts, and a local runbook are delivered. The main branch-protection rule remains outstanding.
-- **PF-105 benchmark evidence:** design `e653555`, plan `88fc4c5`, implementation commits `b01625a`, `dc6bad5`, `1237b7c`, `6998db8`, and `7cc7cf1`; deterministic smoke/small/medium/large fixtures, DuckDB/Polars equivalence, pinned Docker-isolated PySpark, versioned reports, verification CLI, and benchmark documentation are delivered. Focused PF-105 tests pass (`40 passed`), the full Python suite passes (`200 passed, 2 skipped`), and the small all-engine report verifies with matching result hashes. Browser reconciliation remains environment-dependent here because the checkout lacks the web Vitest dependency. The public data diff is empty and the main branch-protection rule remains outstanding.
+- **PF-101 local Redpanda streaming:** design `06c0570`, plan `a205df8`, implementation commits `96ad360`, `c65bb37`, `c89de5a`, `c08411e`, `236a277`, `e0e8ca7`, and `511c52f`; canonical telemetry publishing, manual-commit consumption, deterministic Bronze writes, an opt-in Compose profile, broker-optional integration coverage, and separate CI verification are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The PF-031 branch-protection rule is documented separately.
+- **PF-102 stream safety:** design `9a5dfca`, plan `b5bcd6a`, implementation commits `edc7b6b`, `1367a53`, `b3f304a`, `bad4b87`, `b33f3d3`, and `1508582`; durable SQLite event state, exact-duplicate suppression, bounded lateness, canonical dead-letter envelopes, safe commit ordering, runner wiring, and broker-optional round-trip coverage are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The PF-031 branch-protection rule is documented separately.
+- **PF-103 local orchestration:** design `5508ab0`, plan `5bfaefe`, implementation commits `1d59781`, `502317b`, `63a0063`, and `c56113f`; optional local Dagster consumer orchestration, canonical Dagster run IDs, SQLite run lifecycle metadata, manual execution documentation, full Python verification (`142 passed, 2 skipped`), and both Redpanda round-trip checks are delivered. Producer orchestration, schedules, retries, hosted Dagster, and a public streaming UI remain out of scope. The PF-031 branch-protection rule is documented separately.
+- **PF-104 engineering observability:** design and plan `7faa6a9`, implementation commits `1518c98`, `eb5e47b`, `9f36112`, `3f7ab58`, and `6c4f678`; read-only stream-run metrics, optional Prometheus/Grafana Compose services, a local dashboard, bounded-label contracts, and a local runbook are delivered. The PF-031 branch-protection rule is documented separately.
+- **PF-105 benchmark evidence:** design `e653555`, plan `88fc4c5`, implementation commits `b01625a`, `dc6bad5`, `1237b7c`, `6998db8`, and `7cc7cf1`; deterministic smoke/small/medium/large fixtures, DuckDB/Polars equivalence, pinned Docker-isolated PySpark, versioned reports, verification CLI, and benchmark documentation are delivered. Focused PF-105 tests pass (`40 passed`), the full Python suite passes (`200 passed, 2 skipped`), and the small all-engine report verifies with matching result hashes. Browser reconciliation remains environment-dependent here because the checkout lacks the web Vitest dependency. The public data diff is empty and the PF-031 branch-protection rule is documented separately.
+- **PF-031 Main branch protection:** configured on 2026-09-16 as a classic rule matching `main`; pull requests and the `verify` status check are required, with no human approval-count requirement and no force-push or deletion bypass.
 
 ## R0 — Verified constraints
 
@@ -605,8 +607,26 @@ repository-hardening follow-up.
 **Expected result:** PortFlow V1 has an auditable release record.
 
 **Result:** Complete in `c735701`; the release record is passing and the published site is available at
-`https://hamdaoui-ali.github.io/PortFlow/`. Main branch protection remains a separate repository-hardening
-follow-up.
+`https://hamdaoui-ali.github.io/PortFlow/`. Main branch protection is tracked separately in PF-031.
+
+### Task PF-031 — Protect main with pull-request and green-CI rules
+
+**Priority:** P1
+
+**Dependencies:** PF-030
+
+**Goal:** Prevent direct changes to `main` from bypassing the reviewed pull-request and CI gate.
+
+**Action:** Configure the documented classic branch protection rule for `main`: require a pull request and the
+GitHub Actions `verify` status check before merge, without requiring a human approval count; keep force pushes and
+deletions disabled.
+
+**Verification:** Confirm the saved rule in **Settings > Branches** and record the live configuration in the release
+checklist.
+
+**Expected result:** Every future change to `main` follows a pull request and a green `verify` check.
+
+**Result:** Complete on 2026-09-16. The saved rule applies to 1 branch and matches the documented configuration.
 
 ## Post-V1 backlog
 
