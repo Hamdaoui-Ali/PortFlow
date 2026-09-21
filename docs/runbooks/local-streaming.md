@@ -21,13 +21,13 @@ decisions.
 ## Prerequisites
 
 - Python `3.12` or newer with the locked project environment.
-- `uv` installed; use `python -m pip install uv` if it is not already available.
+- `uv` installed; use the pinned binary-only install if it is not already available.
 - Docker Desktop running with its Linux engine enabled.
 - The repository's development dependencies installed:
 
 ```powershell
 Set-Location C:/Users/aliha/PortFlow
-python -m pip install uv
+python -m pip install --only-binary=:all: uv==0.12.12
 python -m uv sync --extra dev --frozen
 ```
 
