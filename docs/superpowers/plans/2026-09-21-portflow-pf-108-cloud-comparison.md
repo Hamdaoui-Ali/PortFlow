@@ -57,7 +57,7 @@
 
 **Interfaces:**
 - Consume the existing PF-107 reparse-point and cross-platform path helpers.
-- Produce DEFAULT_COMPARISON_ROOT, resolve_comparison_root, resolve_comparison_path, ComparisonVerificationError(reason_code), ComparisonSpec, build_comparison_report, build_mismatch_report, and write_comparison_report.
+- Produce DEFAULT_COMPARISON_ROOT, resolve_comparison_root, resolve_comparison_path, ComparisonVerificationError(reason_code), ComparisonSpec, build_comparison_report, build_mismatch_report, and write_comparison_report. The report reference includes a safe PF-107-relative manifest_path so later verification can reopen the exact handoff.
 
 - [ ] Step 1: Write failing path and schema tests.
 
@@ -209,7 +209,8 @@ incomplete.
 
 - [ ] Step 3: Implement verify_comparison.
 
-Guard the report below .databricks/pf108/, validate its exact schema, guard
+Guard the report below .databricks/pf108/, validate its exact schema, resolve
+the recorded PF-107-relative reference manifest below .databricks/pf107/, guard
 the declared cloud-result relative path, verify its exact file SHA-256, reload
 and canonicalize the rows, and check the recorded cloud hash and row count.
 Re-run PF-107 verify_bundle and compare its manifest/result metadata with the
@@ -348,4 +349,3 @@ git log --oneline --decorate -12
 
 Expected: the branch is clean, all required commits are present, and the final
 handoff cites exact verification output without claiming a cloud run.
-

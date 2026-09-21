@@ -113,7 +113,8 @@ def compare_result(spec: ComparisonSpec) -> dict[str, object]: ...
 def verify_comparison(path: Path, *, repository_root: Path) -> None: ...
 ```
 
-`compare_result` validates the PF-107 handoff, reads both result files,
+`compare_result` validates the PF-107 handoff, records its PF-107-relative
+manifest path, and reads both result files,
 computes canonical hashes, writes `output_path`, verifies the generated report,
 and returns the report dictionary. Equal row hashes produce `status: "match"`;
 different canonical hashes or row counts produce `status: "mismatch"` and
@@ -147,6 +148,7 @@ The successful report is versioned as:
   "cloud_execution": "result_supplied",
   "reference": {
     "task": "PF-107",
+    "manifest_path": "handoff/manifest.json",
     "manifest_sha256": "...",
     "result_rows": 1,
     "result_sha256": "..."
@@ -205,4 +207,3 @@ Update the PF-107 runbook with the manual export placement, comparison command,
 report interpretation, and cleanup boundary. Update the README, CHANGELOG, and
 backlog with PF-108's artifact-only scope and explicitly record that no real
 Databricks execution was performed by the repository workflow.
-
