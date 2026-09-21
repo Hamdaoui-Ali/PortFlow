@@ -24,3 +24,11 @@ Implementation begins with one deterministic equipment-availability KPI rendered
 The public site remains static and reads versioned JSON only. For local development, PortFlow includes a loopback-only API that connects the existing PostgreSQL pipeline to the **Data Health** page. Use it to seed demo data, import validated JSON records, and refresh the published snapshot without editing source files.
 
 Follow the complete [local development runbook](docs/runbooks/local-development.md). The browser never connects directly to PostgreSQL, and the hosted/static site intentionally shows **Local API unavailable** because it has no database connection.
+
+For the opt-in Kafka-compatible telemetry path, follow the [local Redpanda streaming runbook](docs/runbooks/local-streaming.md). PF-102 adds restart-safe event state, bounded lateness, and a canonical dead-letter topic while writing disposable stream output to local Bronze only; PF-103 adds optional manual Dagster orchestration and run metadata; PF-104 adds optional local Prometheus and Grafana engineering observability over `stream_runs`. The public browser remains static and the committed public snapshot is unchanged.
+
+For reproducible local engine comparisons, follow the [benchmark runbook](docs/runbooks/benchmarks.md). PF-105 compares DuckDB, Polars, and optional Docker-isolated PySpark over the same deterministic fixture; benchmark artifacts remain disposable under .benchmarks/ and are separate from public data.
+
+For PF-106 offline BigQuery portability evidence, follow the [BigQuery portability runbook](docs/runbooks/bigquery-portability.md). The local bundle is credential-free, remains offline, and is separate from public data.
+
+For PF-107 Databricks Free Edition Delta/PySpark handoff evidence and the PF-108 manual-result comparison, follow the [Databricks Free Edition runbook](docs/runbooks/databricks-free-edition.md). The default workflow is credential-free and offline; cloud execution remains a separate manual handoff.

@@ -1,0 +1,43 @@
+name: Redpanda streaming
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify-streaming:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PORTFLOW_POSTGRES_PASSWORD: ${{ github.run_id }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: "python -m pip install --only-binary=:all: uv==0.12.12"
+
+      - name: Install locked dependencies
+        run: python -m uv sync --extra dev --frozen
+
+      - name: Start Redpanda
+        run: docker compose --profile streaming up -d --wait redpanda
+
+      - name: Run Redpanda round-trip
+        env:
+          PORTFLOW_REDPANDA_BROKERS: localhost:19092
+        run: python -m uv run pytest tests/streaming/test_redpanda.py -m redpanda -v
+
+      - name: Stop Redpanda
+        if: always()
+        run: docker compose --profile streaming down -v

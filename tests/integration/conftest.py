@@ -12,7 +12,7 @@ from portflow.db.migrations import apply_migrations
 def database_url() -> str:
     return os.environ.get(
         "PORTFLOW_DATABASE_URL",
-        "postgresql://portflow:portflow@localhost:5433/portflow",
+        "postgresql://portflow@localhost:5433/portflow",
     )
 
 

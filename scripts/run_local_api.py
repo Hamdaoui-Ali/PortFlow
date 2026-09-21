@@ -3,12 +3,13 @@
 import os
 from pathlib import Path
 
-from portflow.local_api import DEFAULT_DATABASE_URL, LocalApiConfig, create_server
+from portflow.db.connection import get_database_url
+from portflow.local_api import LocalApiConfig, create_server
 
 
 def main() -> None:
     repository_root = Path(__file__).resolve().parents[1]
-    database_url = os.environ.get("PORTFLOW_DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = get_database_url()
     port = int(os.environ.get("PORTFLOW_LOCAL_API_PORT", "8000"))
     server = create_server(
         LocalApiConfig(

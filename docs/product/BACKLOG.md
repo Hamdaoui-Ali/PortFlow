@@ -20,8 +20,13 @@
 
 ## Current next action
 
-Start **PF-101**. PF-030 is complete, PortFlow V1 is published, and the documented pull-request and green-CI
-protection rule is configured for `main`.
+The PF-108 repository-side comparison contract is complete. The optional
+time-limited Databricks workspace run remains an explicit operator handoff and
+was not executed by the repository workflow. PF-030, PF-101, PF-102, PF-103,
+PF-104, PF-105, PF-106, PF-107, and PF-108 are complete and PortFlow V1 is
+published. PF-031 is also complete: the documented pull-request and green-CI
+branch-protection rule for `main` is configured, with force pushes and
+deletions disabled.
 
 ## Completed checkpoints
 
@@ -36,6 +41,11 @@ protection rule is configured for `main`.
 - **PF-028 GitHub Pages publication safety:** `3296fe4`, `82a07c0`, `978fa43`.
 - **PF-029 Local data workspace and navigation reliability:** `f5312ad`, `7325f4d`, `85e17dc`, `24b4b21`, `9f19551`, `827d8d7`, and `d310109`; deterministic menu routing, a loopback-only local API, schema-allowlisted transactional JSON imports, bounded database waits, Data Health controls, a Vite proxy, and a complete local runbook are delivered. Unit, static, frontend, build, Pages-path, and browser checks pass. The real PostgreSQL integration check is included but could not run in this environment because Docker Desktop's Linux engine was unavailable.
 - **PF-030 V1 release gate:** `4156222` and merged release commit `c735701`; local quality gates, public HTTP 200 checks, public route checks, responsive/accessibility evidence, reduced-motion emulation, and GitHub Actions Pages publication all pass.
+- **PF-101 local Redpanda streaming:** design `06c0570`, plan `a205df8`, implementation commits `96ad360`, `c65bb37`, `c89de5a`, `c08411e`, `236a277`, `e0e8ca7`, and `511c52f`; canonical telemetry publishing, manual-commit consumption, deterministic Bronze writes, an opt-in Compose profile, broker-optional integration coverage, and separate CI verification are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The PF-031 branch-protection rule is documented separately.
+- **PF-102 stream safety:** design `9a5dfca`, plan `b5bcd6a`, implementation commits `edc7b6b`, `1367a53`, `b3f304a`, `bad4b87`, `b33f3d3`, and `1508582`; durable SQLite event state, exact-duplicate suppression, bounded lateness, canonical dead-letter envelopes, safe commit ordering, runner wiring, and broker-optional round-trip coverage are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The PF-031 branch-protection rule is documented separately.
+- **PF-103 local orchestration:** design `5508ab0`, plan `5bfaefe`, implementation commits `1d59781`, `502317b`, `63a0063`, and `c56113f`; optional local Dagster consumer orchestration, canonical Dagster run IDs, SQLite run lifecycle metadata, manual execution documentation, full Python verification (`142 passed, 2 skipped`), and both Redpanda round-trip checks are delivered. Producer orchestration, schedules, retries, hosted Dagster, and a public streaming UI remain out of scope. The PF-031 branch-protection rule is documented separately.
+- **PF-104 engineering observability:** design and plan `7faa6a9`, implementation commits `1518c98`, `eb5e47b`, `9f36112`, `3f7ab58`, and `6c4f678`; read-only stream-run metrics, optional Prometheus/Grafana Compose services, a local dashboard, bounded-label contracts, and a local runbook are delivered. The PF-031 branch-protection rule is documented separately.
+- **PF-105 benchmark evidence:** design `e653555`, plan `88fc4c5`, implementation commits `b01625a`, `dc6bad5`, `1237b7c`, `6998db8`, and `7cc7cf1`; deterministic smoke/small/medium/large fixtures, DuckDB/Polars equivalence, pinned Docker-isolated PySpark, versioned reports, verification CLI, and benchmark documentation are delivered. Focused PF-105 tests pass (`40 passed`), the full Python suite passes (`200 passed, 2 skipped`), and the small all-engine report verifies with matching result hashes. Browser reconciliation remains environment-dependent here because the checkout lacks the web Vitest dependency. The public data diff is empty and the PF-031 branch-protection rule is documented separately.
 - **PF-031 Main branch protection:** configured on 2026-09-16 as a classic rule matching `main`; pull requests and the `verify` status check are required, with no human approval-count requirement and no force-push or deletion bypass.
 
 ## R0 — Verified constraints
@@ -622,14 +632,17 @@ checklist.
 
 These items are P2 and cannot block V1:
 
-- PF-101: Redpanda local streaming into the existing Bronze contract.
-- PF-102: Streaming deduplication, late events, and dead-letter handling.
-- PF-103: Dagster orchestration and run metadata.
-- PF-104: Prometheus and Grafana engineering observability.
-- PF-105: Larger DuckDB, Polars, and PySpark benchmarks.
-- PF-106: BigQuery Sandbox portability lab.
-- PF-107: Databricks Free Edition Delta/PySpark lab.
-- PF-108: Optional time-limited cloud comparison.
+- PF-101: **Complete** — Redpanda local streaming into the existing Bronze contract.
+- PF-102: **Complete** — Streaming deduplication, late events, and dead-letter handling.
+- PF-103: **Complete** — Optional local Dagster orchestration and run metadata for bounded consumer runs.
+- PF-104: **Complete** — Prometheus and Grafana engineering observability.
+- PF-105: **Complete** — Deterministic DuckDB, Polars, and Docker-isolated PySpark benchmark evidence; design `e653555`, plan `88fc4c5`, and implementation through `7cc7cf1`.
+- PF-106: **Complete** — Offline BigQuery Sandbox portability evidence with a local dbt/DuckDB bundle; design `843d610`, plan `30562b2`, and implementation through `4cff55b`.
+- PF-107: **Complete** — Credential-free Databricks Free Edition Delta/PySpark handoff with a statically validated Serverless notebook, deterministic fixture, local expected Gold result, bounded manifest, CLI, and runbook; design `4cdf5d2`, plan `3870200`, and implementation through `2582e58`. The focused PF-107 suite passed (`192 passed, 1 skipped`), the full Python suite passed (`515 passed, 11 skipped`), and Ruff, Ruff format, and mypy passed. No Databricks workspace execution or credential lookup was performed; the manifest remains `cloud_execution: not_run`.
+- PF-108: **Complete (repository-side)** — deterministic comparison of an
+  operator-supplied Databricks Gold export against PF-107, with bounded paths,
+  report verification, CLI output, and manual-run documentation. No real
+  Databricks workspace execution was performed.
 
 ## Specification coverage
 
@@ -648,6 +661,11 @@ These items are P2 and cannot block V1:
 | Performance budgets | PF-026 |
 | Safe CI and static publication | PF-027–PF-028 |
 | Clean-clone reproducibility and release evidence | PF-029–PF-030 |
+| Local telemetry streaming into the existing Bronze contract | PF-101 |
+| Restart-safe local telemetry streaming and dead-letter handling | PF-102 |
+| Optional local consumer orchestration and run metadata | PF-103 |
+| Local stream-run engineering observability | PF-104 |
+| Reproducible local engine benchmark evidence | PF-105 |
 
 ## Definition of done for every task
 

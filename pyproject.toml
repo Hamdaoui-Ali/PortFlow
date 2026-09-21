@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "dbt-duckdb>=1.9,<2",
+  "confluent-kafka>=2.12,<3",
   "duckdb>=1.2,<2",
   "jsonschema>=4.23,<5",
   "polars>=1.25,<2",
@@ -24,6 +25,11 @@ dev = [
   "pytest>=8.3,<10",
   "pyyaml>=6.0,<7",
   "ruff>=0.11,<1",
+  "sqlglot>=26",
+]
+orchestration = [
+  "dagster>=1.11,<2",
+  "dagster-webserver>=1.11,<2",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -32,6 +38,9 @@ packages = ["src/portflow"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-markers"
+markers = [
+  "redpanda: requires a running local Redpanda broker",
+]
 
 [tool.ruff]
 target-version = "py312"
