@@ -53,6 +53,14 @@ def test_database_workflows_use_one_ephemeral_password_source() -> None:
         assert job["services"]["postgres"]["env"]["POSTGRES_PASSWORD"] == password
 
 
+def test_streaming_workflow_supplies_compose_interpolation_credential() -> None:
+    workflow = yaml.safe_load(_read(".github/workflows/streaming.yml"))
+
+    assert workflow["jobs"]["verify-streaming"]["env"]["PORTFLOW_POSTGRES_PASSWORD"] == (
+        "${{ github.run_id }}"
+    )
+
+
 def test_workflows_harden_python_and_frontend_installation() -> None:
     for relative_path in (
         ".github/workflows/ci.yml",
