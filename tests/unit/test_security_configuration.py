@@ -72,6 +72,16 @@ def test_workflows_harden_python_and_frontend_installation() -> None:
         assert "npm --prefix web ci\n" not in content
 
 
+def test_active_runbooks_use_hardened_installation_commands() -> None:
+    streaming_runbook = _read("docs/runbooks/local-streaming.md")
+    deployment_runbook = _read("docs/runbooks/first-deployment.md")
+
+    assert "python -m pip install --only-binary=:all: uv==0.12.12" in streaming_runbook
+    assert "python -m pip install uv\n" not in streaming_runbook
+    assert "npm --prefix web ci --ignore-scripts" in deployment_runbook
+    assert "npm --prefix web ci\n" not in deployment_runbook
+
+
 def test_verify_script_generates_and_restores_local_database_password() -> None:
     content = _read("scripts/verify_r2.ps1")
 
