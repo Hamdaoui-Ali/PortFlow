@@ -72,6 +72,38 @@ and is intended for non-commercial use without an SLA. Treat the workspace
 run as optional and time-limited; no billing account or credential is needed
 for the default local workflow.
 
+## PF-108 result comparison
+
+PF-108 does not execute Databricks. It compares a result that an operator has
+already exported from an explicitly authorized workspace run with the trusted
+PF-107 local reference. The comparison command is local, credential-free, and
+does not execute notebooks, contact a workspace, inspect credentials, or infer
+cloud provenance from the JSON file.
+
+Place only the exported `overview_kpis` row list at:
+
+```text
+.databricks/pf108/cloud-result.json
+```
+
+The file must be a JSON array using the PF-106 `overview_kpis` field contract,
+with UTC timestamps ending in `Z`. Then run:
+
+```powershell
+python -m labs.portflow_databricks compare `
+  --handoff-manifest .databricks/pf107/manifest.json `
+  --cloud-result .databricks/pf108/cloud-result.json `
+  --output .databricks/pf108/comparison.json
+```
+
+The command prints `databricks comparison matched` and returns zero when the
+canonical row hash and row count match. A valid difference prints
+`databricks comparison mismatch: result_hash_mismatch`, returns one, and still
+writes deterministic evidence. Malformed input, a tampered PF-107 handoff, or
+a path violation prints one bounded `databricks comparison failed:` reason.
+The report records `cloud_execution: result_supplied`; that is supplied-result
+evidence, not a claim that PortFlow automatically executed the cloud run.
+
 ## Cleanup
 
 Remove only the disposable local bundle when finished:
