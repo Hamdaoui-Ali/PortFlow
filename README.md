@@ -30,3 +30,5 @@ For the opt-in Kafka-compatible telemetry path, follow the [local Redpanda strea
 For reproducible local engine comparisons, follow the [benchmark runbook](docs/runbooks/benchmarks.md). PF-105 compares DuckDB, Polars, and optional Docker-isolated PySpark over the same deterministic fixture; benchmark artifacts remain disposable under .benchmarks/ and are separate from public data.
 
 For PF-106 offline BigQuery portability evidence, follow the [BigQuery portability runbook](docs/runbooks/bigquery-portability.md). The local bundle is credential-free, remains offline, and is separate from public data.
+
+For PF-107 Databricks Free Edition Delta/PySpark handoff evidence, follow the [Databricks Free Edition runbook](docs/runbooks/databricks-free-edition.md). The default workflow is credential-free and offline; cloud execution remains a separate manual handoff.

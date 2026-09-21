@@ -1,5 +1,18 @@
 # Changelog
 
+## PF-107 Databricks Free Edition Delta/PySpark lab - 2026-09-21
+
+PortFlow now includes a credential-free offline handoff bundle for validating
+the shared Parquet-to-Bronze/Silver/Gold Delta contract before an optional
+manual Databricks Free Edition run.
+
+- The local `run`/`verify` commands generate deterministic fixture, notebook,
+  schema, and expected-result hashes under ignored `.databricks/` artifacts.
+- The committed source notebook uses Serverless-compatible DataFrame and Delta
+  APIs with Unity Catalog widget parameters.
+- The default workflow never contacts Databricks or looks up credentials;
+  `cloud_execution` remains `not_run`.
+
 ## PF-106 BigQuery portability evidence - 2026-09-20
 
 PortFlow now includes a local, credential-free BigQuery portability bundle that

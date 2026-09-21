@@ -11,6 +11,7 @@ web/dist/
 .lighthouseci/
 .benchmarks/
 .portability/
+.databricks/
 analytics/target/
 analytics/logs/
 analytics/.user.yml
