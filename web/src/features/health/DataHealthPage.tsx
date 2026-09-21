@@ -5,6 +5,7 @@ import { HealthEvidence } from "./HealthEvidence";
 import { HealthKpiRail } from "./HealthKpiRail";
 import { HealthStatus } from "./HealthStatus";
 import { LocalDataWorkspace } from "./LocalDataWorkspace";
+import { LocalStreamRuns } from "./LocalStreamRuns";
 import { deriveHealthViewModel } from "./healthPresentation";
 
 interface DataHealthPageProps {
@@ -29,6 +30,7 @@ export function DataHealthPage({ manifest, quality = { status: "absent" }, stale
       <HealthKpiRail model={model} />
       <HealthEvidence model={model} />
       <LocalDataWorkspace />
+      <LocalStreamRuns />
     </section>
   );
 }
