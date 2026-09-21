@@ -73,6 +73,42 @@ describe("App", () => {
     await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
   });
 
+  it("keeps the active navigation link aligned with the selected route", async () => {
+    render(
+      <App
+        loadData={() =>
+          Promise.resolve({
+            ...snapshot,
+            incidents: {
+              status: "ready" as const,
+              records: [
+                {
+                  equipment_id: "QC-001",
+                  incident_id: "inc-000001",
+                  opened_at: "2026-09-02T03:00:00Z",
+                  resolved_at: "2026-09-02T03:30:00Z",
+                  root_cause: "Hydraulic leak",
+                  severity: "MAJOR" as const,
+                  status: "RESOLVED" as const,
+                  terminal_id: "TM-001",
+                },
+              ],
+            },
+          })
+        }
+      />
+    );
+
+    fireEvent.click(screen.getAllByRole("link", { name: "Data Health" })[0]);
+    expect(await screen.findByRole("heading", { name: "Data Health" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Data Health" })[0]).toHaveAttribute("aria-current", "page");
+
+    fireEvent.click(screen.getAllByRole("link", { name: "Incidents" })[0]);
+    expect(await screen.findByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Incidents" })[0]).toHaveAttribute("aria-current", "page");
+    expect(screen.getAllByRole("link", { name: "Data Health" })[0]).not.toHaveAttribute("aria-current");
+  });
+
   it("renders the selected page in the same navigation interaction", async () => {
     render(<App loadData={() => Promise.resolve({
       ...snapshot,

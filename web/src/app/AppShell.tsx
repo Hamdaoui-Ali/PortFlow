@@ -59,12 +59,21 @@ export function AppShell({ children, onNavigate }: AppShellProps) {
   const mainRef = useRef<HTMLElement>(null);
   const [terminal, setTerminal] = useState(() => readFilter("terminal", "all"));
   const [range, setRange] = useState(() => readFilter("range", "24h"));
+  const [activeHref, setActiveHref] = useState(() => window.location.hash || "#overview");
 
   useEffect(() => {
-    const focusRouteContent = () => mainRef.current?.focus();
-    window.addEventListener("hashchange", focusRouteContent);
-    return () => window.removeEventListener("hashchange", focusRouteContent);
+    const syncRoute = () => {
+      setActiveHref(window.location.hash || "#overview");
+      mainRef.current?.focus();
+    };
+    window.addEventListener("hashchange", syncRoute);
+    return () => window.removeEventListener("hashchange", syncRoute);
   }, []);
+
+  const handleNavigate = (hash: string) => {
+    setActiveHref(hash);
+    onNavigate?.(hash);
+  };
 
   const updateFilters = (nextTerminal: string, nextRange: string) => {
     const params = new URLSearchParams();
@@ -109,7 +118,7 @@ export function AppShell({ children, onNavigate }: AppShellProps) {
           <img src={`${import.meta.env.BASE_URL}brand/portflow-mark.png`} alt="" />
           <span>{APP_NAME}</span>
         </a>
-        <Navigation variant="desktop" onNavigate={onNavigate} />
+        <Navigation variant="desktop" activeHref={activeHref} onNavigate={handleNavigate} />
         <div className="sidebar-footer">
           <Database size={16} aria-hidden="true" />
           <span>Static snapshot</span>
@@ -151,7 +160,7 @@ export function AppShell({ children, onNavigate }: AppShellProps) {
         <main ref={mainRef} id="main-content" className="content" tabIndex={-1}>
           {children}
         </main>
-        <div className="mobile-navigation"><Navigation variant="mobile" onNavigate={onNavigate} /></div>
+        <div className="mobile-navigation"><Navigation variant="mobile" activeHref={activeHref} onNavigate={handleNavigate} /></div>
       </div>
       </div>
     </AppFiltersContext.Provider>
@@ -160,12 +169,13 @@ export function AppShell({ children, onNavigate }: AppShellProps) {
 
 function Navigation({
   variant,
+  activeHref,
   onNavigate,
 }: {
   variant: "desktop" | "mobile";
+  activeHref: string;
   onNavigate?: (hash: string) => void;
 }) {
-  const activeHref = window.location.hash || "#overview";
   return (
     <nav className={`primary-navigation primary-navigation-${variant}`} aria-label={variant === "desktop" ? "Primary navigation" : "Mobile primary navigation"}>
       {navItems.map(({ label, href, icon: Icon }) => (
