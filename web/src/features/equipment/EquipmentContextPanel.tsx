@@ -60,11 +60,6 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
                   <a
                     className="equipment-incident-link"
                     href={incidentHref(incident.incident_id)}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      window.history.pushState({}, "", incidentHref(incident.incident_id));
-                      window.dispatchEvent(new Event("hashchange"));
-                    }}
                   >
                     {incident.incident_id}
                   </a>

@@ -197,7 +197,7 @@ describe("EquipmentPage", () => {
     ));
   });
 
-  it("follows a related incident link into the focused incident detail", async () => {
+  it("navigates from a related incident link into the focused incident detail", async () => {
     const contextSnapshot: SnapshotV1 = {
       ...snapshot,
       incidents: {
@@ -221,7 +221,10 @@ describe("EquipmentPage", () => {
     render(<App loadData={() => Promise.resolve(contextSnapshot)} />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Open equipment QC-001" }));
-    fireEvent.click(await screen.findByRole("link", { name: "inc-000002" }));
+    const incidentLink = await screen.findByRole("link", { name: "inc-000002" });
+    expect(incidentLink).toHaveAttribute("href", "?incident=inc-000002#incidents");
+    window.history.pushState({}, "", incidentLink.getAttribute("href")!);
+    window.dispatchEvent(new Event("hashchange"));
 
     await screen.findByRole("heading", { name: "Incident inc-000002" });
     expect(window.location.hash).toBe("#incidents");
