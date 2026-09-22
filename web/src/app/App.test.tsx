@@ -62,10 +62,10 @@ describe("App", () => {
     expect(status).toHaveTextContent("Current snapshot");
     expect(status).toHaveTextContent("Data is healthy and current.");
     expect(status.querySelector("time")).toHaveAttribute("datetime", "2026-09-02T23:55:02Z");
-    expect(status).toHaveTextContent("UTC");
+    expect(status).toHaveTextContent("Updated 02 Sept 2026, 23:55 UTC");
 
     fireEvent.click(screen.getAllByRole("link", { name: "Equipment" })[0]);
-    act(() => vi.runOnlyPendingTimers());
+    act(() => vi.advanceTimersByTime(0));
 
     expect(screen.getByRole("heading", { name: "Equipment dataset not published" })).toBeInTheDocument();
     expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Current snapshot");
@@ -80,6 +80,50 @@ describe("App", () => {
     const status = screen.getByRole("status", { name: "Snapshot freshness" });
     expect(status).toHaveTextContent("Stale snapshot");
     expect(status).toHaveTextContent("Data is healthy but stale.");
+  });
+
+  it("updates freshness when a ready snapshot crosses the stale threshold without navigation", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-03T23:55:02Z"));
+    const nearStaleSnapshot = {
+      ...snapshot,
+      manifest: { ...snapshot.manifest, generated_at: "2026-09-02T23:55:03Z" },
+    };
+    render(<App loadData={() => Promise.resolve(nearStaleSnapshot)} />);
+    await act(async () => { await Promise.resolve(); });
+
+    expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Current snapshot");
+
+    act(() => vi.advanceTimersByTime(1_000));
+    expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Current snapshot");
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Stale snapshot");
+  });
+
+  it("rechecks freshness when the snapshot timestamp is beyond the browser timer limit", async () => {
+    const browserTimerLimitMs = 2_147_000_000;
+    const now = new Date("2026-09-03T23:55:02Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    const futureSnapshot = {
+      ...snapshot,
+      manifest: {
+        ...snapshot.manifest,
+        generated_at: new Date(now.getTime() + browserTimerLimitMs + 10_000).toISOString(),
+      },
+    };
+    render(<App loadData={() => Promise.resolve(futureSnapshot)} />);
+    await act(async () => { await Promise.resolve(); });
+
+    act(() => vi.advanceTimersByTime(browserTimerLimitMs));
+    expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Current snapshot");
+
+    act(() => vi.advanceTimersByTime(10_000 + 24 * 60 * 60 * 1000));
+    expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Current snapshot");
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Stale snapshot");
   });
 
   it("flags unavailable quality evidence in the shared snapshot status", async () => {
@@ -320,7 +364,7 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Live Demo" })).toBeInTheDocument();
 
     rerender(<App loadData={() => Promise.reject(new Error("network down"))} />);
-    expect(await screen.findByRole("status", { name: "Showing last valid snapshot" })).toBeInTheDocument();
+    expect(await screen.findByRole("note", { name: "Refresh details" })).toBeInTheDocument();
     expect(screen.getByText("Simulation — not live operational data")).toBeInTheDocument();
   });
 
@@ -331,8 +375,9 @@ describe("App", () => {
 
     rerender(<App loadData={() => Promise.reject(new Error("network down"))} />);
 
-    const staleNotice = await screen.findByRole("status", { name: "Showing last valid snapshot" });
-    expect(staleNotice).toBeInTheDocument();
+    const staleNotice = await screen.findByRole("note", { name: "Refresh details" });
+    expect(staleNotice).toHaveTextContent("Refresh issue");
+    expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Showing last valid snapshot");
     expect(screen.getByRole("heading", { name: "Data Health" })).toBeInTheDocument();
     expect(staleNotice.compareDocumentPosition(screen.getByRole("heading", { name: "Data Health" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
@@ -411,7 +456,7 @@ describe("App", () => {
 
     rerender(<App loadData={() => Promise.reject(new Error("network down"))} />);
 
-    expect(await screen.findByRole("status", { name: "Showing last valid snapshot" })).toBeInTheDocument();
+    expect(await screen.findByRole("note", { name: "Refresh details" })).toBeInTheDocument();
     expect(screen.getAllByText("94.4%")).toHaveLength(2);
     const status = screen.getByRole("status", { name: "Snapshot freshness" });
     expect(status).toHaveTextContent("Showing last valid snapshot");
