@@ -81,7 +81,9 @@ describe("generated snapshot browser reconciliation", () => {
     expect(await screen.findByRole("heading", { name: "Live Demo" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Start replay" }));
     expect(snapshot.event_replay?.length).toBe(288);
-    expect(await screen.findByText(/Replay playing/)).toHaveTextContent(
+    const replayStatus = await screen.findByRole("status", { name: "Replay status" });
+    expect(replayStatus).toHaveTextContent(/Replay playing/);
+    expect(replayStatus).toHaveTextContent(
       new RegExp(`${snapshot.event_replay?.[0].event_id}.*${snapshot.event_replay?.[0].equipment_id}`),
     );
   });
