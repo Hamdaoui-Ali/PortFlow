@@ -448,6 +448,23 @@ describe("App", () => {
     expect(status.querySelector("time")).not.toBeInTheDocument();
   });
 
+  it("uses only the shared freshness live region while loading", () => {
+    const { container } = render(<App loadData={() => new Promise(() => undefined)} />);
+
+    const liveRegions = container.querySelectorAll('[aria-live], [role="status"], [role="alert"]');
+    expect(liveRegions).toHaveLength(1);
+    expect(liveRegions[0]).toHaveAttribute("aria-label", "Snapshot freshness");
+  });
+
+  it("uses only the shared freshness live region for initial errors", async () => {
+    const { container } = render(<App loadData={() => Promise.reject(new Error("invalid snapshot"))} />);
+
+    expect(await screen.findByText("Operational snapshot unavailable")).toBeInTheDocument();
+    const liveRegions = container.querySelectorAll('[aria-live], [role="status"], [role="alert"]');
+    expect(liveRegions).toHaveLength(1);
+    expect(liveRegions[0]).toHaveAttribute("aria-label", "Snapshot freshness");
+  });
+
   it("retains the last valid snapshot when the next load fails", async () => {
     const firstLoad = () => Promise.resolve(snapshot);
     const { rerender } = render(<App loadData={firstLoad} />);

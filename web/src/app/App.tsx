@@ -159,11 +159,11 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
   const filters = useAppFilters();
 
   if (snapshotState.status === "loading") {
-    return <p className="data-state" role="status">Loading operational snapshot</p>;
+    return <p className="data-state">Loading operational snapshot</p>;
   }
   if (snapshotState.status === "error") {
     return (
-      <div className="data-state data-state-error" role="alert">
+      <div className="data-state data-state-error">
         <h2>{failureHeading(snapshotState.kind)}</h2>
         <p>{failureDescription(snapshotState.kind)}</p>
       </div>
