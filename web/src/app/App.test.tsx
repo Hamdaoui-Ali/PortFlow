@@ -143,7 +143,7 @@ describe("App", () => {
       },
     })} />);
 
-    expect(await screen.findByText("Terminal throughput (moves)")).toBeInTheDocument();
+    expect(await screen.findByText("Hourly equipment availability")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("link", { name: "Equipment" })[0]);
 
     expect(screen.getByRole("heading", { name: "Equipment fleet" })).toBeInTheDocument();
@@ -208,7 +208,7 @@ describe("App", () => {
 
     expect(await screen.findByRole("heading", { name: "Equipment fleet" }))
       .toBeInTheDocument();
-    expect(screen.queryByText("Terminal throughput (moves)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Hourly equipment availability")).not.toBeInTheDocument();
   });
 
   it("renders the Live Demo for the live-demo hash route", async () => {
@@ -244,7 +244,7 @@ describe("App", () => {
     })} />);
 
     expect(await screen.findAllByText("94.4%")).toHaveLength(2);
-    expect(screen.getByText("Terminal throughput (moves)")).toBeInTheDocument();
+    expect(screen.getByText("Hourly equipment availability")).toBeInTheDocument();
   });
 
   it("distinguishes missing and empty replay datasets honestly", async () => {
@@ -289,7 +289,7 @@ describe("App", () => {
     window.history.replaceState({}, "", "/#not-a-portflow-route");
     render(<App loadData={() => Promise.resolve(snapshot)} />);
 
-    expect(await screen.findByText("Terminal throughput (moves)")).toBeInTheDocument();
+    expect(await screen.findByText("Hourly equipment availability")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Equipment fleet" })).not.toBeInTheDocument();
   });
 
@@ -309,8 +309,8 @@ describe("App", () => {
     expect(screen.getByText("63.8 min")).toBeInTheDocument();
     expect(screen.getByText("30 min")).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Terminal throughput trend" })).toBeInTheDocument();
-    expect(screen.getByText("Trend data unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Hourly equipment availability" })).toBeInTheDocument();
+    expect(screen.getByText("Hourly availability data unavailable")).toBeInTheDocument();
     expect(screen.getAllByRole("group", { name: /About/ })).toHaveLength(6);
   });
 
@@ -323,8 +323,11 @@ describe("App", () => {
       ],
     })} />);
 
-    expect(await screen.findByRole("img", { name: /Hourly availability trend/ })).toBeInTheDocument();
-    expect(screen.getByText("Hourly availability ranged from 50.0% to 50.0%.")).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: /Hourly equipment availability chart/ })).toBeInTheDocument();
+    expect(screen.getByText("Hourly equipment availability ranged from 50.0% to 50.0%.")).toBeInTheDocument();
+    expect(screen.getByText(
+      "Bars show equipment availability for each hour. The throughput value above is the total for the selected period; hourly throughput data is not available.",
+    )).toBeInTheDocument();
     expect(screen.getByText("00:00")).toBeInTheDocument();
   });
 

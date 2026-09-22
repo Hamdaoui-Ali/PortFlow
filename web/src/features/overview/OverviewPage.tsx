@@ -27,19 +27,21 @@ export function OverviewPage({ snapshot, filters, staleNotice }: OverviewPagePro
     <>
       {staleNotice}
       <OverviewKpiRail overview={snapshot.overview} />
-      <section className="overview-analysis" aria-label="Terminal throughput trend">
+      <section className="overview-analysis" aria-labelledby="availability-trend-title">
         <div>
-          <p className="section-kicker">Activity signal</p>
-          <h2>Terminal throughput (moves)</h2>
-          <p className="analysis-summary">The current public snapshot contains a period total, not a time-series breakdown.</p>
+          <p className="section-kicker">Equipment health</p>
+          <h2 id="availability-trend-title">Hourly equipment availability</h2>
+          <p className="analysis-summary">
+            Bars show equipment availability for each hour. The throughput value above is the total for the selected period; hourly throughput data is not available.
+          </p>
         </div>
         {snapshot.event_replay?.length ? (
           <AvailabilityTrend events={snapshot.event_replay} />
         ) : (
           <div className="analysis-empty" role="status">
             <span className="analysis-empty-line" aria-hidden="true" />
-            <strong>Trend data unavailable</strong>
-            <span>Use the period total above while the next snapshot is generated.</span>
+            <strong>Hourly availability data unavailable</strong>
+            <span>Use the throughput total above while the next snapshot is generated.</span>
           </div>
         )}
       </section>
