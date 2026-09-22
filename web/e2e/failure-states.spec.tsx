@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "../src/app/App";
@@ -184,8 +184,9 @@ describe("frontend failure-state fixtures", () => {
     const staleManifest = manifest({ generated_at: "2020-01-01T00:00:00Z" });
     render(<App loadData={loadThroughApp(createFetcher(fullFixtures(staleManifest)))} />);
 
-    expect(await screen.findByText("Data is healthy but stale.")).toBeInTheDocument();
-    expect(screen.queryByText("Data is healthy and current.")).not.toBeInTheDocument();
+    const dataHealth = await screen.findByRole("region", { name: "Data Health" });
+    expect(within(dataHealth).getByText("Data is healthy but stale.")).toBeInTheDocument();
+    expect(within(dataHealth).queryByText("Data is healthy and current.")).not.toBeInTheDocument();
   });
 
   it("shows the last valid cached snapshot after the next load fails", async () => {
@@ -194,7 +195,9 @@ describe("frontend failure-state fixtures", () => {
     const failures: SnapshotLoadError[] = [];
     render(<App loadData={loadThroughApp(createFetcher({ "manifest.json": new Error("network down") }), failures)} />);
 
-    expect(await screen.findByRole("heading", { name: "Showing last valid snapshot" })).toBeInTheDocument();
+    await screen.findByText("Using saved data after the latest refresh failed.");
+    expect(screen.getByRole("status", { name: "Snapshot freshness" }))
+      .toHaveTextContent("Showing last valid snapshot");
     expect(screen.getByText("120 moves")).toBeInTheDocument();
     expect(failures[0]?.kind).toBe("unavailable");
   });
@@ -204,7 +207,9 @@ describe("frontend failure-state fixtures", () => {
     snapshotCache.set(cached);
     const failingLoad = loadThroughApp(createFetcher({ "manifest.json": new Error("network down") }));
     const { rerender } = render(<App loadData={failingLoad} />);
-    expect(await screen.findByRole("heading", { name: "Showing last valid snapshot" })).toBeInTheDocument();
+    await screen.findByText("Using saved data after the latest refresh failed.");
+    expect(screen.getByRole("status", { name: "Snapshot freshness" }))
+      .toHaveTextContent("Showing last valid snapshot");
 
     const replacement = { ...overview, throughput: 987 };
     rerender(<App loadData={loadThroughApp(createFetcher(fullFixtures(manifest({ snapshot_id: "replacement" }), replacement)))} />);
