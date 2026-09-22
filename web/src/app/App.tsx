@@ -4,12 +4,13 @@ import type { SnapshotFetch } from "../data/loadSnapshot";
 import { snapshotCache } from "../data/cache";
 import { SnapshotLoadError, type SnapshotFailureKind } from "../data/errors";
 import type { SnapshotV1 } from "../data/schema";
+import { deriveHealthViewModel } from "../features/health/healthPresentation";
 import { DataHealthPage } from "../features/health/DataHealthPage";
 import { EquipmentPage } from "../features/equipment/EquipmentPage";
 import { IncidentPage } from "../features/incidents/IncidentPage";
 import { LiveDemoPage } from "../features/replay/LiveDemoPage";
 import { OverviewPage } from "../features/overview/OverviewPage";
-import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
+import { AppShell, useAppFilters, type AppFilters, type SnapshotHeaderStatus } from "./AppShell";
 
 interface AppProps {
   loadData?: (fetcher?: SnapshotFetch, baseUrl?: string) => Promise<SnapshotV1>;
@@ -64,10 +65,59 @@ export function App({ loadData = loadDefaultSnapshot }: AppProps) {
   }, []);
 
   return (
-    <AppShell onNavigate={(hash) => setRoute(readRoute(hash))}>
+    <AppShell
+      onNavigate={(hash) => setRoute(readRoute(hash))}
+      snapshotStatus={deriveSnapshotHeaderStatus(snapshotState)}
+    >
       <AppContent route={route} snapshotState={snapshotState} />
     </AppShell>
   );
+}
+
+function deriveSnapshotHeaderStatus(snapshotState: SnapshotState): SnapshotHeaderStatus {
+  if (snapshotState.status === "loading") {
+    return {
+      kind: "loading",
+      label: "Loading snapshot",
+      message: "Fetching published operational data.",
+    };
+  }
+
+  if (snapshotState.status === "error") {
+    return {
+      kind: "unavailable",
+      label: "Snapshot unavailable",
+      message: failureDescription(snapshotState.kind),
+    };
+  }
+
+  const { snapshot } = snapshotState;
+  if (snapshotState.status === "stale") {
+    return {
+      kind: "stale",
+      label: "Showing last valid snapshot",
+      message: "Using saved data after the latest refresh failed.",
+      generatedAt: snapshot.manifest.generated_at,
+    };
+  }
+
+  const health = deriveHealthViewModel(
+    snapshot.manifest,
+    snapshot.quality ?? { status: "absent" },
+    new Date(),
+  );
+  const label = {
+    healthy: "Current snapshot",
+    stale: "Stale snapshot",
+    invalid: "Snapshot needs attention",
+  }[health.status];
+
+  return {
+    kind: health.status,
+    label,
+    message: health.message,
+    generatedAt: health.generatedAt,
+  };
 }
 
 function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: SnapshotState }) {
