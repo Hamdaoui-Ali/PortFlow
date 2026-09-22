@@ -73,6 +73,16 @@ describe("App", () => {
     await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
   });
 
+  it("keeps main focus after route navigation settles", async () => {
+    render(<App loadData={() => new Promise(() => undefined)} />);
+
+    const equipmentLink = screen.getAllByRole("link", { name: "Equipment" })[0];
+    fireEvent.click(equipmentLink);
+    equipmentLink.focus();
+
+    await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
+  });
+
   it("resets the viewport before focusing main content after route navigation", async () => {
     const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
 
