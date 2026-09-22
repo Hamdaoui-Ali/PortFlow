@@ -57,7 +57,9 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
             {incidents.records.map((incident) => (
               <li className="equipment-incident-item" key={incident.incident_id}>
                 <div className="equipment-incident-heading">
-                  <a href={incidentHref(incident.incident_id)}>{incident.incident_id}</a>
+                  <a className="equipment-incident-link" href={incidentHref(incident.incident_id)}>
+                    {incident.incident_id}
+                  </a>
                   <span className={`severity-pill severity-${incident.severity.toLowerCase()}`}>
                     {incident.severity}
                   </span>

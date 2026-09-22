@@ -48,10 +48,9 @@ describe("EquipmentContext", () => {
     expect(screen.getByRole("list", { name: "Related incidents" })).toBeInTheDocument();
     expect(screen.getByText("Motor overload")).toBeInTheDocument();
     expect(screen.getByText("CRITICAL")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /inc-000002/ })).toHaveAttribute(
-      "href",
-      "?incident=inc-000002#incidents",
-    );
+    const incidentLink = screen.getByRole("link", { name: /inc-000002/ });
+    expect(incidentLink).toHaveAttribute("href", "?incident=inc-000002#incidents");
+    expect(incidentLink).toHaveClass("equipment-incident-link");
   });
 
   it.each([

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { AppFilters } from "../../app/AppShell";
 import type {
@@ -33,7 +33,7 @@ export function EquipmentPage({
   const [urlState, setUrlState] = useState(() => readEquipmentUrlState(window.location.search));
   const returnFocusId = useRef<string | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!urlState.equipmentId && returnFocusId.current) {
       const returnTarget = document.getElementById(`equipment-link-${returnFocusId.current}`);
       (returnTarget ?? document.getElementById("equipment-page-title"))?.focus();

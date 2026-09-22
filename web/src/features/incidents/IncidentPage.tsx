@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { AppFilters } from "../../app/AppShell";
 import type { IncidentDatasetState } from "../../data/schema";
@@ -37,7 +37,7 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
     writeIncidentLocation(urlState, "replace");
   }, [filters.range, filters.terminal, urlState]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!urlState.incidentId && returnFocusId.current) {
       const returnTarget = document.getElementById(`incident-link-${returnFocusId.current}`);
       (returnTarget ?? document.getElementById("incident-page-title"))?.focus();

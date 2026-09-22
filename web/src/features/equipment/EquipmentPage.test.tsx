@@ -177,14 +177,24 @@ describe("EquipmentPage", () => {
       },
     };
 
-    window.history.replaceState({}, "", "/?equipment=QC-001#equipment");
+    window.history.replaceState({}, "", "/#equipment");
     render(<App loadData={() => Promise.resolve(contextSnapshot)} />);
 
+    const equipmentButton = await screen.findByRole("button", { name: "Open equipment QC-001" });
+    fireEvent.click(equipmentButton);
     expect(await screen.findByRole("heading", { name: "Equipment activity" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "inc-000002" })).toHaveAttribute(
       "href",
       "?incident=inc-000002#incidents",
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to equipment fleet" }));
+
+    expect(window.location.hash).toBe("#equipment");
+    expect(new URLSearchParams(window.location.search).has("equipment")).toBe(false);
+    await waitFor(() => expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Open equipment QC-001" }),
+    ));
   });
 
   it("restores URL-selected detail on browser navigation", async () => {

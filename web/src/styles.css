@@ -142,6 +142,24 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .equipment-detail-item:nth-last-child(-n+4) { border-bottom: 0; }
 .equipment-detail-item dt { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .equipment-detail-item dd { margin: 9px 0 0; color: var(--ink); font-size: 18px; font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.equipment-context { display: grid; max-width: 980px; gap: 32px; margin-top: 38px; }
+.equipment-context-section { padding-top: 24px; border-top: 1px solid var(--border); }
+.equipment-context-header { max-width: 720px; margin-bottom: 18px; }
+.equipment-context-header h3 { margin: 0; color: var(--ink); font-size: 20px; letter-spacing: -.02em; }
+.equipment-context-header > p:last-child { margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.equipment-activity-list, .equipment-incident-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.equipment-activity-item { display: grid; grid-template-columns: minmax(160px, .35fr) 1fr; align-items: baseline; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.equipment-activity-item:last-child, .equipment-incident-item:last-child { border-bottom: 0; }
+.equipment-activity-item time, .equipment-incident-item time { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.equipment-activity-item strong { color: var(--ink); font-size: 13px; }
+.equipment-activity-state { margin-left: 12px; color: var(--muted); font-size: 12px; }
+.equipment-context-message { margin: 0; padding: 16px; color: var(--muted); background: var(--pale-blue); border-left: 3px solid var(--cobalt); font-size: 13px; line-height: 1.5; }
+.equipment-incident-item { display: grid; gap: 8px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.equipment-incident-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.equipment-incident-link { color: var(--cobalt); font-size: 13px; font-weight: 800; text-underline-offset: 3px; }
+.equipment-incident-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.equipment-incident-item > strong { color: var(--ink); font-size: 14px; }
+.equipment-incident-item > span { color: var(--muted); font-size: 12px; }
 .incident-page, .incident-detail { max-width: 1180px; }
 .incident-page-header { max-width: 720px; margin-bottom: 28px; }
 .incident-page-header h2, .incident-detail h2 { margin: 0; font-size: clamp(24px, 3vw, 34px); line-height: 1.15; letter-spacing: -0.035em; }
@@ -349,6 +367,9 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .equipment-detail-item:nth-child(2n) { border-right: 0; }
   .equipment-detail-item:nth-last-child(-n+4) { border-bottom: 1px solid var(--border); }
   .equipment-detail-item:nth-last-child(-n+2) { border-bottom: 0; }
+  .equipment-context { gap: 24px; margin-top: 28px; }
+  .equipment-activity-item { grid-template-columns: 1fr; gap: 7px; }
+  .equipment-activity-state { display: block; margin: 5px 0 0; }
   .table-toolbar { display: grid; align-items: start; }
   .table-filters { display: grid; grid-template-columns: 1fr 1fr; }
   .incident-metric-grid { grid-template-columns: 1fr; }
@@ -399,6 +420,9 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .equipment-detail-list { grid-template-columns: 1fr; }
   .equipment-detail-item, .equipment-detail-item:nth-child(4n), .equipment-detail-item:nth-child(2n), .equipment-detail-item:nth-last-child(-n+2) { border-right: 0; border-bottom: 1px solid var(--border); }
   .equipment-detail-item:last-child { border-bottom: 0; }
+  .equipment-context { gap: 22px; margin-top: 24px; }
+  .equipment-context-section { padding-top: 20px; }
+  .equipment-context-message { padding: 14px 0 14px 12px; }
   .table-filters, .incident-metric-grid { grid-template-columns: 1fr; }
   .incident-metric, .incident-metric:first-child, .incident-metric:last-child { border-right: 0; border-bottom: 1px solid var(--border); padding: 14px 0; }
   .incident-metric:last-child { border-bottom: 0; }
