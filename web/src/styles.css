@@ -91,7 +91,7 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .trend-chart { display: flex; height: 124px; align-items: stretch; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
 .trend-point { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; height: 100%; flex: 1; align-items: end; justify-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
 .trend-bar-track { display: flex; min-width: 0; width: 100%; max-width: 22px; height: 100%; align-items: end; background: var(--pale-blue); }
-.trend-bar { width: 100%; min-height: 2px; background: var(--teal); }
+.trend-bar { width: 100%; background: var(--teal); }
 .trend-label-hidden { display: none; }
 .trend-label-visible { white-space: nowrap; }
 .trend-point:first-child .trend-label-visible { transform: translateX(50%); }

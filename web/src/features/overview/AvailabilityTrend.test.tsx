@@ -35,4 +35,17 @@ describe("AvailabilityTrend", () => {
     expect(screen.getByText("50%")).toBeVisible();
     expect(screen.getByText("0%")).toBeVisible();
   });
+
+  it("renders zero availability with zero-height bars", () => {
+    const unavailableEvents = events.map((event) => ({ ...event, available: false }));
+    render(<AvailabilityTrend events={unavailableEvents} />);
+
+    const chart = screen.getByRole("img", { name: /ranged from 0.0% to 0.0%/i });
+    const bars = chart.querySelectorAll<HTMLElement>(".trend-bar");
+
+    expect(bars).toHaveLength(24);
+    for (const bar of bars) {
+      expect(bar).toHaveStyle({ height: "0%" });
+    }
+  });
 });

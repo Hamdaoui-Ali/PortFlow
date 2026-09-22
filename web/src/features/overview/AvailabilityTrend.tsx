@@ -33,7 +33,7 @@ export function AvailabilityTrend({ events }: AvailabilityTrendProps) {
             return (
               <div className="trend-point" key={point.label}>
                 <div className="trend-bar-track">
-                  <div className="trend-bar" style={{ height: `${Math.max(point.value * 100, 2)}%` }} />
+                  <div className="trend-bar" style={{ height: `${point.value * 100}%` }} />
                 </div>
                 <span className={isCheckpoint ? "trend-label-visible" : "trend-label-hidden"}>
                   {point.label}
