@@ -184,6 +184,8 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
         {staleNotice}
         <EquipmentPage
           dataset={snapshot.equipment ?? { status: "absent" }}
+          replayEvents={snapshot.event_replay}
+          incidentDataset={snapshot.incidents}
           filters={filters}
         />
       </>

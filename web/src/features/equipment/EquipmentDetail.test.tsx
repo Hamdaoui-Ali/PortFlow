@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { EquipmentRecordV1 } from "../../data/schema";
+import type { EquipmentRecordV1, IncidentRecordV1, ReplayEventV1 } from "../../data/schema";
 import { EquipmentDetail } from "./EquipmentDetail";
 
 const record: EquipmentRecordV1 = {
@@ -15,6 +15,26 @@ const record: EquipmentRecordV1 = {
   mttr_minutes: 30,
   terminal_id: "TM-001",
   utilization: 0.7426470588235294,
+};
+
+const replayEvent: ReplayEventV1 = {
+  available: true,
+  equipment_id: "QC-001",
+  event_id: "evt-000001",
+  event_timestamp: "2026-09-02T02:00:00Z",
+  state: "ACTIVE",
+  terminal_id: "TM-001",
+};
+
+const incident: IncidentRecordV1 = {
+  equipment_id: "QC-001",
+  incident_id: "inc-000002",
+  opened_at: "2026-09-02T02:15:00Z",
+  resolved_at: null,
+  root_cause: "Motor overload",
+  severity: "CRITICAL",
+  status: "OPEN",
+  terminal_id: "TM-001",
 };
 
 describe("EquipmentDetail", () => {
@@ -60,6 +80,26 @@ describe("EquipmentDetail", () => {
     expect(screen.getAllByText("Unavailable")).toHaveLength(5);
     expect(screen.queryByText("0.0%")).not.toBeInTheDocument();
     expect(screen.queryByText("0 min")).not.toBeInTheDocument();
+  });
+
+  it("renders replay activity and related incidents for the selected equipment", () => {
+    render(
+      <EquipmentDetail
+        record={record}
+        replayEvents={[replayEvent]}
+        incidentDataset={{ status: "ready", records: [incident] }}
+        onBack={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Equipment activity" })).toBeInTheDocument();
+    expect(within(screen.getByRole("list", { name: "Equipment activity" })).getByText("ACTIVE"))
+      .toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Related incidents" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "inc-000002" })).toHaveAttribute(
+      "href",
+      "?incident=inc-000002#incidents",
+    );
   });
 
   it("returns to the fleet through an accessible control", () => {

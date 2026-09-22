@@ -26,8 +26,10 @@ explicit operator handoff and was not executed by the repository workflow.
 PF-030, PF-101, PF-102, PF-103, PF-104, PF-105, PF-106, PF-107, PF-108, and
 PF-109 are complete and PortFlow V1 is published. PF-031 is also complete: the
 documented pull-request and green-CI branch-protection rule for `main` is
-configured, with force pushes and deletions disabled. No subsequent post-V1
-specification is currently approved.
+configured, with force pushes and deletions disabled. PF-110, PF-111, PF-112,
+PF-113, and PF-114 are also complete through merged post-V1 pull requests.
+PF-115 is the current approved post-V1 slice: finish the equipment detail
+context PR before selecting the next specification.
 
 ## Completed checkpoints
 
@@ -651,6 +653,15 @@ These items are P2 and cannot block V1:
   The local endpoint uses the SQLite state store without mutating it; no public
   snapshot, hosted API, or public route changed.
 
+## PF-115 implementation checkpoint
+
+- PF-115: **In progress** — equipment detail context derived from the existing
+  replay and incident snapshot datasets. The design is `485c8da`, the plan is
+  `2857e7d`, and the implementation currently consists of `8413fc7`, `b23206e`,
+  `22116c2`, and `f858f4f`. The slice preserves the static snapshot boundary,
+  exposes explicit dataset states, links related incidents through the existing
+  route, and hardens return-focus behavior; merge remains the completion gate.
+
 ## Specification coverage
 
 | Approved requirement | Delivery tasks |
@@ -665,6 +676,7 @@ These items are P2 and cannot block V1:
 | Browser replay with simulation disclosure | PF-020–PF-021 |
 | Data freshness and quality visibility | PF-016, PF-022 |
 | Accessibility and responsive behavior | PF-014, PF-021, PF-023 |
+| Equipment detail activity and incident context | PF-115 |
 | Performance budgets | PF-026 |
 | Safe CI and static publication | PF-027–PF-028 |
 | Clean-clone reproducibility and release evidence | PF-029–PF-030 |

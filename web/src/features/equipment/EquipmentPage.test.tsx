@@ -147,6 +147,96 @@ describe("EquipmentPage", () => {
     expect(new URLSearchParams(window.location.search).has("equipment")).toBe(false);
   });
 
+  it("passes snapshot activity and incidents to the selected equipment detail", async () => {
+    const contextSnapshot: SnapshotV1 = {
+      ...snapshot,
+      event_replay: [
+        {
+          available: true,
+          equipment_id: "QC-001",
+          event_id: "evt-000001",
+          event_timestamp: "2026-09-02T02:00:00Z",
+          state: "ACTIVE",
+          terminal_id: "TM-001",
+        },
+      ],
+      incidents: {
+        status: "ready",
+        records: [
+          {
+            equipment_id: "QC-001",
+            incident_id: "inc-000002",
+            opened_at: "2026-09-02T02:15:00Z",
+            resolved_at: null,
+            root_cause: "Motor overload",
+            severity: "CRITICAL",
+            status: "OPEN",
+            terminal_id: "TM-001",
+          },
+        ],
+      },
+    };
+
+    window.history.replaceState({}, "", "/#equipment");
+    render(<App loadData={() => Promise.resolve(contextSnapshot)} />);
+
+    const equipmentButton = await screen.findByRole("button", { name: "Open equipment QC-001" });
+    fireEvent.click(equipmentButton);
+    expect(await screen.findByRole("heading", { name: "Equipment activity" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "inc-000002" })).toHaveAttribute(
+      "href",
+      "?incident=inc-000002#incidents",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to equipment fleet" }));
+
+    expect(window.location.hash).toBe("#equipment");
+    expect(new URLSearchParams(window.location.search).has("equipment")).toBe(false);
+    await waitFor(() => expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Open equipment QC-001" }),
+    ));
+  });
+
+  it("navigates from a related incident link into the focused incident detail", async () => {
+    const contextSnapshot: SnapshotV1 = {
+      ...snapshot,
+      incidents: {
+        status: "ready",
+        records: [
+          {
+            equipment_id: "QC-001",
+            incident_id: "inc-000002",
+            opened_at: "2026-09-02T02:15:00Z",
+            resolved_at: null,
+            root_cause: "Motor overload",
+            severity: "CRITICAL",
+            status: "OPEN",
+            terminal_id: "TM-001",
+          },
+        ],
+      },
+    };
+
+    window.history.replaceState({}, "", "/#equipment");
+    render(<App loadData={() => Promise.resolve(contextSnapshot)} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Open equipment QC-001" }));
+    const incidentLink = await screen.findByRole("link", { name: "inc-000002" });
+    expect(incidentLink).toHaveAttribute("href", "?incident=inc-000002#incidents");
+    expect(fireEvent.click(incidentLink)).toBe(true);
+    window.history.pushState({}, "", incidentLink.getAttribute("href")!);
+    window.dispatchEvent(new Event("hashchange"));
+
+    await screen.findByRole("heading", { name: "Incident inc-000002" });
+    expect(window.location.hash).toBe("#incidents");
+    expect(new URLSearchParams(window.location.search).get("incident")).toBe("inc-000002");
+    await waitFor(() => expect(document.activeElement).toBe(document.getElementById("main-content")));
+
+    fireEvent.click(screen.getByRole("button", { name: /Back to incident list/ }));
+    const incidentListHeading = await screen.findByRole("heading", { name: "Incident exploration" });
+    await waitFor(() => expect(document.activeElement).toBe(incidentListHeading));
+  });
+
   it("restores URL-selected detail on browser navigation", async () => {
     renderEquipment();
     await screen.findByRole("table", { name: "Equipment fleet" });
