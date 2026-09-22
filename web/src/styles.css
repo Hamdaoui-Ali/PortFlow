@@ -210,6 +210,17 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .detail-grid > div:nth-last-child(-n+3) { border-bottom: 0; }
 .detail-grid dt { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .detail-grid dd { margin: 9px 0 0; color: var(--ink); font-size: 17px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.incident-context-panel { max-width: 980px; margin-top: 38px; padding-top: 24px; border-top: 1px solid var(--border); }
+.incident-context-panel h3 { margin: 0 0 18px; color: var(--ink); font-size: 20px; letter-spacing: -.02em; }
+.incident-context-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.incident-context-item { min-width: 0; padding: 20px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.incident-context-item:nth-child(3n) { border-right: 0; }
+.incident-context-item:nth-last-child(-n+3) { border-bottom: 0; }
+.incident-context-item dt { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.incident-context-item dd { margin: 9px 0 0; color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.incident-context-item a { color: var(--cobalt); text-decoration: underline; text-underline-offset: 3px; }
+.incident-context-item a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.incident-context-message { margin: 0; padding: 16px; color: var(--muted); background: var(--pale-blue); border-left: 3px solid var(--cobalt); font-size: 13px; line-height: 1.5; }
 .live-demo-page { max-width: 1180px; }
 .replay-disclosure { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin-bottom: 28px; padding: 14px 16px; color: var(--ink); background: var(--pale-blue); border-left: 4px solid var(--cobalt); }
 .replay-disclosure strong { font-size: 13px; }
@@ -385,6 +396,12 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .detail-grid > div:nth-child(2n) { border-right: 0; }
   .detail-grid > div:nth-last-child(-n+3) { border-bottom: 1px solid var(--border); }
   .detail-grid > div:nth-last-child(-n+2) { border-bottom: 0; }
+  .incident-context-panel { margin-top: 28px; }
+  .incident-context-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .incident-context-item:nth-child(3n) { border-right: 1px solid var(--border); }
+  .incident-context-item:nth-child(2n) { border-right: 0; }
+  .incident-context-item:nth-last-child(-n+3) { border-bottom: 1px solid var(--border); }
+  .incident-context-item:nth-last-child(-n+2) { border-bottom: 0; }
   .replay-kpi-strip { grid-template-columns: 1fr; }
   .replay-kpi-card, .replay-kpi-card:first-child, .replay-kpi-card:last-child { padding: 18px 14px; border-right: 1px solid var(--border); }
   .replay-kpi-card { border-right: 0; border-top: 1px solid var(--border); }
@@ -431,6 +448,10 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .detail-grid { grid-template-columns: 1fr; }
   .detail-grid > div, .detail-grid > div:nth-child(3n), .detail-grid > div:nth-child(2n), .detail-grid > div:nth-last-child(-n+2) { border-right: 0; border-bottom: 1px solid var(--border); }
   .detail-grid > div:last-child { border-bottom: 0; }
+  .incident-context-panel { margin-top: 24px; }
+  .incident-context-list { grid-template-columns: 1fr; }
+  .incident-context-item, .incident-context-item:nth-child(3n), .incident-context-item:nth-child(2n), .incident-context-item:nth-last-child(-n+2) { border-right: 0; border-bottom: 1px solid var(--border); }
+  .incident-context-item:last-child { border-bottom: 0; }
   .health-kpi-rail { grid-template-columns: 1fr; }
   .health-kpi, .health-kpi:first-child, .health-kpi:last-child { padding: 16px 0; border-right: 0; border-top: 1px solid var(--border); }
   .health-kpi:first-child { border-top: 0; }
