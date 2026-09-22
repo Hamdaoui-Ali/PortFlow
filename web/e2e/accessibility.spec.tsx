@@ -66,7 +66,7 @@ afterEach(() => {
 
 describe("route accessibility", () => {
   it.each([
-    ["overview", "Terminal throughput (moves)"],
+    ["overview", "Hourly equipment availability"],
     ["equipment", "Equipment fleet"],
     ["incidents", "Incident exploration"],
     ["live-demo", "Live Demo"],
@@ -77,7 +77,7 @@ describe("route accessibility", () => {
 
     expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
     if (route === "overview") {
-      expect(screen.getByRole("img", { name: /hourly availability trend/i })).toBeInTheDocument();
+      expect(screen.getByRole("img", { name: /Hourly equipment availability chart/i })).toBeInTheDocument();
     }
     if (route === "equipment") {
       expect(screen.getByRole("table", { name: "Equipment fleet" })).toBeInTheDocument();

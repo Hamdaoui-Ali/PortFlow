@@ -86,10 +86,12 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .analysis-empty strong { color: var(--ink); font-size: 14px; }
 .analysis-empty-line { width: 100%; height: 1px; margin-bottom: 4px; background: repeating-linear-gradient(90deg, var(--border) 0 8px, transparent 8px 14px); }
 .availability-trend { min-width: 0; }
-.trend-chart { display: flex; height: 124px; align-items: end; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.trend-point { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; height: 100%; flex: 1; align-items: end; justify-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
+.trend-plot { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: stretch; gap: 8px; }
+.trend-axis { display: flex; height: 124px; flex-direction: column; justify-content: space-between; padding: 2px 0 25px; color: var(--muted); font-size: 10px; line-height: 1; text-align: right; }
+.trend-chart { display: flex; height: 124px; align-items: stretch; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.trend-point { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; height: 100%; flex: 1; align-items: end; justify-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
 .trend-bar-track { display: flex; min-width: 0; width: 100%; max-width: 22px; height: 100%; align-items: end; background: var(--pale-blue); }
-.trend-bar { width: 100%; min-height: 2px; background: var(--teal); }
+.trend-bar { width: 100%; background: var(--teal); }
 .trend-label-hidden { display: none; }
 .trend-label-visible { white-space: nowrap; }
 .trend-point:first-child .trend-label-visible { transform: translateX(50%); }
@@ -322,7 +324,8 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .kpi-item:nth-child(n+3) { border-top: 1px solid var(--border); }
   .kpi-value { font-size: clamp(25px, 8vw, 34px); }
   .overview-analysis { grid-template-columns: 1fr; gap: 24px; margin: 36px 0; }
-  .trend-chart { gap: 6px; }
+  .trend-plot { grid-template-columns: 32px minmax(0, 1fr); gap: 6px; }
+  .trend-chart { gap: 2px; }
   .availability-panel { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 26px 0; }
   .availability-icon { width: 42px; height: 42px; }
   .equipment-page-header { margin-bottom: 24px; }

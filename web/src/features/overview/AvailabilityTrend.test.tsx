@@ -17,7 +17,7 @@ describe("AvailabilityTrend", () => {
   it("shows readable checkpoint labels while retaining every hourly point", () => {
     render(<AvailabilityTrend events={events} />);
 
-    const chart = screen.getByRole("img", { name: /hourly availability trend/i });
+    const chart = screen.getByRole("img", { name: /hourly equipment availability chart/i });
     const labels = within(chart).getAllByText(/^\d{2}:00$/);
     const visibleLabels = labels.filter((label) => label.classList.contains("trend-label-visible"));
 
@@ -31,5 +31,21 @@ describe("AvailabilityTrend", () => {
       "20:00",
       "23:00",
     ]);
+    expect(screen.getByText("100%")).toBeVisible();
+    expect(screen.getByText("50%")).toBeVisible();
+    expect(screen.getByText("0%")).toBeVisible();
+  });
+
+  it("renders zero availability with zero-height bars", () => {
+    const unavailableEvents = events.map((event) => ({ ...event, available: false }));
+    render(<AvailabilityTrend events={unavailableEvents} />);
+
+    const chart = screen.getByRole("img", { name: /ranged from 0.0% to 0.0%/i });
+    const bars = chart.querySelectorAll<HTMLElement>(".trend-bar");
+
+    expect(bars).toHaveLength(24);
+    for (const bar of bars) {
+      expect(bar).toHaveStyle({ height: "0%" });
+    }
   });
 });
