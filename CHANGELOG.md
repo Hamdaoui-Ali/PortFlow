@@ -1,5 +1,23 @@
 # Changelog
 
+## PF-115 Equipment detail context - 2026-09-22
+
+The PF-115 implementation adds diagnostic context to a selected equipment
+record while keeping PortFlow a static snapshot product.
+
+- Equipment detail now derives a deterministic activity timeline from the
+  existing replay events, collapsing adjacent duplicate states without
+  mutating published data.
+- Related incidents are filtered to the selected equipment, sorted newest
+  first, and linked to the existing incident detail route.
+- Absent, empty, unavailable, malformed, and no-match data states remain
+  explicit instead of being presented as healthy or complete history.
+- Responsive context sections, keyboard-reachable links, UTC timestamps, and
+  reliable return-focus behavior are covered by the frontend tests.
+
+The feature adds no endpoint, polling loop, public-data schema change, cloud
+dependency, or live operational claim.
+
 ## PF-108 Databricks result comparison - 2026-09-21
 
 PortFlow now includes a local, credential-free comparator for an operator-supplied
