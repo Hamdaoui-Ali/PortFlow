@@ -1,7 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { IncidentDatasetState, IncidentRecordV1, SnapshotV1 } from "../../data/schema";
+import type {
+  EquipmentRecordV1,
+  IncidentDatasetState,
+  IncidentRecordV1,
+  SnapshotV1,
+} from "../../data/schema";
 import { App } from "../../app/App";
 
 const records: IncidentRecordV1[] = [
@@ -26,6 +31,19 @@ const records: IncidentRecordV1[] = [
     terminal_id: "TM-001",
   },
 ];
+
+const equipmentRecord: EquipmentRecordV1 = {
+  alarm_count: 3,
+  availability: 0.9444444444444444,
+  available: true,
+  current_state: "ACTIVE",
+  downtime_minutes: 80,
+  equipment_id: "QC-001",
+  mtbf_hours: 24,
+  mttr_minutes: 30,
+  terminal_id: "TM-001",
+  utilization: 0.7426470588235294,
+};
 
 const snapshot = {
   manifest: {
@@ -87,6 +105,28 @@ describe("IncidentPage", () => {
     expect(await screen.findByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("link", { name: "inc-000001" })));
     expect(window.history.state?.incidentDetail).toBeUndefined();
+  });
+
+  it("passes equipment context to the selected incident and preserves native navigation", async () => {
+    render(
+      <App
+        loadData={() => Promise.resolve({
+          ...snapshot,
+          equipment: { status: "ready", records: [equipmentRecord] },
+        })}
+      />,
+    );
+
+    fireEvent.click(await screen.findByRole("link", { name: "inc-000001" }));
+    expect(await screen.findByRole("heading", { name: "Equipment context" })).toBeInTheDocument();
+    const equipmentLink = screen.getByRole("link", { name: "Open equipment QC-001" });
+    expect(equipmentLink).toHaveAttribute("href", "?equipment=QC-001#equipment");
+    expect(fireEvent.click(equipmentLink)).toBe(true);
+
+    window.history.pushState({}, "", equipmentLink.getAttribute("href")!);
+    window.dispatchEvent(new Event("hashchange"));
+
+    expect(await screen.findByRole("heading", { name: "QC-001" })).toBeInTheDocument();
   });
 
   it.each([
