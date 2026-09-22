@@ -4,7 +4,7 @@
 
 **Goal:** Add deterministic replay activity and related incident context to the selected equipment detail view without changing the public snapshot contract.
 
-**Architecture:** Keep all derivation in pure TypeScript helpers. `EquipmentDetail` derives view models from the optional replay and incident datasets, and a focused `EquipmentContext` component renders explicit ready, empty, absent, unavailable, malformed, and no-match states. `App` and `EquipmentPage` only thread existing snapshot data through; no API, polling, schema, or dependency change is introduced.
+**Architecture:** Keep all derivation in pure TypeScript helpers. `EquipmentDetail` derives view models from the optional replay and incident datasets, and a focused `EquipmentContextPanel` component renders explicit ready, empty, absent, unavailable, malformed, and no-match states. `App` and `EquipmentPage` only thread existing snapshot data through; no API, polling, schema, or dependency change is introduced.
 
 **Tech Stack:** React 19, TypeScript, Vitest, Testing Library, existing CSS, Zod-validated `SnapshotV1` data.
 
@@ -119,16 +119,16 @@ git commit -m "feat: derive equipment detail context"
 ### Task 2: Render accessible context states
 
 **Files:**
-- Create: `web/src/features/equipment/EquipmentContext.tsx`
+- Create: `web/src/features/equipment/EquipmentContextPanel.tsx`
 - Test: `web/src/features/equipment/EquipmentContext.test.tsx`
 
 **Interfaces:**
 - Consumes: `EquipmentActivityView` and `EquipmentIncidentView` from Task 1.
-- Produces: `EquipmentContext({ activity, incidents })`, with headings `Equipment activity` and `Related incidents` and keyboard-reachable incident links.
+- Produces: `EquipmentContextPanel({ activity, incidents })`, with headings `Equipment activity` and `Related incidents` and keyboard-reachable incident links.
 
 - [ ] **Step 1: Write the failing component tests**
 
-Render `EquipmentContext` with each view-model status. Assert these exact messages:
+Render `EquipmentContextPanel` with each view-model status. Assert these exact messages:
 
 ```ts
 expect(screen.getByRole("heading", { name: "Equipment activity" })).toBeInTheDocument();
@@ -167,7 +167,7 @@ Expected: all state and accessibility assertions pass with no type errors.
 - [ ] **Step 5: Commit the presentation slice**
 
 ```text
-git add web/src/features/equipment/EquipmentContext.tsx web/src/features/equipment/EquipmentContext.test.tsx
+git add web/src/features/equipment/EquipmentContextPanel.tsx web/src/features/equipment/EquipmentContext.test.tsx
 git commit -m "feat: render equipment context states"
 ```
 

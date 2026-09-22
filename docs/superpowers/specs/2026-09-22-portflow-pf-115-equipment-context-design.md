@@ -1,7 +1,7 @@
 # PF-115 Equipment Detail Context Design
 
-**Date:** 2026-09-22  
-**Parent:** PF-114 Snapshot Freshness  
+**Date:** 2026-09-22
+**Parent:** PF-114 Snapshot Freshness
 **Status:** Approved for implementation under the standing PortFlow workflow
 
 ## Problem
@@ -66,8 +66,8 @@ Use the existing `IncidentDatasetState` union and filter only `status: "ready"` 
 ## Component boundaries
 
 - `web/src/features/equipment/equipmentContext.ts`: pure derivation and formatting-safe view models; no React or browser APIs.
-- `web/src/features/equipment/EquipmentContext.tsx`: accessible activity and related-incident sections; owns only presentation of the derived states.
-- `web/src/features/equipment/EquipmentDetail.tsx`: composes the existing metric list with `EquipmentContext` and passes the selected equipment id.
+- `web/src/features/equipment/EquipmentContextPanel.tsx`: accessible activity and related-incident sections; owns only presentation of the derived states.
+- `web/src/features/equipment/EquipmentDetail.tsx`: composes the existing metric list with `EquipmentContextPanel` and passes the selected equipment id.
 - `web/src/features/equipment/EquipmentPage.tsx`: passes optional replay and incident datasets when rendering the selected detail.
 - `web/src/app/App.tsx`: supplies `snapshot.event_replay` and `snapshot.incidents` to the equipment route.
 - `web/src/styles.css`: adds responsive context-section styles using the existing visual language and no new dependency.
