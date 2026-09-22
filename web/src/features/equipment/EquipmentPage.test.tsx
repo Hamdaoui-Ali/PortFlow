@@ -147,6 +147,46 @@ describe("EquipmentPage", () => {
     expect(new URLSearchParams(window.location.search).has("equipment")).toBe(false);
   });
 
+  it("passes snapshot activity and incidents to the selected equipment detail", async () => {
+    const contextSnapshot: SnapshotV1 = {
+      ...snapshot,
+      event_replay: [
+        {
+          available: true,
+          equipment_id: "QC-001",
+          event_id: "evt-000001",
+          event_timestamp: "2026-09-02T02:00:00Z",
+          state: "ACTIVE",
+          terminal_id: "TM-001",
+        },
+      ],
+      incidents: {
+        status: "ready",
+        records: [
+          {
+            equipment_id: "QC-001",
+            incident_id: "inc-000002",
+            opened_at: "2026-09-02T02:15:00Z",
+            resolved_at: null,
+            root_cause: "Motor overload",
+            severity: "CRITICAL",
+            status: "OPEN",
+            terminal_id: "TM-001",
+          },
+        ],
+      },
+    };
+
+    window.history.replaceState({}, "", "/?equipment=QC-001#equipment");
+    render(<App loadData={() => Promise.resolve(contextSnapshot)} />);
+
+    expect(await screen.findByRole("heading", { name: "Equipment activity" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "inc-000002" })).toHaveAttribute(
+      "href",
+      "?incident=inc-000002#incidents",
+    );
+  });
+
   it("restores URL-selected detail on browser navigation", async () => {
     renderEquipment();
     await screen.findByRole("table", { name: "Equipment fleet" });

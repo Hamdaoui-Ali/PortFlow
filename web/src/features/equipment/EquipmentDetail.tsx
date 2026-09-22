@@ -1,8 +1,19 @@
-import type { EquipmentRecordV1 } from "../../data/schema";
+import type {
+  EquipmentRecordV1,
+  IncidentDatasetState,
+  ReplayEventV1,
+} from "../../data/schema";
+import { EquipmentContextPanel } from "./EquipmentContextPanel";
+import {
+  deriveEquipmentActivity,
+  deriveEquipmentIncidents,
+} from "./equipmentContext";
 
 interface EquipmentDetailProps {
   record: EquipmentRecordV1;
   onBack: () => void;
+  replayEvents?: ReplayEventV1[];
+  incidentDataset?: IncidentDatasetState;
 }
 
 function formatPercentage(value: number | null): string {
@@ -14,7 +25,12 @@ function formatMetric(value: number | null, unit: "min" | "hr"): string {
   return `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}`;
 }
 
-export function EquipmentDetail({ record, onBack }: EquipmentDetailProps) {
+export function EquipmentDetail({
+  record,
+  onBack,
+  replayEvents,
+  incidentDataset,
+}: EquipmentDetailProps) {
   const details = [
     ["Terminal", record.terminal_id],
     ["State", record.current_state],
@@ -25,6 +41,8 @@ export function EquipmentDetail({ record, onBack }: EquipmentDetailProps) {
     ["MTTR", formatMetric(record.mttr_minutes, "min")],
     ["MTBF", formatMetric(record.mtbf_hours, "hr")],
   ] as const;
+  const activity = deriveEquipmentActivity(replayEvents, record.equipment_id);
+  const incidents = deriveEquipmentIncidents(incidentDataset, record.equipment_id);
 
   return (
     <section className="equipment-detail" aria-labelledby="equipment-detail-title">
@@ -41,6 +59,7 @@ export function EquipmentDetail({ record, onBack }: EquipmentDetailProps) {
           </div>
         ))}
       </dl>
+      <EquipmentContextPanel activity={activity} incidents={incidents} />
     </section>
   );
 }

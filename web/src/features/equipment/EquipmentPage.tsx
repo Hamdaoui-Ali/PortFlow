@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { AppFilters } from "../../app/AppShell";
-import type { EquipmentDatasetState } from "../../data/schema";
+import type {
+  EquipmentDatasetState,
+  IncidentDatasetState,
+  ReplayEventV1,
+} from "../../data/schema";
 import { EquipmentDetail } from "./EquipmentDetail";
 import { EquipmentTable } from "./EquipmentTable";
 import { filterEquipment, type EquipmentSortColumn } from "./equipmentTableData";
@@ -14,11 +18,18 @@ import {
 interface EquipmentPageProps {
   dataset: EquipmentDatasetState;
   filters: AppFilters;
+  replayEvents?: ReplayEventV1[];
+  incidentDataset?: IncidentDatasetState;
 }
 
 const equipmentUrlKeys = ["search", "sort", "direction", "equipment"] as const;
 
-export function EquipmentPage({ dataset, filters }: EquipmentPageProps) {
+export function EquipmentPage({
+  dataset,
+  filters,
+  replayEvents,
+  incidentDataset,
+}: EquipmentPageProps) {
   const [urlState, setUrlState] = useState(() => readEquipmentUrlState(window.location.search));
   const returnFocusId = useRef<string | null>(null);
 
@@ -75,7 +86,14 @@ export function EquipmentPage({ dataset, filters }: EquipmentPageProps) {
   }
 
   if (selectedRecord) {
-    return <EquipmentDetail record={selectedRecord} onBack={returnToFleet} />;
+    return (
+      <EquipmentDetail
+        record={selectedRecord}
+        replayEvents={replayEvents}
+        incidentDataset={incidentDataset}
+        onBack={returnToFleet}
+      />
+    );
   }
 
   const visibleRecords = filterEquipment(dataset.records, urlState.query, filters.terminal);
