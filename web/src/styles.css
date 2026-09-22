@@ -11,7 +11,9 @@
   --pale-blue: #edf4ff;
   --cobalt: #064fc4;
   --teal: #079a98;
+  --teal-ink: #006563;
   --warning: #b87900;
+  --warning-ink: #805000;
   --danger: #d92332;
   --focus: #064fc4;
 }
@@ -44,8 +46,8 @@ a { color: inherit; }
 .snapshot-freshness-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
 .snapshot-freshness-message, .snapshot-freshness time { color: var(--muted); }
 .snapshot-freshness time { font-variant-numeric: tabular-nums; }
-.snapshot-freshness-healthy .snapshot-freshness-label { color: var(--teal); }
-.snapshot-freshness-stale .snapshot-freshness-label { color: var(--warning); }
+.snapshot-freshness-healthy .snapshot-freshness-label { color: var(--teal-ink); }
+.snapshot-freshness-stale .snapshot-freshness-label { color: var(--warning-ink); }
 .snapshot-freshness-invalid .snapshot-freshness-label, .snapshot-freshness-unavailable .snapshot-freshness-label { color: var(--danger); }
 .snapshot-freshness-loading .snapshot-freshness-label { color: var(--muted); }
 .filter-band { display: flex; align-items: end; gap: 14px; padding: 0 clamp(24px, 4vw, 52px) 18px; }
