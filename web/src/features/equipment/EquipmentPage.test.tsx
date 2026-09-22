@@ -223,6 +223,7 @@ describe("EquipmentPage", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Open equipment QC-001" }));
     const incidentLink = await screen.findByRole("link", { name: "inc-000002" });
     expect(incidentLink).toHaveAttribute("href", "?incident=inc-000002#incidents");
+    expect(fireEvent.click(incidentLink)).toBe(true);
     window.history.pushState({}, "", incidentLink.getAttribute("href")!);
     window.dispatchEvent(new Event("hashchange"));
 
