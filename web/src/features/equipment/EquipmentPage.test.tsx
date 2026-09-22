@@ -173,7 +173,9 @@ describe("EquipmentPage", () => {
 
     rerender(<App loadData={() => Promise.reject(new Error("network down"))} />);
 
-    const warning = await screen.findByRole("status", { name: "Showing last valid snapshot" });
+    const warning = await screen.findByRole("note", { name: "Refresh details" });
+    expect(screen.getByRole("status", { name: "Snapshot freshness" }))
+      .toHaveTextContent("Showing last valid snapshot");
     const fleetHeading = screen.getByRole("heading", { name: "Equipment fleet" });
     expect(warning.compareDocumentPosition(fleetHeading) & Node.DOCUMENT_POSITION_FOLLOWING)
       .toBeTruthy();

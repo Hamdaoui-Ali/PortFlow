@@ -4,12 +4,13 @@ import type { SnapshotFetch } from "../data/loadSnapshot";
 import { snapshotCache } from "../data/cache";
 import { SnapshotLoadError, type SnapshotFailureKind } from "../data/errors";
 import type { SnapshotV1 } from "../data/schema";
+import { deriveHealthViewModel } from "../features/health/healthPresentation";
 import { DataHealthPage } from "../features/health/DataHealthPage";
 import { EquipmentPage } from "../features/equipment/EquipmentPage";
 import { IncidentPage } from "../features/incidents/IncidentPage";
 import { LiveDemoPage } from "../features/replay/LiveDemoPage";
 import { OverviewPage } from "../features/overview/OverviewPage";
-import { AppShell, useAppFilters, type AppFilters } from "./AppShell";
+import { AppShell, useAppFilters, type AppFilters, type SnapshotHeaderStatus } from "./AppShell";
 
 interface AppProps {
   loadData?: (fetcher?: SnapshotFetch, baseUrl?: string) => Promise<SnapshotV1>;
@@ -23,6 +24,8 @@ type SnapshotState =
 
 type AppRoute = "data-health" | "equipment" | "incidents" | "live-demo" | "overview";
 
+const MAX_TIMEOUT_DELAY_MS = 2_147_000_000;
+
 export async function loadDefaultSnapshot(
   fetcher?: SnapshotFetch,
   baseUrl?: string,
@@ -34,6 +37,7 @@ export async function loadDefaultSnapshot(
 export function App({ loadData = loadDefaultSnapshot }: AppProps) {
   const [snapshotState, setSnapshotState] = useState<SnapshotState>({ status: "loading" });
   const [route, setRoute] = useState<AppRoute>(readRoute);
+  const [freshnessNow, setFreshnessNow] = useState(() => new Date());
 
   useEffect(() => {
     let active = true;
@@ -63,22 +67,103 @@ export function App({ loadData = loadDefaultSnapshot }: AppProps) {
     return () => window.removeEventListener("hashchange", updateRoute);
   }, []);
 
+  useEffect(() => {
+    if (snapshotState.status !== "ready") return;
+
+    const evaluatedAt = new Date();
+    setFreshnessNow(evaluatedAt);
+    const health = deriveHealthViewModel(
+      snapshotState.snapshot.manifest,
+      snapshotState.snapshot.quality ?? { status: "absent" },
+      evaluatedAt,
+    );
+    if (health.status !== "healthy") return;
+
+    const staleAt = Date.parse(health.generatedAt) + health.staleAfterMs + 1;
+    let timeout: number | undefined;
+    const refreshAtStaleBoundary = () => {
+      const remainingMs = staleAt - Date.now();
+      if (remainingMs <= 0) {
+        setFreshnessNow(new Date());
+        return;
+      }
+      timeout = window.setTimeout(
+        refreshAtStaleBoundary,
+        Math.min(remainingMs, MAX_TIMEOUT_DELAY_MS),
+      );
+    };
+
+    refreshAtStaleBoundary();
+    return () => {
+      if (timeout !== undefined) window.clearTimeout(timeout);
+    };
+  }, [snapshotState]);
+
   return (
-    <AppShell onNavigate={(hash) => setRoute(readRoute(hash))}>
+    <AppShell
+      onNavigate={(hash) => setRoute(readRoute(hash))}
+      snapshotStatus={deriveSnapshotHeaderStatus(snapshotState, freshnessNow)}
+    >
       <AppContent route={route} snapshotState={snapshotState} />
     </AppShell>
   );
+}
+
+function deriveSnapshotHeaderStatus(snapshotState: SnapshotState, now: Date): SnapshotHeaderStatus {
+  if (snapshotState.status === "loading") {
+    return {
+      kind: "loading",
+      label: "Loading snapshot",
+      message: "Fetching published operational data.",
+    };
+  }
+
+  if (snapshotState.status === "error") {
+    return {
+      kind: "unavailable",
+      label: "Snapshot unavailable",
+      message: failureDescription(snapshotState.kind),
+    };
+  }
+
+  const { snapshot } = snapshotState;
+  if (snapshotState.status === "stale") {
+    return {
+      kind: "stale",
+      label: "Showing last valid snapshot",
+      message: "Using saved data after the latest refresh failed.",
+      generatedAt: snapshot.manifest.generated_at,
+    };
+  }
+
+  const health = deriveHealthViewModel(
+    snapshot.manifest,
+    snapshot.quality ?? { status: "absent" },
+    now,
+  );
+  const label = {
+    healthy: "Current snapshot",
+    stale: "Stale snapshot",
+    invalid: "Snapshot needs attention",
+  }[health.status];
+
+  return {
+    kind: health.status,
+    label,
+    message: health.message,
+    generatedAt: health.generatedAt,
+  };
 }
 
 function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: SnapshotState }) {
   const filters = useAppFilters();
 
   if (snapshotState.status === "loading") {
-    return <p className="data-state" role="status">Loading operational snapshot</p>;
+    return <p className="data-state">Loading operational snapshot</p>;
   }
   if (snapshotState.status === "error") {
     return (
-      <div className="data-state data-state-error" role="alert">
+      <div className="data-state data-state-error">
         <h2>{failureHeading(snapshotState.kind)}</h2>
         <p>{failureDescription(snapshotState.kind)}</p>
       </div>
@@ -87,8 +172,8 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
 
   const { snapshot } = snapshotState;
   const staleNotice = snapshotState.status === "stale" ? (
-    <div className="data-state data-state-warning stale-notice" role="status" aria-label="Showing last valid snapshot">
-      <h2>Showing last valid snapshot</h2>
+    <div className="data-state data-state-warning stale-notice" role="note" aria-label="Refresh details">
+      <h2>Refresh issue</h2>
       <p>{failureDescription(snapshotState.kind)} New data will appear when the published snapshot recovers.</p>
     </div>
   ) : null;

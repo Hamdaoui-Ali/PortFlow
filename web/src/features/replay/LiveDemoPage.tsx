@@ -53,7 +53,7 @@ export function LiveDemoPage({ events, overview }: LiveDemoPageProps) {
 
   return (
     <LiveDemoFrame>
-      <div className="replay-status" role="status" aria-live="polite">{statusText}</div>
+      <div className="replay-status" role="status" aria-live="polite" aria-label="Replay status">{statusText}</div>
       <ReplayControls
         status={state.status}
         speed={state.speed}

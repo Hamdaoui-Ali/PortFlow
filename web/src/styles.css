@@ -11,7 +11,9 @@
   --pale-blue: #edf4ff;
   --cobalt: #064fc4;
   --teal: #079a98;
+  --teal-ink: #006563;
   --warning: #b87900;
+  --warning-ink: #805000;
   --danger: #d92332;
   --focus: #064fc4;
 }
@@ -39,7 +41,15 @@ a { color: inherit; }
 .eyebrow { margin: 0 0 7px; color: var(--cobalt); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .title-region h1 { margin: 0; font-size: clamp(24px, 2.2vw, 32px); line-height: 1.12; letter-spacing: -0.035em; }
 .simulation-note { margin: 0; color: var(--muted); font-size: 13px; font-weight: 500; }
-.header-status { display: flex; align-items: center; gap: 7px; color: var(--teal); font-size: 12px; font-weight: 700; }
+.header-context { display: grid; max-width: 620px; justify-items: end; gap: 8px; text-align: right; }
+.snapshot-freshness { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px; margin: 0; font-size: 13px; line-height: 1.4; }
+.snapshot-freshness-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.snapshot-freshness-message, .snapshot-freshness time { color: var(--muted); }
+.snapshot-freshness time { font-variant-numeric: tabular-nums; }
+.snapshot-freshness-healthy .snapshot-freshness-label { color: var(--teal-ink); }
+.snapshot-freshness-stale .snapshot-freshness-label { color: var(--warning-ink); }
+.snapshot-freshness-invalid .snapshot-freshness-label, .snapshot-freshness-unavailable .snapshot-freshness-label { color: var(--danger); }
+.snapshot-freshness-loading .snapshot-freshness-label { color: var(--muted); }
 .filter-band { display: flex; align-items: end; gap: 14px; padding: 0 clamp(24px, 4vw, 52px) 18px; }
 .filter-control { display: grid; min-width: 210px; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 700; }
 .filter-control > span { display: flex; align-items: center; gap: 6px; }
@@ -314,6 +324,8 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .mobile-brand-row .brand img { width: 30px; height: 30px; }
   .title-region { display: block; min-height: auto; padding: 24px 20px 20px; }
   .simulation-note { margin-top: 14px; }
+  .header-context { justify-items: start; text-align: left; }
+  .snapshot-freshness { justify-content: flex-start; }
   .filter-band { display: grid; grid-template-columns: 1fr 1fr; align-items: start; padding: 0 20px 18px; }
   .filter-control { min-width: 0; }
   .filter-summary { grid-column: 1 / -1; margin: 2px 0 0; }

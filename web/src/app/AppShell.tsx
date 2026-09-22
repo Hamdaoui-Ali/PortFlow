@@ -37,6 +37,14 @@ const rangeOptions = [
 interface AppShellProps {
   children: ReactNode;
   onNavigate?: (hash: string) => void;
+  snapshotStatus: SnapshotHeaderStatus;
+}
+
+export interface SnapshotHeaderStatus {
+  kind: "healthy" | "stale" | "invalid" | "loading" | "unavailable";
+  label: string;
+  message: string;
+  generatedAt?: string;
 }
 
 export interface AppFilters {
@@ -55,7 +63,7 @@ function readFilter(name: string, fallback: string): string {
   return new URLSearchParams(window.location.search).get(name) ?? fallback;
 }
 
-export function AppShell({ children, onNavigate }: AppShellProps) {
+export function AppShell({ children, onNavigate, snapshotStatus }: AppShellProps) {
   const mainRef = useRef<HTMLElement>(null);
   const routeFocusTimerRef = useRef<number | null>(null);
   const clickNavigationRef = useRef(false);
@@ -157,14 +165,16 @@ export function AppShell({ children, onNavigate }: AppShellProps) {
               <img src={`${import.meta.env.BASE_URL}brand/portflow-mark.png`} alt="" />
               <span>{APP_NAME}</span>
             </a>
-            <span className="header-status"><CheckCircle2 size={15} aria-hidden="true" /> Healthy snapshot</span>
           </div>
           <div className="title-region">
             <div>
               <p className="eyebrow">Operations overview</p>
               <h1>Terminal Operations Control Tower</h1>
             </div>
-            <p className="simulation-note">Simulated terminal operations data</p>
+            <div className="header-context">
+              <p className="simulation-note">Simulated terminal operations data</p>
+              <SnapshotFreshnessStatus status={snapshotStatus} />
+            </div>
           </div>
           <div className="filter-band" aria-label="Global filters">
             <label className="filter-control">
@@ -190,6 +200,41 @@ export function AppShell({ children, onNavigate }: AppShellProps) {
       </div>
     </AppFiltersContext.Provider>
   );
+}
+
+function SnapshotFreshnessStatus({ status }: { status: SnapshotHeaderStatus }) {
+  const StatusIcon = status.kind === "healthy"
+    ? CheckCircle2
+    : status.kind === "loading"
+      ? Activity
+      : AlertTriangle;
+
+  return (
+    <p className={`snapshot-freshness snapshot-freshness-${status.kind}`} role="status" aria-label="Snapshot freshness">
+      <span className="snapshot-freshness-label">
+        <StatusIcon size={15} aria-hidden="true" />
+        <strong>{status.label}</strong>
+      </span>
+      <span className="snapshot-freshness-message">{status.message}</span>
+      {status.generatedAt ? (
+        <time dateTime={status.generatedAt}>Updated {formatUtcTimestamp(status.generatedAt)}</time>
+      ) : null}
+    </p>
+  );
+}
+
+function formatUtcTimestamp(value: string): string {
+  const formatted = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "UTC",
+  }).format(new Date(value));
+
+  return `${formatted} UTC`;
 }
 
 function Navigation({
