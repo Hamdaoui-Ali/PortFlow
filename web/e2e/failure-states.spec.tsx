@@ -195,9 +195,9 @@ describe("frontend failure-state fixtures", () => {
     const failures: SnapshotLoadError[] = [];
     render(<App loadData={loadThroughApp(createFetcher({ "manifest.json": new Error("network down") }), failures)} />);
 
-    await screen.findByText("Using saved data after the latest refresh failed.");
-    expect(screen.getByRole("status", { name: "Snapshot freshness" }))
-      .toHaveTextContent("Showing last valid snapshot");
+    const freshnessStatus = await screen.findByRole("status", { name: "Snapshot freshness" });
+    await within(freshnessStatus).findByText("Using saved data after the latest refresh failed.");
+    expect(freshnessStatus).toHaveTextContent("Showing last valid snapshot");
     expect(screen.getByText("120 moves")).toBeInTheDocument();
     expect(failures[0]?.kind).toBe("unavailable");
   });
@@ -207,9 +207,9 @@ describe("frontend failure-state fixtures", () => {
     snapshotCache.set(cached);
     const failingLoad = loadThroughApp(createFetcher({ "manifest.json": new Error("network down") }));
     const { rerender } = render(<App loadData={failingLoad} />);
-    await screen.findByText("Using saved data after the latest refresh failed.");
-    expect(screen.getByRole("status", { name: "Snapshot freshness" }))
-      .toHaveTextContent("Showing last valid snapshot");
+    const freshnessStatus = await screen.findByRole("status", { name: "Snapshot freshness" });
+    await within(freshnessStatus).findByText("Using saved data after the latest refresh failed.");
+    expect(freshnessStatus).toHaveTextContent("Showing last valid snapshot");
 
     const replacement = { ...overview, throughput: 987 };
     rerender(<App loadData={loadThroughApp(createFetcher(fullFixtures(manifest({ snapshot_id: "replacement" }), replacement)))} />);
