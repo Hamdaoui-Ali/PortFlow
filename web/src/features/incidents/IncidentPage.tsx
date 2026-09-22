@@ -38,8 +38,10 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
   }, [filters.range, filters.terminal, urlState]);
 
   useLayoutEffect(() => {
-    if (!urlState.incidentId && returnFocusId.current) {
-      const returnTarget = document.getElementById(`incident-link-${returnFocusId.current}`);
+    if (!urlState.incidentId) {
+      const returnTarget = returnFocusId.current
+        ? document.getElementById(`incident-link-${returnFocusId.current}`)
+        : null;
       (returnTarget ?? document.getElementById("incident-page-title"))?.focus();
       returnFocusId.current = null;
     }
