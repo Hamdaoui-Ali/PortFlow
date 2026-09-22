@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, loadDefaultSnapshot } from "./App";
@@ -47,8 +47,60 @@ const snapshot = {
 
 describe("App", () => {
   afterEach(() => {
+    vi.useRealTimers();
     window.history.replaceState({}, "", "/");
     snapshotCache.clear();
+  });
+
+  it("shows current snapshot status and its UTC generation time across routes", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-03T23:55:02Z"));
+    render(<App loadData={() => Promise.resolve(snapshot)} />);
+    await act(async () => { await Promise.resolve(); });
+
+    const status = screen.getByRole("status", { name: "Snapshot freshness" });
+    expect(status).toHaveTextContent("Current snapshot");
+    expect(status).toHaveTextContent("Data is healthy and current.");
+    expect(status.querySelector("time")).toHaveAttribute("datetime", "2026-09-02T23:55:02Z");
+    expect(status).toHaveTextContent("UTC");
+
+    fireEvent.click(screen.getAllByRole("link", { name: "Equipment" })[0]);
+    act(() => vi.runOnlyPendingTimers());
+
+    expect(screen.getByRole("heading", { name: "Equipment dataset not published" })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Current snapshot");
+  });
+
+  it("shows stale ready snapshots instead of claiming they are healthy", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-04T23:55:02.001Z"));
+    render(<App loadData={() => Promise.resolve(snapshot)} />);
+    await act(async () => { await Promise.resolve(); });
+
+    const status = screen.getByRole("status", { name: "Snapshot freshness" });
+    expect(status).toHaveTextContent("Stale snapshot");
+    expect(status).toHaveTextContent("Data is healthy but stale.");
+  });
+
+  it("flags unavailable quality evidence in the shared snapshot status", async () => {
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      quality: { status: "unavailable" as const },
+    })} />);
+    await act(async () => { await Promise.resolve(); });
+
+    const status = screen.getByRole("status", { name: "Snapshot freshness" });
+    expect(status).toHaveTextContent("Snapshot needs attention");
+    expect(status).toHaveTextContent("Quality evidence is unavailable.");
+    expect(status.querySelector("time")).toHaveAttribute("datetime", "2026-09-02T23:55:02Z");
+  });
+
+  it("shows loading status without inventing snapshot metadata", () => {
+    render(<App loadData={() => new Promise(() => undefined)} />);
+
+    const status = screen.getByRole("status", { name: "Snapshot freshness" });
+    expect(status).toHaveTextContent("Loading snapshot");
+    expect(status.querySelector("time")).not.toBeInTheDocument();
   });
 
   it("provides skip navigation and the approved product sections", () => {
@@ -346,6 +398,9 @@ describe("App", () => {
 
     expect(await screen.findByText("Operational snapshot unavailable")).toBeInTheDocument();
     expect(screen.queryByText("0.0%")).not.toBeInTheDocument();
+    const status = screen.getByRole("status", { name: "Snapshot freshness" });
+    expect(status).toHaveTextContent("Snapshot unavailable");
+    expect(status.querySelector("time")).not.toBeInTheDocument();
   });
 
   it("retains the last valid snapshot when the next load fails", async () => {
@@ -358,6 +413,10 @@ describe("App", () => {
 
     expect(await screen.findByRole("status", { name: "Showing last valid snapshot" })).toBeInTheDocument();
     expect(screen.getAllByText("94.4%")).toHaveLength(2);
+    const status = screen.getByRole("status", { name: "Snapshot freshness" });
+    expect(status).toHaveTextContent("Showing last valid snapshot");
+    expect(status).toHaveTextContent("Using saved data after the latest refresh failed.");
+    expect(status.querySelector("time")).toHaveAttribute("datetime", snapshot.manifest.generated_at);
   });
 
   it("loads the default snapshot through the deferred data module", async () => {
