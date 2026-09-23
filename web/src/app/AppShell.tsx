@@ -154,6 +154,7 @@ export function AppShell({ children, onNavigate, snapshotStatus, filterScope }: 
     setTerminal("all");
     setRange("24h");
     updateFilters("all", "24h");
+    scheduleRouteFocus();
   };
 
   const filters = { terminal: selectedTerminal, range: selectedRange };
