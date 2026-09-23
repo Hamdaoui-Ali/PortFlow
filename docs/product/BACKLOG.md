@@ -28,8 +28,8 @@ PF-109 are complete and PortFlow V1 is published. PF-031 is also complete: the
 documented pull-request and green-CI branch-protection rule for `main` is
 configured, with force pushes and deletions disabled. PF-110, PF-111, PF-112,
 PF-113, and PF-114 are also complete through merged post-V1 pull requests.
-PF-115 is the current approved post-V1 slice: finish the equipment detail
-context PR before selecting the next specification.
+PF-116 is the current post-V1 review checkpoint: review and merge the incident
+detail context PR before selecting or starting the next specification.
 
 ## Completed checkpoints
 
