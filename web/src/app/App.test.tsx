@@ -503,7 +503,7 @@ describe("App", () => {
     expect(window.location.search).toBe("");
     expect(screen.getByLabelText("Terminal")).toHaveValue("all");
     expect(screen.getByLabelText("Date range")).toHaveValue("24h");
-    expect(await screen.findByText("94.4%")).toBeInTheDocument();
+    expect(await screen.findAllByText("94.4%")).toHaveLength(2);
   });
 
   it("shows an explicit error without fabricating a KPI", async () => {
