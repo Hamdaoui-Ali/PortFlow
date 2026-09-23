@@ -30,9 +30,10 @@ configured, with force pushes and deletions disabled. PF-110, PF-111, PF-112,
 PF-113, and PF-114 are also complete through merged post-V1 pull requests.
 PF-116 is complete through its merged incident detail context pull requests.
 PF-117 is complete through merged PR #23 (`0984979`). PF-118 is complete
-through merged PR #24 (`a2e0580`). PF-119 is the current post-V1 review
-checkpoint: review and merge the Overview snapshot trust action PR before
-selecting or starting the next specification.
+through merged PR #24 (`a2e0580`). PF-119 is complete through merged PR #25
+(`8cd636d`). PF-120 is the current post-V1 review checkpoint: review and merge
+the published snapshot filter scope PR before selecting or starting the next
+specification.
 
 ## Completed checkpoints
 
@@ -693,6 +694,26 @@ These items are P2 and cannot block V1:
   The implementation uses deterministic open/severity/time/ID ranking, explicit
   optional-dataset states, native links to incident detail, and responsive
   styling without changing the public snapshot contract.
+
+## PF-119 implementation checkpoint
+
+- PF-119: **Complete** - Overview snapshot trust action delivered through
+  merged PR #25 (`8cd636d`). The slice exposes the freshness status and a
+  direct Data Health review action while preserving the static snapshot
+  boundary. Lighthouse browser startup coverage was hardened alongside the
+  feature.
+
+## PF-120 implementation checkpoint
+
+- PF-120: **In review** - published snapshot filter scope disclosure and
+  one-step recovery for unsupported global filter combinations. The design is
+  recorded in
+  `docs/superpowers/specs/2026-09-23-portflow-pf-120-filter-scope-design.md`
+  and the plan in
+  `docs/superpowers/plans/2026-09-23-portflow-pf-120-filter-scope.md`. The
+  implementation derives display labels from the validated snapshot, keeps
+  the filter URL contract intact, and adds responsive, keyboard-accessible
+  reset behavior without changing the public snapshot schema.
 
 
 ## Specification coverage
