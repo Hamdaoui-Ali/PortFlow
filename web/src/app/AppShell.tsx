@@ -13,6 +13,7 @@ import {
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { APP_NAME } from "./constants";
+import type { SnapshotFilterScope } from "./filterScope";
 
 const navItems = [
   { label: "Overview", href: "#overview", icon: Grid2X2 },
@@ -38,6 +39,7 @@ interface AppShellProps {
   children: ReactNode;
   onNavigate?: (hash: string) => void;
   snapshotStatus: SnapshotHeaderStatus;
+  filterScope?: SnapshotFilterScope;
 }
 
 export interface SnapshotHeaderStatus {
@@ -52,9 +54,17 @@ export interface AppFilters {
   range: string;
 }
 
-const AppFiltersContext = createContext<AppFilters>({ terminal: "all", range: "24h" });
+interface AppFiltersContextValue extends AppFilters {
+  resetFilters: () => void;
+}
 
-export function useAppFilters(): AppFilters {
+const AppFiltersContext = createContext<AppFiltersContextValue>({
+  terminal: "all",
+  range: "24h",
+  resetFilters: () => undefined,
+});
+
+export function useAppFilters(): AppFiltersContextValue {
   return useContext(AppFiltersContext);
 }
 
@@ -63,7 +73,7 @@ function readFilter(name: string, fallback: string): string {
   return new URLSearchParams(window.location.search).get(name) ?? fallback;
 }
 
-export function AppShell({ children, onNavigate, snapshotStatus }: AppShellProps) {
+export function AppShell({ children, onNavigate, snapshotStatus, filterScope }: AppShellProps) {
   const mainRef = useRef<HTMLElement>(null);
   const routeFocusTimerRef = useRef<number | null>(null);
   const clickNavigationRef = useRef(false);
@@ -140,10 +150,16 @@ export function AppShell({ children, onNavigate, snapshotStatus }: AppShellProps
     updateFilters(selectedTerminal, value);
   };
 
+  const resetFilters = () => {
+    setTerminal("all");
+    setRange("24h");
+    updateFilters("all", "24h");
+  };
+
   const filters = { terminal: selectedTerminal, range: selectedRange };
 
   return (
-    <AppFiltersContext.Provider value={filters}>
+    <AppFiltersContext.Provider value={{ ...filters, resetFilters }}>
       <div className="app-frame">
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <aside className="desktop-sidebar" aria-label="Sidebar">
@@ -190,6 +206,13 @@ export function AppShell({ children, onNavigate, snapshotStatus }: AppShellProps
               </select>
             </label>
             <p className="filter-summary">Filters apply across operational views <ChevronRight size={15} aria-hidden="true" /></p>
+            {filterScope ? (
+              <p className="filter-scope" role="note" aria-label="Published snapshot scope">
+                <span>Published scope </span>
+                <strong>{filterScope.terminalLabel}</strong>
+                <span> {filterScope.periodLabel}</span>
+              </p>
+            ) : null}
           </div>
         </header>
         <main ref={mainRef} id="main-content" className="content" tabIndex={-1}>
