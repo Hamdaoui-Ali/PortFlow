@@ -1,31 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { IncidentDatasetState, IncidentRecordV1 } from "../../data/schema";
+import type { IncidentDatasetState } from "../../data/schema";
+import { incidentRecords } from "../../test/incidentFixtures";
 import { OverviewIncidentPulse } from "./OverviewIncidentPulse";
 
-const records: IncidentRecordV1[] = [
-  {
-    equipment_id: "QC-001",
-    incident_id: "inc-000001",
-    opened_at: "2026-09-02T03:00:00Z",
-    resolved_at: "2026-09-02T03:30:00Z",
-    root_cause: "Hydraulic leak",
-    severity: "MAJOR",
-    status: "RESOLVED",
-    terminal_id: "TM-001",
-  },
-  {
-    equipment_id: "QC-002",
-    incident_id: "inc-000002",
-    opened_at: "2026-09-02T20:00:00Z",
-    resolved_at: null,
-    root_cause: "Motor overload",
-    severity: "CRITICAL",
-    status: "OPEN",
-    terminal_id: "TM-001",
-  },
-];
+const records = incidentRecords.slice(0, 2);
 
 describe("OverviewIncidentPulse", () => {
   it("renders ranked records with native incident links and visible context", () => {

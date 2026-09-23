@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, loadDefaultSnapshot } from "./App";
 import { snapshotCache } from "../data/cache";
-import type { IncidentRecordV1 } from "../data/schema";
+import { incidentRecords } from "../test/incidentFixtures";
 
 vi.mock("../data/loadSnapshot", () => ({
   loadSnapshot: vi.fn(),
@@ -44,17 +44,6 @@ const snapshot = {
       dbt_test_status: "PASS" as const,
     },
   },
-};
-
-const incidentRecord: IncidentRecordV1 = {
-  equipment_id: "QC-002",
-  incident_id: "inc-000002",
-  opened_at: "2026-09-02T20:00:00Z",
-  resolved_at: null,
-  root_cause: "Motor overload",
-  severity: "CRITICAL",
-  status: "OPEN",
-  terminal_id: "TM-001",
 };
 
 describe("App", () => {
@@ -324,7 +313,7 @@ describe("App", () => {
   it("renders the incident pulse on the Overview route", async () => {
     render(<App loadData={() => Promise.resolve({
       ...snapshot,
-      incidents: { status: "ready" as const, records: [incidentRecord] },
+      incidents: { status: "ready" as const, records: [incidentRecords[1]] },
     })} />);
 
     expect(await screen.findByRole("heading", { name: "Incident pulse" })).toBeInTheDocument();

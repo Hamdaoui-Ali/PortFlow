@@ -1,30 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import type { IncidentDatasetState, IncidentRecordV1 } from "../../data/schema";
+import type { IncidentDatasetState } from "../../data/schema";
+import { incidentRecords, makeIncidentRecord } from "../../test/incidentFixtures";
 import { deriveOverviewIncidentPulse } from "./overviewIncidentPulseData";
 
-const records: IncidentRecordV1[] = [
-  {
-    equipment_id: "QC-001",
-    incident_id: "inc-000001",
-    opened_at: "2026-09-02T03:00:00Z",
+const records = [
+  makeIncidentRecord({
+    ...incidentRecords[0],
     resolved_at: null,
-    root_cause: "Hydraulic leak",
-    severity: "MAJOR",
     status: "OPEN",
-    terminal_id: "TM-001",
-  },
-  {
-    equipment_id: "QC-002",
-    incident_id: "inc-000002",
-    opened_at: "2026-09-02T04:00:00Z",
-    resolved_at: null,
-    root_cause: "Motor overload",
-    severity: "CRITICAL",
-    status: "OPEN",
-    terminal_id: "TM-001",
-  },
-  {
+  }),
+  makeIncidentRecord({ opened_at: "2026-09-02T04:00:00Z" }),
+  makeIncidentRecord({
     equipment_id: "QC-003",
     incident_id: "inc-000003",
     opened_at: "2026-09-02T23:00:00Z",
@@ -33,7 +20,7 @@ const records: IncidentRecordV1[] = [
     severity: "CRITICAL",
     status: "RESOLVED",
     terminal_id: "TM-002",
-  },
+  }),
 ];
 
 describe("deriveOverviewIncidentPulse", () => {
