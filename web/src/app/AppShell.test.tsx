@@ -11,6 +11,7 @@ const readyStatus: SnapshotHeaderStatus = {
 };
 
 const filterScope = {
+  terminalId: "TM-001",
   terminalLabel: "Casablanca Terminal",
   periodLabel: "02 Sept 2026, 00:00–23:55 UTC",
 };
