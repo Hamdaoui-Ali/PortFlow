@@ -281,6 +281,34 @@ describe("App", () => {
     expect(await screen.findAllByText("94.4%")).toHaveLength(2);
   });
 
+  it("renders snapshot equipment context on the Overview route", async () => {
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      equipment: {
+        status: "ready" as const,
+        records: [{
+          alarm_count: 3,
+          availability: 0.8,
+          available: false,
+          current_state: "DOWN",
+          downtime_minutes: 40,
+          equipment_id: "QC-002",
+          mtbf_hours: 24,
+          mttr_minutes: 30,
+          terminal_id: "TM-002",
+          utilization: 0.4,
+        }],
+      },
+    })} />);
+
+    expect(await screen.findByRole("heading", { name: "Equipment pulse" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open equipment QC-002" })).toHaveAttribute(
+      "href",
+      "?equipment=QC-002#equipment",
+    );
+    expect(screen.getByText("80.0%")).toBeInTheDocument();
+  });
+
   it("renders the equipment fleet for the equipment hash route", async () => {
     window.history.replaceState({}, "", "/#equipment");
     render(<App loadData={() => Promise.resolve({

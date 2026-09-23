@@ -224,7 +224,14 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
     );
   }
 
-  return <OverviewPage snapshot={snapshot} filters={filters} staleNotice={staleNotice} />;
+  return (
+    <OverviewPage
+      snapshot={snapshot}
+      equipmentDataset={snapshot.equipment}
+      filters={filters}
+      staleNotice={staleNotice}
+    />
+  );
 }
 
 function readRoute(hash = window.location.hash): AppRoute {
