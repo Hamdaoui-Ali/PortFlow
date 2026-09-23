@@ -1,5 +1,20 @@
 # Changelog
 
+## PF-118 Overview incident pulse - 2026-09-23
+
+Overview now exposes a compact, snapshot-backed incident pulse beside the
+existing equipment context.
+
+- Up to three records are ranked open-first, then by severity, opening instant,
+  and stable incident ID.
+- Each record shows visible severity, lifecycle status, root cause, equipment
+  context, and a native link to the existing incident detail route.
+- Absent, empty, unavailable, and malformed incident datasets remain explicit
+  instead of being presented as a healthy or complete incident history.
+
+The feature adds no endpoint, polling loop, public-data schema change, cloud
+dependency, or live operational claim.
+
 ## PF-117 Overview equipment pulse - 2026-09-23
 
 Overview now exposes a compact, snapshot-backed equipment pulse beneath the

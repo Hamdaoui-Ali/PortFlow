@@ -18,7 +18,7 @@ larger than the baseline so normal copy and fixture changes have room without
 allowing an unbounded regression.
 
 The bundle limit includes the bounded Overview incident pulse introduced by
-PF-118; the feature adds 330 bytes over the previous 400,000-byte guardrail
+PF-118; the feature adds 438 bytes over the previous 400,000-byte guardrail
 after sharing the pulse and incident-row renderers.
 
 ## Runtime budgets
