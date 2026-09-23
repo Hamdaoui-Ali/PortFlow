@@ -19,6 +19,8 @@ interface OverviewPulseSectionProps<T> {
   readonly title: string;
   readonly titleId: string;
   readonly description: string;
+  readonly listClassName: string;
+  readonly resourceName: string;
   readonly renderRecord: (record: T) => ReactNode;
 }
 
@@ -28,11 +30,12 @@ export function OverviewPulseSection<T>({
   title,
   titleId,
   description,
+  listClassName,
+  resourceName,
   renderRecord,
 }: OverviewPulseSectionProps<T>) {
-  const resourceName = title.slice(0, title.indexOf(" "));
   const content = pulse.status === "ready"
-    ? <ul className="equipment-incident-list" aria-label={`${title} records`}>{pulse.records.map(renderRecord)}</ul>
+    ? <ul className={listClassName} aria-label={`${title} records`}>{pulse.records.map(renderRecord)}</ul>
     : <output className="equipment-context-message">{pulseMessage(resourceName, pulse.status)}</output>;
 
   return (

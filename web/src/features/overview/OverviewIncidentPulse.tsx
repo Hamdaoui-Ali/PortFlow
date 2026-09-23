@@ -1,8 +1,6 @@
 import type { IncidentDatasetState, IncidentRecordV1 } from "../../data/schema";
 import { IncidentRecordItem } from "../incidents/IncidentRecordItem";
-import {
-  deriveOverviewIncidentPulse,
-} from "./overviewIncidentPulseData";
+import { deriveOverviewIncidentPulse } from "./overviewIncidentPulseData";
 import { OverviewPulseSection } from "./OverviewPulseSection";
 
 interface OverviewIncidentPulseProps {
@@ -17,6 +15,8 @@ export function OverviewIncidentPulse({ dataset }: OverviewIncidentPulseProps) {
       title="Incident pulse"
       titleId="overview-incident-pulse-title"
       description="Open and highest-severity incidents appear first in this snapshot."
+      listClassName="equipment-incident-list"
+      resourceName="Incident"
       renderRecord={renderIncidentRecord}
     />
   );

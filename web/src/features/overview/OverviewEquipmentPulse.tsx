@@ -17,6 +17,8 @@ export function OverviewEquipmentPulse({ dataset }: OverviewEquipmentPulseProps)
       title="Equipment pulse"
       titleId="overview-equipment-pulse-title"
       description="Unavailable or lower-availability records appear first in this snapshot."
+      listClassName="equipment-activity-list"
+      resourceName="Equipment"
       renderRecord={renderEquipmentRecord}
     />
   );
