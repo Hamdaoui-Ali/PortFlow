@@ -1,5 +1,7 @@
 import path from "node:path";
 
+const LIGHTHOUSE_BROWSER_START_TIMEOUT = 60_000;
+
 export function createLighthouseConfig(environment = process.env) {
   const basePath = environment.VITE_BASE_PATH ?? "/";
   const normalizedBasePath = basePath.endsWith("/") ? basePath : `${basePath}/`;
@@ -18,6 +20,7 @@ export function createLighthouseConfig(environment = process.env) {
       puppeteerLaunchOptions: {
         userDataDir: profileDir,
         args: ["--no-sandbox"],
+        timeout: LIGHTHOUSE_BROWSER_START_TIMEOUT,
       },
       settings: {
         formFactor: "mobile",
