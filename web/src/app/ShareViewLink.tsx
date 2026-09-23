@@ -35,6 +35,7 @@ export function ShareViewLink({
 }: ShareViewLinkProps) {
   const [status, setStatus] = useState<ShareStatus>("idle");
   const statusText = statusMessage(status);
+  const livePoliteness = status === "idle" ? undefined : "polite";
 
   const handleCopy = async () => {
     try {
@@ -51,7 +52,7 @@ export function ShareViewLink({
         <Link2 size={15} aria-hidden="true" />
         <span>Copy view link</span>
       </button>
-      <output className="share-view-link-status" aria-live="polite">{statusText}</output>
+      <output className="share-view-link-status" aria-live={livePoliteness}>{statusText}</output>
     </div>
   );
 }

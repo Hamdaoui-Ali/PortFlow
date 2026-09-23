@@ -13,12 +13,14 @@ describe("ShareViewLink", () => {
       />,
     );
 
+    expect(screen.getByRole("status")).not.toHaveAttribute("aria-live");
     fireEvent.click(screen.getByRole("button", { name: "Copy view link" }));
 
     await waitFor(() => expect(writeClipboard).toHaveBeenCalledWith(
       "https://portflow.test/?terminal=TM-002&range=7d#equipment",
     ));
     expect(screen.getByRole("status")).toHaveTextContent("View link copied.");
+    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
   });
 
   it("announces an actionable fallback when clipboard writing fails", async () => {
