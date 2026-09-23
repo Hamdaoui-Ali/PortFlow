@@ -72,6 +72,17 @@ describe("App", () => {
     expect(screen.getByRole("status", { name: "Snapshot freshness" })).toHaveTextContent("Current snapshot");
   });
 
+  it("offers a direct Data Health review from a ready snapshot status", async () => {
+    render(<App loadData={() => Promise.resolve(snapshot)} />);
+    await act(async () => { await Promise.resolve(); });
+
+    const reviewLink = screen.getByRole("link", { name: "Review Data Health" });
+    expect(reviewLink).toHaveAttribute("href", "#data-health");
+
+    fireEvent.click(reviewLink);
+    expect(await screen.findByRole("heading", { name: "Data Health" })).toBeInTheDocument();
+  });
+
   it("shows stale ready snapshots instead of claiming they are healthy", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-04T23:55:02.001Z"));
@@ -146,6 +157,7 @@ describe("App", () => {
     const status = screen.getByRole("status", { name: "Snapshot freshness" });
     expect(status).toHaveTextContent("Loading snapshot");
     expect(status.querySelector("time")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Review Data Health" })).not.toBeInTheDocument();
   });
 
   it("provides skip navigation and the approved product sections", () => {
