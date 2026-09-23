@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { AppShell, useAppFilters, type SnapshotHeaderStatus } from "./AppShell";
@@ -49,6 +49,20 @@ describe("AppShell", () => {
     expect(window.location.hash).toBe("#equipment");
     expect(screen.getByLabelText("Terminal")).toHaveValue("all");
     expect(screen.getByLabelText("Date range")).toHaveValue("24h");
+  });
+
+  it("returns keyboard focus to the main content after resetting filters", async () => {
+    window.history.replaceState({}, "", "/?terminal=TM-002&range=7d#overview");
+
+    render(
+      <AppShell snapshotStatus={readyStatus} filterScope={filterScope}>
+        <FilterProbe />
+      </AppShell>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset filters in test" }));
+
+    await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
   });
 
   it("does not show a scope note while the snapshot is loading", () => {
