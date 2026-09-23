@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { FilterRecoveryState } from "../../app/FilterRecoveryState";
+import { matchesSnapshotFilterScope, type SnapshotFilterScope } from "../../app/filterScope";
 import type { AppFilters } from "../../app/AppShell";
 import type { EquipmentDatasetState, IncidentDatasetState } from "../../data/schema";
 import { IncidentDetail } from "./IncidentDetail";
@@ -16,14 +18,22 @@ import {
 import { readIncidentUrlState, writeIncidentUrlState, type IncidentUrlState } from "./incidentUrlState";
 
 interface IncidentPageProps {
-  dataset: IncidentDatasetState;
-  equipmentDataset?: EquipmentDatasetState;
-  filters: AppFilters;
+  readonly dataset: IncidentDatasetState;
+  readonly equipmentDataset?: EquipmentDatasetState;
+  readonly filters: AppFilters;
+  readonly filterScope: SnapshotFilterScope;
+  readonly onResetFilters: () => void;
 }
 
 const incidentUrlKeys = ["search", "severity", "sort", "direction", "incident"] as const;
 
-export function IncidentPage({ dataset, equipmentDataset, filters }: IncidentPageProps) {
+export function IncidentPage({
+  dataset,
+  equipmentDataset,
+  filters,
+  filterScope,
+  onResetFilters,
+}: IncidentPageProps) {
   const [urlState, setUrlState] = useState(() => readIncidentUrlState(window.location.search));
   const returnFocusId = useRef<string | null>(null);
   const selectedFromThisPage = useRef(false);
@@ -49,8 +59,14 @@ export function IncidentPage({ dataset, equipmentDataset, filters }: IncidentPag
   }, [urlState.incidentId]);
 
   if (dataset.status !== "ready") return <IncidentDatasetMessage status={dataset.status} />;
-  if (filters.range !== "24h") {
-    return <div className="data-state data-state-warning" role="status"><h2>Incidents unavailable for selected filters</h2><p>The published incident snapshot covers the last 24 hours only.</p></div>;
+  if (!matchesSnapshotFilterScope(filters.terminal, filters.range, filterScope)) {
+    return (
+      <FilterRecoveryState
+        filterScope={filterScope}
+        onResetFilters={onResetFilters}
+        resource="incidents"
+      />
+    );
   }
 
   const selectedRecord = urlState.incidentId ? dataset.records.find((record) => record.incident_id === urlState.incidentId) : undefined;

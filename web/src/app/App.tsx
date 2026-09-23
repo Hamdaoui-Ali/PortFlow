@@ -192,6 +192,8 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
           replayEvents={snapshot.event_replay}
           incidentDataset={snapshot.incidents}
           filters={filters}
+          filterScope={filterScope}
+          onResetFilters={resetFilters}
         />
       </>
     );
@@ -205,6 +207,8 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
           dataset={snapshot.incidents ?? { status: "absent" }}
           equipmentDataset={snapshot.equipment}
           filters={filters}
+          filterScope={filterScope}
+          onResetFilters={resetFilters}
         />
       </>
     );

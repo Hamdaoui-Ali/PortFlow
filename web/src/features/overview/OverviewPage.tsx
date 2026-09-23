@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { FilterRecoveryState } from "../../app/FilterRecoveryState";
+import { matchesSnapshotFilterScope } from "../../app/filterScope";
 import type { SnapshotV1 } from "../../data/schema";
 import type { SnapshotFilterScope } from "../../app/filterScope";
 import { AvailabilityCard } from "./AvailabilityCard";
@@ -28,19 +30,14 @@ export function OverviewPage({
   filterScope,
   onResetFilters,
 }: OverviewPageProps) {
-  if (!matchesFilters(snapshot, filters)) {
+  if (!matchesSnapshotFilterScope(filters.terminal, filters.range, filterScope)) {
     return <>
       {staleNotice}
-      <div className="data-state data-state-warning" role="status">
-        <h2>Snapshot unavailable for selected filters</h2>
-        <p>These filters do not match the published snapshot.</p>
-        <p className="filter-scope-summary">
-          Published scope: <strong>{filterScope.terminalLabel}</strong> · {filterScope.periodLabel}
-        </p>
-        <button type="button" className="filter-reset" onClick={onResetFilters}>
-          Reset filters to published scope
-        </button>
-      </div>
+      <FilterRecoveryState
+        filterScope={filterScope}
+        onResetFilters={onResetFilters}
+        resource="overview"
+      />
     </>;
   }
 
@@ -74,9 +71,4 @@ export function OverviewPage({
       <OverviewIncidentPulse dataset={incidentDataset} />
     </>
   );
-}
-
-function matchesFilters(snapshot: SnapshotV1, filters: AppFilters): boolean {
-  const terminalMatches = filters.terminal === "all" || filters.terminal === snapshot.overview.terminal_id;
-  return terminalMatches && filters.range === "24h";
 }

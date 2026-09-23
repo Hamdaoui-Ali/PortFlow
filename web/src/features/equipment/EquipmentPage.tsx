@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { FilterRecoveryState } from "../../app/FilterRecoveryState";
+import { matchesSnapshotFilterScope, type SnapshotFilterScope } from "../../app/filterScope";
 import type { AppFilters } from "../../app/AppShell";
 import type {
   EquipmentDatasetState,
@@ -16,10 +18,12 @@ import {
 } from "./equipmentUrlState";
 
 interface EquipmentPageProps {
-  dataset: EquipmentDatasetState;
-  filters: AppFilters;
-  replayEvents?: ReplayEventV1[];
-  incidentDataset?: IncidentDatasetState;
+  readonly dataset: EquipmentDatasetState;
+  readonly filters: AppFilters;
+  readonly filterScope: SnapshotFilterScope;
+  readonly onResetFilters: () => void;
+  readonly replayEvents?: ReplayEventV1[];
+  readonly incidentDataset?: IncidentDatasetState;
 }
 
 const equipmentUrlKeys = ["search", "sort", "direction", "equipment"] as const;
@@ -27,6 +31,8 @@ const equipmentUrlKeys = ["search", "sort", "direction", "equipment"] as const;
 export function EquipmentPage({
   dataset,
   filters,
+  filterScope,
+  onResetFilters,
   replayEvents,
   incidentDataset,
 }: EquipmentPageProps) {
@@ -60,12 +66,13 @@ export function EquipmentPage({
     return <EquipmentDatasetMessage status={dataset.status} />;
   }
 
-  if (filters.range !== "24h") {
+  if (!matchesSnapshotFilterScope(filters.terminal, filters.range, filterScope)) {
     return (
-      <div className="data-state data-state-warning" role="status">
-        <h2>Equipment unavailable for selected filters</h2>
-        <p>The published equipment snapshot covers the last 24 hours only.</p>
-      </div>
+      <FilterRecoveryState
+        filterScope={filterScope}
+        onResetFilters={onResetFilters}
+        resource="equipment"
+      />
     );
   }
 
