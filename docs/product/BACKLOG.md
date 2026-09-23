@@ -655,7 +655,7 @@ These items are P2 and cannot block V1:
 
 ## PF-115 implementation checkpoint
 
-- PF-115: **In progress** — equipment detail context derived from the existing
+- PF-115: **Complete** — equipment detail context derived from the existing
   replay and incident snapshot datasets. The design is `485c8da`, the plan is
   `2857e7d`, and the implementation currently consists of `8413fc7`, `b23206e`,
   `22116c2`, and `f858f4f`. The slice preserves the static snapshot boundary,
