@@ -1,4 +1,4 @@
-import { Link2 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 export interface ShareViewLinkProps {
@@ -12,11 +12,8 @@ function currentUrl(): string {
   return window.location.href;
 }
 
-async function writeCurrentUrl(value: string): Promise<void> {
-  if (!navigator.clipboard?.writeText) {
-    throw new Error("Clipboard API unavailable");
-  }
-  await navigator.clipboard.writeText(value);
+function writeCurrentUrl(value: string): Promise<void> {
+  return navigator.clipboard.writeText(value);
 }
 
 function statusMessage(status: ShareStatus): string {
@@ -47,12 +44,12 @@ export function ShareViewLink({
   };
 
   return (
-    <div className="share-view-link">
+    <>
       <button type="button" className="share-view-link-button" onClick={() => void handleCopy()}>
-        <Link2 size={15} aria-hidden="true" />
+        <ChevronRight size={15} aria-hidden="true" />
         <span>Copy view link</span>
       </button>
-      <output className="share-view-link-status" aria-live={livePoliteness}>{statusText}</output>
-    </div>
+      <output className="filter-summary" aria-live={livePoliteness}>{statusText}</output>
+    </>
   );
 }
