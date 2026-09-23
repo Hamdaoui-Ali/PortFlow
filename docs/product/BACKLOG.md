@@ -29,9 +29,10 @@ documented pull-request and green-CI branch-protection rule for `main` is
 configured, with force pushes and deletions disabled. PF-110, PF-111, PF-112,
 PF-113, and PF-114 are also complete through merged post-V1 pull requests.
 PF-116 is complete through its merged incident detail context pull requests.
-PF-117 is complete through merged PR #23 (`0984979`). PF-118 is the current
-post-V1 review checkpoint: review and merge the Overview incident pulse PR
-before selecting or starting the next specification.
+PF-117 is complete through merged PR #23 (`0984979`). PF-118 is complete
+through merged PR #24 (`a2e0580`). PF-119 is the current post-V1 review
+checkpoint: review and merge the Overview snapshot trust action PR before
+selecting or starting the next specification.
 
 ## Completed checkpoints
 

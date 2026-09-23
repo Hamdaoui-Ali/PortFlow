@@ -18,6 +18,7 @@ describe("Lighthouse configuration", () => {
     expect(config.collect.puppeteerLaunchOptions).toEqual({
       userDataDir: "C:/tmp/portflow-lighthouse-profile",
       args: ["--no-sandbox"],
+      timeout: 60_000,
     });
     expect(config.assert.aggregationMethod).toBe("median-run");
   });

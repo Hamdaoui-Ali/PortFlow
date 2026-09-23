@@ -46,6 +46,9 @@ a { color: inherit; }
 .snapshot-freshness-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
 .snapshot-freshness-message, .snapshot-freshness time { color: var(--muted); }
 .snapshot-freshness time { font-variant-numeric: tabular-nums; }
+.snapshot-freshness-link { color: var(--cobalt); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.snapshot-freshness-link:hover { color: var(--teal-ink); }
+.snapshot-freshness-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 .snapshot-freshness-healthy .snapshot-freshness-label { color: var(--teal-ink); }
 .snapshot-freshness-stale .snapshot-freshness-label { color: var(--warning-ink); }
 .snapshot-freshness-invalid .snapshot-freshness-label, .snapshot-freshness-unavailable .snapshot-freshness-label { color: var(--danger); }
