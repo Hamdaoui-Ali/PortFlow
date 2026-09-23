@@ -10,6 +10,7 @@ import { EquipmentPage } from "../features/equipment/EquipmentPage";
 import { IncidentPage } from "../features/incidents/IncidentPage";
 import { LiveDemoPage } from "../features/replay/LiveDemoPage";
 import { OverviewPage } from "../features/overview/OverviewPage";
+import { deriveSnapshotFilterScope } from "./filterScope";
 import { AppShell, useAppFilters, type AppFilters, type SnapshotHeaderStatus } from "./AppShell";
 
 interface AppProps {
@@ -103,6 +104,9 @@ export function App({ loadData = loadDefaultSnapshot }: AppProps) {
     <AppShell
       onNavigate={(hash) => setRoute(readRoute(hash))}
       snapshotStatus={deriveSnapshotHeaderStatus(snapshotState, freshnessNow)}
+      filterScope={snapshotState.status === "ready" || snapshotState.status === "stale"
+        ? deriveSnapshotFilterScope(snapshotState.snapshot)
+        : undefined}
     >
       <AppContent route={route} snapshotState={snapshotState} />
     </AppShell>
@@ -156,7 +160,7 @@ function deriveSnapshotHeaderStatus(snapshotState: SnapshotState, now: Date): Sn
 }
 
 function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: SnapshotState }) {
-  const filters = useAppFilters();
+  const { resetFilters, ...filters } = useAppFilters();
 
   if (snapshotState.status === "loading") {
     return <p className="data-state">Loading operational snapshot</p>;
@@ -171,6 +175,7 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
   }
 
   const { snapshot } = snapshotState;
+  const filterScope = deriveSnapshotFilterScope(snapshot);
   const staleNotice = snapshotState.status === "stale" ? (
     <div className="data-state data-state-warning stale-notice" role="note" aria-label="Refresh details">
       <h2>Refresh issue</h2>
@@ -231,6 +236,8 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
       incidentDataset={snapshot.incidents}
       filters={filters}
       staleNotice={staleNotice}
+      filterScope={filterScope}
+      onResetFilters={resetFilters}
     />
   );
 }
