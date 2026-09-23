@@ -16,10 +16,10 @@ import {
 } from "./equipmentUrlState";
 
 interface EquipmentPageProps {
-  dataset: EquipmentDatasetState;
-  filters: AppFilters;
-  replayEvents?: ReplayEventV1[];
-  incidentDataset?: IncidentDatasetState;
+  readonly dataset: EquipmentDatasetState;
+  readonly filters: AppFilters;
+  readonly replayEvents?: ReplayEventV1[];
+  readonly incidentDataset?: IncidentDatasetState;
 }
 
 const equipmentUrlKeys = ["search", "sort", "direction", "equipment"] as const;
@@ -58,15 +58,6 @@ export function EquipmentPage({
 
   if (dataset.status !== "ready") {
     return <EquipmentDatasetMessage status={dataset.status} />;
-  }
-
-  if (filters.range !== "24h") {
-    return (
-      <div className="data-state data-state-warning" role="status">
-        <h2>Equipment unavailable for selected filters</h2>
-        <p>The published equipment snapshot covers the last 24 hours only.</p>
-      </div>
-    );
   }
 
   const selectedRecord = urlState.equipmentId

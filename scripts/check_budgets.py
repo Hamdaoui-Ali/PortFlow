@@ -8,9 +8,9 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 SNAPSHOT_BUDGET_BYTES = 100_000
-# PF-120 adds published-scope disclosure and recovery while keeping the
-# measured bundle below the next two-kilobyte guardrail.
-BUNDLE_BUDGET_BYTES = 403_000
+# PF-121 reuses the published-scope recovery state across operational routes
+# while keeping the measured bundle below the next one-kilobyte guardrail.
+BUNDLE_BUDGET_BYTES = 404_000
 STARTUP_BUDGET_BYTES = 400_000
 
 

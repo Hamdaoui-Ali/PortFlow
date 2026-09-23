@@ -93,6 +93,35 @@ describe("IncidentPage", () => {
     expect(screen.queryByText("inc-000001")).not.toBeInTheDocument();
   });
 
+  it("shows the published-scope recovery state for an unsupported terminal", async () => {
+    renderIncidents();
+    expect(await screen.findByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Terminal" }), {
+      target: { value: "TM-002" },
+    });
+
+    expect(await screen.findByRole("heading", { name: "Incidents unavailable for selected filters" })).toBeInTheDocument();
+    expect(screen.getByText(/Published scope:/)).toHaveTextContent("Casablanca Terminal");
+    expect(screen.queryByRole("table", { name: "Incident register with sortable columns" })).not.toBeInTheDocument();
+  });
+
+  it("resets the published-scope recovery state for an unsupported range", async () => {
+    renderIncidents();
+    expect(await screen.findByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Date range" }), {
+      target: { value: "7d" },
+    });
+
+    expect(await screen.findByRole("heading", { name: "Incidents unavailable for selected filters" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Reset filters to published scope" }));
+
+    expect(window.location.search).toBe("");
+    expect(await screen.findByRole("heading", { name: "Incident exploration" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
+  });
+
   it("opens a lifecycle detail view and returns to the incident list", async () => {
     renderIncidents();
 

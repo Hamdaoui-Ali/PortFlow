@@ -16,18 +16,29 @@ const utcDateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 export interface SnapshotFilterScope {
+  terminalId: string;
   terminalLabel: string;
   periodLabel: string;
 }
 
 export function deriveSnapshotFilterScope(snapshot: SnapshotV1): SnapshotFilterScope {
   return {
+    terminalId: snapshot.overview.terminal_id,
     terminalLabel: terminalLabels[snapshot.overview.terminal_id] ?? snapshot.overview.terminal_id,
     periodLabel: formatSnapshotPeriod(
       snapshot.manifest.source_period_start,
       snapshot.manifest.source_period_end,
     ),
   };
+}
+
+export function matchesSnapshotFilterScope(
+  terminal: string,
+  range: string,
+  scope: SnapshotFilterScope,
+): boolean {
+  const terminalMatches = terminal === "all" || terminal === scope.terminalId;
+  return terminalMatches && range === "24h";
 }
 
 export function formatSnapshotPeriod(start: string, end: string): string {

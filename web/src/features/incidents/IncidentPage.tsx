@@ -16,14 +16,18 @@ import {
 import { readIncidentUrlState, writeIncidentUrlState, type IncidentUrlState } from "./incidentUrlState";
 
 interface IncidentPageProps {
-  dataset: IncidentDatasetState;
-  equipmentDataset?: EquipmentDatasetState;
-  filters: AppFilters;
+  readonly dataset: IncidentDatasetState;
+  readonly equipmentDataset?: EquipmentDatasetState;
+  readonly filters: AppFilters;
 }
 
 const incidentUrlKeys = ["search", "severity", "sort", "direction", "incident"] as const;
 
-export function IncidentPage({ dataset, equipmentDataset, filters }: IncidentPageProps) {
+export function IncidentPage({
+  dataset,
+  equipmentDataset,
+  filters,
+}: IncidentPageProps) {
   const [urlState, setUrlState] = useState(() => readIncidentUrlState(window.location.search));
   const returnFocusId = useRef<string | null>(null);
   const selectedFromThisPage = useRef(false);
@@ -49,10 +53,6 @@ export function IncidentPage({ dataset, equipmentDataset, filters }: IncidentPag
   }, [urlState.incidentId]);
 
   if (dataset.status !== "ready") return <IncidentDatasetMessage status={dataset.status} />;
-  if (filters.range !== "24h") {
-    return <div className="data-state data-state-warning" role="status"><h2>Incidents unavailable for selected filters</h2><p>The published incident snapshot covers the last 24 hours only.</p></div>;
-  }
-
   const selectedRecord = urlState.incidentId ? dataset.records.find((record) => record.incident_id === urlState.incidentId) : undefined;
   const update = (next: IncidentUrlState, mode: "push" | "replace") => { writeIncidentLocation(next, mode); setUrlState(next); };
   const back = () => {

@@ -96,7 +96,7 @@ describe("EquipmentPage", () => {
     expect(screen.getByRole("table", { name: "Equipment fleet" })).toBeInTheDocument();
   });
 
-  it("filters fleet rows with the global terminal filter", async () => {
+  it("shows the published-scope recovery state for an unsupported terminal", async () => {
     renderEquipment();
     expect(await screen.findByRole("button", { name: "Open equipment QC-001" })).toBeInTheDocument();
 
@@ -104,8 +104,25 @@ describe("EquipmentPage", () => {
       target: { value: "TM-002" },
     });
 
-    expect(screen.getByRole("button", { name: "Open equipment QC-002" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Open equipment QC-001" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Equipment unavailable for selected filters" })).toBeInTheDocument();
+    expect(screen.getByText(/Published scope:/)).toHaveTextContent("Casablanca Terminal");
+    expect(screen.queryByRole("table", { name: "Equipment fleet" })).not.toBeInTheDocument();
+  });
+
+  it("resets the published-scope recovery state for an unsupported range", async () => {
+    renderEquipment();
+    expect(await screen.findByRole("heading", { name: "Equipment fleet" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Date range" }), {
+      target: { value: "7d" },
+    });
+
+    expect(await screen.findByRole("heading", { name: "Equipment unavailable for selected filters" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Reset filters to published scope" }));
+
+    expect(window.location.search).toBe("");
+    expect(await screen.findByRole("heading", { name: "Equipment fleet" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
   });
 
   it("writes search and sort changes to the equipment URL", async () => {

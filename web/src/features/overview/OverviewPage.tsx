@@ -1,49 +1,25 @@
 import type { ReactNode } from "react";
 
 import type { SnapshotV1 } from "../../data/schema";
-import type { SnapshotFilterScope } from "../../app/filterScope";
 import { AvailabilityCard } from "./AvailabilityCard";
 import { AvailabilityTrend } from "./AvailabilityTrend";
 import { OverviewEquipmentPulse } from "./OverviewEquipmentPulse";
 import { OverviewIncidentPulse } from "./OverviewIncidentPulse";
 import { OverviewKpiRail } from "./OverviewKpiRail";
-import type { AppFilters } from "../../app/AppShell";
 
 interface OverviewPageProps {
   readonly snapshot: SnapshotV1;
   readonly equipmentDataset: SnapshotV1["equipment"];
   readonly incidentDataset: SnapshotV1["incidents"];
-  readonly filters: AppFilters;
   readonly staleNotice: ReactNode;
-  readonly filterScope: SnapshotFilterScope;
-  readonly onResetFilters: () => void;
 }
 
 export function OverviewPage({
   snapshot,
   equipmentDataset,
   incidentDataset,
-  filters,
   staleNotice,
-  filterScope,
-  onResetFilters,
 }: OverviewPageProps) {
-  if (!matchesFilters(snapshot, filters)) {
-    return <>
-      {staleNotice}
-      <div className="data-state data-state-warning" role="status">
-        <h2>Snapshot unavailable for selected filters</h2>
-        <p>These filters do not match the published snapshot.</p>
-        <p className="filter-scope-summary">
-          Published scope: <strong>{filterScope.terminalLabel}</strong> · {filterScope.periodLabel}
-        </p>
-        <button type="button" className="filter-reset" onClick={onResetFilters}>
-          Reset filters to published scope
-        </button>
-      </div>
-    </>;
-  }
-
   return (
     <>
       {staleNotice}
@@ -74,9 +50,4 @@ export function OverviewPage({
       <OverviewIncidentPulse dataset={incidentDataset} />
     </>
   );
-}
-
-function matchesFilters(snapshot: SnapshotV1, filters: AppFilters): boolean {
-  const terminalMatches = filters.terminal === "all" || filters.terminal === snapshot.overview.terminal_id;
-  return terminalMatches && filters.range === "24h";
 }
