@@ -486,10 +486,24 @@ describe("App", () => {
     window.history.replaceState({}, "", "/");
     render(<App loadData={() => Promise.resolve(snapshot)} />);
 
+    expect(await screen.findByRole("note", { name: "Published snapshot scope" })).toHaveTextContent(
+      "Casablanca Terminal",
+    );
+    expect(screen.getByRole("note", { name: "Published snapshot scope" })).toHaveTextContent(
+      "02 Sept 2026, 00:00–23:55 UTC",
+    );
+
     fireEvent.change(screen.getByLabelText("Terminal"), { target: { value: "TM-002" } });
 
     expect(await screen.findByText("Snapshot unavailable for selected filters")).toBeInTheDocument();
     expect(screen.queryByText("94.4%")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset filters to published scope" }));
+
+    expect(window.location.search).toBe("");
+    expect(screen.getByLabelText("Terminal")).toHaveValue("all");
+    expect(screen.getByLabelText("Date range")).toHaveValue("24h");
+    expect(await screen.findAllByText("94.4%")).toHaveLength(2);
   });
 
   it("shows an explicit error without fabricating a KPI", async () => {
