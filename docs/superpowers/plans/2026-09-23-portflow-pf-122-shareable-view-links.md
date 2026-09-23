@@ -225,14 +225,14 @@ Run: `./scripts/verify_r2.ps1`
 Expected: Python tests, Ruff, mypy, frontend checks, and the deterministic
 public-data diff pass.
 
-- [ ] **Step 5: Commit documentation**
+- [x] **Step 5: Commit documentation**
 
 ```powershell
 git add docs/product/BACKLOG.md CHANGELOG.md
 git commit -m "docs: close PF-122 shareable view links"
 ```
 
-- [ ] **Step 6: Inspect the final branch**
+- [x] **Step 6: Inspect the final branch**
 
 Run: `git diff --check; git status --short; git log --oneline -6`
 
