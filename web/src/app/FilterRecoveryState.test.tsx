@@ -20,9 +20,8 @@ describe("FilterRecoveryState", () => {
       />,
     );
 
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Snapshot unavailable for selected filters",
-    );
+    expect(screen.getByRole("heading", { name: "Snapshot unavailable for selected filters" }))
+      .toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent(
       "These filters do not match the published snapshot.",
     );

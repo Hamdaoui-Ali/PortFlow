@@ -70,6 +70,7 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .availability-value { margin: 8px 0 12px; color: var(--teal); font-size: clamp(38px, 6vw, 54px); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
 .availability-definition, .availability-time, .data-state p { color: var(--muted); line-height: 1.5; }
 .availability-definition { max-width: 520px; margin: 0; font-size: 15px; }
+.filter-recovery-description { display: block; margin-top: 6px; color: var(--muted); line-height: 1.5; }
 .availability-time { margin: 14px 0 0; font-size: 13px; font-weight: 500; }
 .data-state { max-width: 640px; min-height: 160px; margin: 0; padding: 32px 0; color: var(--muted); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .data-state-error h2 { color: #d92332; }

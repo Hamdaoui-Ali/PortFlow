@@ -1,6 +1,6 @@
 import type { SnapshotFilterScope } from "./filterScope";
 
-type FilterRecoveryResource = "overview" | "equipment" | "incidents";
+export type FilterRecoveryResource = "overview" | "equipment" | "incidents";
 
 const resourceLabels: Record<FilterRecoveryResource, string> = {
   overview: "Snapshot",
@@ -29,9 +29,11 @@ export function FilterRecoveryState({
     : "The selected filters are outside the published snapshot scope.";
 
   return (
-    <div className="data-state data-state-warning" role="status">
+    <div className="data-state data-state-warning">
       <h2>{heading}</h2>
-      <p>{description}</p>
+      <output className="filter-recovery-description" aria-live="polite">
+        {description}
+      </output>
       <p className="filter-scope-summary">
         Published scope: <strong>{filterScope.terminalLabel}</strong> · {filterScope.periodLabel}
       </p>
