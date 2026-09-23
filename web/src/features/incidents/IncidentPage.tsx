@@ -32,7 +32,7 @@ export function IncidentPage({
   const returnFocusId = useRef<string | null>(null);
   const selectedFromThisPage = useRef(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const restore = () => setUrlState(readIncidentUrlState(window.location.search));
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);

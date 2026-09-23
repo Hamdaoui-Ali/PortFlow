@@ -41,7 +41,7 @@ export function EquipmentPage({
     }
   }, [urlState.equipmentId]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const restoreUrlState = () => setUrlState(readEquipmentUrlState(window.location.search));
     window.addEventListener("popstate", restoreUrlState);
     return () => window.removeEventListener("popstate", restoreUrlState);
