@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { EquipmentDatasetState, IncidentRecordV1 } from "../../data/schema";
-import { incidentDurationMinutes } from "./incidentData";
+import { formatIncidentOpenedAt, incidentDurationMinutes } from "./incidentData";
 import { IncidentContextPanel } from "./IncidentContextPanel";
 import { formatDuration } from "./IncidentTable";
 
@@ -9,7 +9,6 @@ interface IncidentDetailProps {
   equipmentDataset?: EquipmentDatasetState;
   onBack: () => void;
 }
-
 export function IncidentDetail({ record, equipmentDataset, onBack }: IncidentDetailProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const duration = incidentDurationMinutes(record);
@@ -28,8 +27,8 @@ export function IncidentDetail({ record, equipmentDataset, onBack }: IncidentDet
       <dl className="detail-grid">
         <div><dt>Status</dt><dd>{record.status}</dd></div>
         <div><dt>Root cause</dt><dd>{record.root_cause}</dd></div>
-        <div><dt>Opened</dt><dd>{formatTimestamp(record.opened_at)}</dd></div>
-        <div><dt>Resolved</dt><dd>{record.resolved_at ? formatTimestamp(record.resolved_at) : "Not resolved"}</dd></div>
+        <div><dt>Opened</dt><dd>{formatIncidentOpenedAt(record.opened_at)}</dd></div>
+        <div><dt>Resolved</dt><dd>{record.resolved_at ? formatIncidentOpenedAt(record.resolved_at) : "Not resolved"}</dd></div>
         <div><dt>Recovery duration</dt><dd>{duration === null ? "In progress" : formatDuration(duration)}</dd></div>
       </dl>
       <IncidentContextPanel dataset={equipmentDataset} equipmentId={record.equipment_id} />
@@ -37,6 +36,3 @@ export function IncidentDetail({ record, equipmentDataset, onBack }: IncidentDet
   );
 }
 
-function formatTimestamp(value: string): string {
-  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(value));
-}

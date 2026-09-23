@@ -10,6 +10,20 @@ const severityRank: Record<Exclude<IncidentSeverity, "all">, number> = {
   CRITICAL: 3,
 };
 
+const utcDateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "UTC",
+});
+
+export function incidentSeverityRank(severity: Exclude<IncidentSeverity, "all">): number {
+  return severityRank[severity];
+}
+
+export function formatIncidentOpenedAt(value: string): string {
+  return utcDateTimeFormatter.format(new Date(value));
+}
+
 export function incidentDurationMinutes(record: IncidentRecordV1): number | null {
   if (!record.resolved_at) return null;
   return (Date.parse(record.resolved_at) - Date.parse(record.opened_at)) / 60_000;

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { IncidentRecordV1 } from "../../data/schema";
 import {
   filterIncidents,
+  formatIncidentOpenedAt,
   getIncidentMetrics,
   getIncidentTrend,
   getRootCauseCounts,
@@ -82,5 +83,9 @@ describe("incident data helpers", () => {
     const offsetRecord = { ...records[0], incident_id: "inc-000004", opened_at: "2026-09-02T23:30:00-02:00" };
     expect(sortIncidents([records[1], offsetRecord], "opened_at", "desc").map((record) => record.incident_id))
       .toEqual(["inc-000004", "inc-000002"]);
+  });
+
+  it("formats incident timestamps in UTC", () => {
+    expect(formatIncidentOpenedAt("2026-09-02T23:30:00-02:00")).toBe("3 Sept 2026, 01:30");
   });
 });

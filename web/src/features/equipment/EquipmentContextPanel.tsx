@@ -4,17 +4,12 @@ import type {
   EquipmentIncidentStatus,
   EquipmentIncidentView,
 } from "./equipmentContext";
+import { formatIncidentOpenedAt } from "../incidents/incidentData";
 
 interface EquipmentContextProps {
   activity: EquipmentActivityView;
   incidents: EquipmentIncidentView;
 }
-
-const utcDateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-});
 
 export function EquipmentContextPanel({ activity, incidents }: EquipmentContextProps) {
   return (
@@ -30,7 +25,7 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
             {activity.events.map((event) => (
               <li className="equipment-activity-item" key={event.event_id}>
                 <time dateTime={event.event_timestamp}>
-                  {formatTimestamp(event.event_timestamp)}
+                  {formatIncidentOpenedAt(event.event_timestamp)}
                 </time>
                 <div>
                   <strong>{event.state}</strong>
@@ -69,7 +64,7 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
                 </div>
                 <strong>{incident.root_cause}</strong>
                 <span>{incident.status === "OPEN" ? "Open" : "Resolved"}</span>
-                <time dateTime={incident.opened_at}>{formatTimestamp(incident.opened_at)}</time>
+                <time dateTime={incident.opened_at}>{formatIncidentOpenedAt(incident.opened_at)}</time>
               </li>
             ))}
           </ul>
@@ -83,10 +78,6 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
 
 function ContextMessage({ message }: { message: string }) {
   return <p className="equipment-context-message" role="status">{message}</p>;
-}
-
-function formatTimestamp(value: string): string {
-  return utcDateTimeFormatter.format(new Date(value));
 }
 
 function incidentHref(incidentId: string): string {
