@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { AppFilters } from "../../app/AppShell";
-import type { IncidentDatasetState } from "../../data/schema";
+import type { EquipmentDatasetState, IncidentDatasetState } from "../../data/schema";
 import { IncidentDetail } from "./IncidentDetail";
 import { IncidentTable } from "./IncidentTable";
 import {
@@ -17,12 +17,13 @@ import { readIncidentUrlState, writeIncidentUrlState, type IncidentUrlState } fr
 
 interface IncidentPageProps {
   dataset: IncidentDatasetState;
+  equipmentDataset?: EquipmentDatasetState;
   filters: AppFilters;
 }
 
 const incidentUrlKeys = ["search", "severity", "sort", "direction", "incident"] as const;
 
-export function IncidentPage({ dataset, filters }: IncidentPageProps) {
+export function IncidentPage({ dataset, equipmentDataset, filters }: IncidentPageProps) {
   const [urlState, setUrlState] = useState(() => readIncidentUrlState(window.location.search));
   const returnFocusId = useRef<string | null>(null);
   const selectedFromThisPage = useRef(false);
@@ -65,7 +66,9 @@ export function IncidentPage({ dataset, filters }: IncidentPageProps) {
   if (urlState.incidentId && !selectedRecord) {
     return <div className="data-state data-state-warning" role="status"><h2>Incident not found</h2><p>The selected incident is not present in this published snapshot.</p><button type="button" onClick={back}>Back to incident list</button></div>;
   }
-  if (selectedRecord) return <IncidentDetail record={selectedRecord} onBack={back} />;
+  if (selectedRecord) {
+    return <IncidentDetail record={selectedRecord} equipmentDataset={equipmentDataset} onBack={back} />;
+  }
 
   const filtered = filterIncidents(dataset.records, urlState.query, filters.terminal, urlState.severity);
   const records = sortIncidents(filtered, urlState.sort, urlState.direction);

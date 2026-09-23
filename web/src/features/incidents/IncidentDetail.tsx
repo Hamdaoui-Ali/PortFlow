@@ -1,9 +1,16 @@
 import { useEffect, useRef } from "react";
-import type { IncidentRecordV1 } from "../../data/schema";
+import type { EquipmentDatasetState, IncidentRecordV1 } from "../../data/schema";
 import { incidentDurationMinutes } from "./incidentData";
+import { IncidentContextPanel } from "./IncidentContextPanel";
 import { formatDuration } from "./IncidentTable";
 
-export function IncidentDetail({ record, onBack }: { record: IncidentRecordV1; onBack: () => void }) {
+interface IncidentDetailProps {
+  record: IncidentRecordV1;
+  equipmentDataset?: EquipmentDatasetState;
+  onBack: () => void;
+}
+
+export function IncidentDetail({ record, equipmentDataset, onBack }: IncidentDetailProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const duration = incidentDurationMinutes(record);
   useEffect(() => headingRef.current?.focus(), [record.incident_id]);
@@ -25,6 +32,7 @@ export function IncidentDetail({ record, onBack }: { record: IncidentRecordV1; o
         <div><dt>Resolved</dt><dd>{record.resolved_at ? formatTimestamp(record.resolved_at) : "Not resolved"}</dd></div>
         <div><dt>Recovery duration</dt><dd>{duration === null ? "In progress" : formatDuration(duration)}</dd></div>
       </dl>
+      <IncidentContextPanel dataset={equipmentDataset} equipmentId={record.equipment_id} />
     </article>
   );
 }

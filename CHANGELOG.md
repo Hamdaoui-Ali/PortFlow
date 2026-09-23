@@ -1,5 +1,20 @@
 # Changelog
 
+## PF-116 Incident detail context - 2026-09-23
+
+Incident detail now exposes compact, snapshot-backed context for the affected
+equipment while preserving PortFlow's static-data boundary.
+
+- The detail view derives the matching equipment record and shows terminal,
+  state, availability, utilization, and downtime when that record is present.
+- A native equipment route link makes the incident-to-equipment workflow
+  reversible without adding a client-side navigation dependency.
+- Absent, empty, unavailable, malformed, and no-match snapshot states remain
+  explicit instead of being presented as healthy or complete context.
+
+The feature adds no endpoint, polling loop, public-data schema change, cloud
+dependency, or live operational claim.
+
 ## PF-115 Equipment detail context - 2026-09-22
 
 The PF-115 implementation adds diagnostic context to a selected equipment
