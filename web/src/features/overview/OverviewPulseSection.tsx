@@ -53,9 +53,8 @@ export function OverviewPulseSection<T>({
 function pulseMessage(resourceName: string, status: NonReadyPulseStatus): string {
   if (status === "absent") return `${resourceName} pulse is not included in this snapshot.`;
   if (status === "empty") {
-    return resourceName[0] === "I"
-      ? "No incidents are present in this snapshot."
-      : "No equipment records are present in this snapshot.";
+    if (resourceName.startsWith("Incident")) return "No incidents are present in this snapshot.";
+    return "No equipment records are present in this snapshot.";
   }
   return `${resourceName} pulse ${pulseMessageSuffix[status]} this snapshot.`;
 }
