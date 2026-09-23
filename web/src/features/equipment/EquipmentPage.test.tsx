@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { App } from "../../app/App";
 import { snapshotCache } from "../../data/cache";
 import type { EquipmentDatasetState, EquipmentRecordV1, SnapshotV1 } from "../../data/schema";
+import { defineFilterRecoveryTests } from "../../test/filterRecoveryAssertions";
 
 const records: EquipmentRecordV1[] = [
   {
@@ -96,33 +97,11 @@ describe("EquipmentPage", () => {
     expect(screen.getByRole("table", { name: "Equipment fleet" })).toBeInTheDocument();
   });
 
-  it("shows the published-scope recovery state for an unsupported terminal", async () => {
-    renderEquipment();
-    expect(await screen.findByRole("button", { name: "Open equipment QC-001" })).toBeInTheDocument();
-
-    fireEvent.change(screen.getByRole("combobox", { name: "Terminal" }), {
-      target: { value: "TM-002" },
-    });
-
-    expect(await screen.findByRole("heading", { name: "Equipment unavailable for selected filters" })).toBeInTheDocument();
-    expect(screen.getByText(/Published scope:/)).toHaveTextContent("Casablanca Terminal");
-    expect(screen.queryByRole("table", { name: "Equipment fleet" })).not.toBeInTheDocument();
-  });
-
-  it("resets the published-scope recovery state for an unsupported range", async () => {
-    renderEquipment();
-    expect(await screen.findByRole("heading", { name: "Equipment fleet" })).toBeInTheDocument();
-
-    fireEvent.change(screen.getByRole("combobox", { name: "Date range" }), {
-      target: { value: "7d" },
-    });
-
-    expect(await screen.findByRole("heading", { name: "Equipment unavailable for selected filters" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Reset filters to published scope" }));
-
-    expect(window.location.search).toBe("");
-    expect(await screen.findByRole("heading", { name: "Equipment fleet" })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("main")).toHaveFocus());
+  defineFilterRecoveryTests({
+    resource: "Equipment",
+    readyHeading: "Equipment fleet",
+    tableName: "Equipment fleet",
+    renderPage: renderEquipment,
   });
 
   it("writes search and sort changes to the equipment URL", async () => {
