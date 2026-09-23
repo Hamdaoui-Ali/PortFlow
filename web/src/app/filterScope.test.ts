@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { SnapshotV1 } from "../data/schema";
-import { deriveSnapshotFilterScope, formatSnapshotPeriod } from "./filterScope";
+import {
+  deriveSnapshotFilterScope,
+  formatSnapshotPeriod,
+  matchesSnapshotFilterScope,
+} from "./filterScope";
 
 const snapshot: SnapshotV1 = {
   manifest: {
@@ -33,6 +37,7 @@ const snapshot: SnapshotV1 = {
 describe("snapshot filter scope", () => {
   it("derives the known terminal and UTC source period", () => {
     expect(deriveSnapshotFilterScope(snapshot)).toEqual({
+      terminalId: "TM-001",
       terminalLabel: "Casablanca Terminal",
       periodLabel: "02 Sept 2026, 00:00–23:55 UTC",
     });
@@ -48,5 +53,21 @@ describe("snapshot filter scope", () => {
   it("formats cross-day periods deterministically in UTC", () => {
     expect(formatSnapshotPeriod("2026-09-01T23:30:00Z", "2026-09-02T01:15:00Z"))
       .toBe("01 Sept 2026, 23:30 – 02 Sept 2026, 01:15 UTC");
+  });
+  it("accepts the all-terminal default and the published terminal for the published range", () => {
+    const scope = deriveSnapshotFilterScope(snapshot);
+
+    expect(matchesSnapshotFilterScope("all", "24h", scope)).toBe(true);
+    expect(matchesSnapshotFilterScope("TM-001", "24h", scope)).toBe(true);
+  });
+
+  it.each([
+    ["TM-002", "24h"],
+    ["all", "7d"],
+    ["TM-002", "30d"],
+  ])("rejects unsupported global filters (%s, %s)", (terminal, range) => {
+    const scope = deriveSnapshotFilterScope(snapshot);
+
+    expect(matchesSnapshotFilterScope(terminal, range, scope)).toBe(false);
   });
 });
