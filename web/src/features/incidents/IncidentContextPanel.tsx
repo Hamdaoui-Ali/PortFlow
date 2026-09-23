@@ -1,4 +1,5 @@
 import type { EquipmentDatasetState } from "../../data/schema";
+import { formatMinutes, formatPercentage } from "../equipment/equipmentMetrics";
 import { deriveIncidentEquipmentContext, type IncidentEquipmentContext } from "./incidentContext";
 
 interface IncidentContextPanelProps {
@@ -71,12 +72,4 @@ function messageForStatus(status: Exclude<IncidentEquipmentContext["status"], "r
     case "no-match":
       return "No equipment record matches this incident.";
   }
-}
-
-function formatPercentage(value: number | null): string {
-  return value === null ? "Unavailable" : `${(value * 100).toFixed(1)}%`;
-}
-
-function formatMinutes(value: number | null): string {
-  return value === null ? "Unavailable" : `${Number.isInteger(value) ? value : value.toFixed(1)} min`;
 }

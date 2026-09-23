@@ -3,6 +3,7 @@ import type {
   IncidentDatasetState,
   ReplayEventV1,
 } from "../../data/schema";
+import { formatMetric, formatPercentage } from "./equipmentMetrics";
 import { EquipmentContextPanel } from "./EquipmentContextPanel";
 import {
   deriveEquipmentActivity,
@@ -14,15 +15,6 @@ interface EquipmentDetailProps {
   onBack: () => void;
   replayEvents?: ReplayEventV1[];
   incidentDataset?: IncidentDatasetState;
-}
-
-function formatPercentage(value: number | null): string {
-  return value === null ? "Unavailable" : `${(value * 100).toFixed(1)}%`;
-}
-
-function formatMetric(value: number | null, unit: "min" | "hr"): string {
-  if (value === null) return "Unavailable";
-  return `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}`;
 }
 
 export function EquipmentDetail({

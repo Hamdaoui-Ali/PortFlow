@@ -3,16 +3,18 @@ import type { ReactNode } from "react";
 import type { SnapshotV1 } from "../../data/schema";
 import { AvailabilityCard } from "./AvailabilityCard";
 import { AvailabilityTrend } from "./AvailabilityTrend";
+import { OverviewEquipmentPulse } from "./OverviewEquipmentPulse";
 import { OverviewKpiRail } from "./OverviewKpiRail";
 import type { AppFilters } from "../../app/AppShell";
 
 interface OverviewPageProps {
-  snapshot: SnapshotV1;
-  filters: AppFilters;
-  staleNotice: ReactNode;
+  readonly snapshot: SnapshotV1;
+  readonly equipmentDataset: SnapshotV1["equipment"];
+  readonly filters: AppFilters;
+  readonly staleNotice: ReactNode;
 }
 
-export function OverviewPage({ snapshot, filters, staleNotice }: OverviewPageProps) {
+export function OverviewPage({ snapshot, equipmentDataset, filters, staleNotice }: OverviewPageProps) {
   if (!matchesFilters(snapshot, filters)) {
     return <>
       {staleNotice}
@@ -49,6 +51,7 @@ export function OverviewPage({ snapshot, filters, staleNotice }: OverviewPagePro
         value={snapshot.overview.availability.value}
         generatedAt={snapshot.manifest.generated_at}
       />
+      <OverviewEquipmentPulse dataset={equipmentDataset} />
     </>
   );
 }

@@ -1,5 +1,21 @@
 # Changelog
 
+## PF-117 Overview equipment pulse - 2026-09-23
+
+Overview now exposes a compact, snapshot-backed equipment pulse beneath the
+aggregate availability card.
+
+- Up to three equipment records are shown with unavailable records first,
+  lower availability next, higher downtime as a secondary signal, and a stable
+  equipment ID tie-breaker.
+- Each equipment ID uses a native link to the existing Equipment detail route,
+  preserving keyboard, modifier-click, and new-tab behavior.
+- Absent, empty, unavailable, and malformed equipment datasets remain explicit
+  instead of being presented as a healthy or complete fleet.
+
+The feature adds no endpoint, polling loop, public-data schema change, cloud
+dependency, or live operational claim.
+
 ## PF-116 Incident detail context - 2026-09-23
 
 Incident detail now exposes compact, snapshot-backed context for the affected
