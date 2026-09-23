@@ -8,10 +8,10 @@ import { OverviewKpiRail } from "./OverviewKpiRail";
 import type { AppFilters } from "../../app/AppShell";
 
 interface OverviewPageProps {
-  snapshot: SnapshotV1;
-  equipmentDataset?: SnapshotV1["equipment"];
-  filters: AppFilters;
-  staleNotice: ReactNode;
+  readonly snapshot: SnapshotV1;
+  readonly equipmentDataset: SnapshotV1["equipment"];
+  readonly filters: AppFilters;
+  readonly staleNotice: ReactNode;
 }
 
 export function OverviewPage({ snapshot, equipmentDataset, filters, staleNotice }: OverviewPageProps) {

@@ -9,6 +9,7 @@ import {
 import type { OverviewV1 } from "../../data/schema";
 import { KpiDefinition } from "../../components/KpiDefinition";
 import type { KpiId } from "../../content/kpis";
+import { formatMinutes, formatPercentage } from "../equipment/equipmentMetrics";
 
 interface OverviewKpiRailProps {
   overview: OverviewV1;
@@ -27,11 +28,6 @@ function formatNumber(value: number | null | undefined, suffix = ""): string {
   return value === null || value === undefined ? "Unavailable" : `${value}${suffix}`;
 }
 
-function formatMinutes(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "Unavailable";
-  return `${Number.isInteger(value) ? value : value.toFixed(1)} min`;
-}
-
 export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
   const kpis: Kpi[] = [
     {
@@ -45,7 +41,7 @@ export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
     {
       id: "availability",
       label: "Equipment availability",
-      value: overview.availability.value === null ? "Unavailable" : `${(overview.availability.value * 100).toFixed(1)}%`,
+      value: formatPercentage(overview.availability.value),
       detail: "Available ÷ scheduled intervals",
       icon: Gauge,
       tone: "teal",

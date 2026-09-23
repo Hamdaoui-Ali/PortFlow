@@ -1,4 +1,5 @@
 import type { EquipmentRecordV1 } from "../../data/schema";
+import { formatMinutes, formatPercentage } from "./equipmentMetrics";
 import {
   filterEquipment,
   sortEquipment,
@@ -22,14 +23,6 @@ interface Column {
   label: string;
   format: (record: EquipmentRecordV1) => string;
   numeric?: boolean;
-}
-
-function formatPercentage(value: number | null): string {
-  return value === null ? "Unavailable" : `${(value * 100).toFixed(1)}%`;
-}
-
-function formatMinutes(value: number | null): string {
-  return value === null ? "Unavailable" : `${Number.isInteger(value) ? value : value.toFixed(1)} min`;
 }
 
 const columns: Column[] = [

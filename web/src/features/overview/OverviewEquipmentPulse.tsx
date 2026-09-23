@@ -1,11 +1,20 @@
 import type { EquipmentDatasetState, EquipmentRecordV1 } from "../../data/schema";
+import { formatMinutes, formatPercentage } from "../equipment/equipmentMetrics";
 import {
   deriveOverviewEquipmentPulse,
   type OverviewEquipmentPulse as OverviewEquipmentPulseView,
 } from "./overviewEquipmentPulseData";
 
 interface OverviewEquipmentPulseProps {
-  dataset?: EquipmentDatasetState;
+  readonly dataset?: EquipmentDatasetState;
+}
+
+interface ReadyPulseProps {
+  readonly records: readonly EquipmentRecordV1[];
+}
+
+interface PulseMessageProps {
+  readonly status: Exclude<OverviewEquipmentPulseView["status"], "ready">;
 }
 
 export function OverviewEquipmentPulse({ dataset }: OverviewEquipmentPulseProps) {
@@ -27,7 +36,7 @@ export function OverviewEquipmentPulse({ dataset }: OverviewEquipmentPulseProps)
   );
 }
 
-function ReadyPulse({ records }: { records: EquipmentRecordV1[] }) {
+function ReadyPulse({ records }: ReadyPulseProps) {
   return (
     <ul className="equipment-activity-list" aria-label="Equipment pulse records">
       {records.map((record) => (
@@ -58,8 +67,8 @@ function ReadyPulse({ records }: { records: EquipmentRecordV1[] }) {
   );
 }
 
-function PulseMessage({ status }: { status: Exclude<OverviewEquipmentPulseView["status"], "ready"> }) {
-  return <p className="equipment-context-message" role="status">{messageForStatus(status)}</p>;
+function PulseMessage({ status }: PulseMessageProps) {
+  return <output className="equipment-context-message">{messageForStatus(status)}</output>;
 }
 
 function messageForStatus(status: Exclude<OverviewEquipmentPulseView["status"], "ready">): string {
@@ -73,12 +82,4 @@ function messageForStatus(status: Exclude<OverviewEquipmentPulseView["status"], 
     case "malformed":
       return "Equipment pulse could not be read from this snapshot.";
   }
-}
-
-function formatPercentage(value: number | null): string {
-  return value === null ? "Unavailable" : `${(value * 100).toFixed(1)}%`;
-}
-
-function formatMinutes(value: number | null): string {
-  return value === null ? "Unavailable" : `${Number.isInteger(value) ? value : value.toFixed(1)} min`;
 }

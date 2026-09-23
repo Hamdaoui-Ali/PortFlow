@@ -43,22 +43,15 @@ describe("OverviewEquipmentPulse", () => {
     expect(screen.getByText(
       "Unavailable or lower-availability records appear first in this snapshot.",
     )).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Equipment pulse records" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open equipment QC-002" })).toHaveAttribute(
-      "href",
+    const pulse = screen.getByRole("list", { name: "Equipment pulse records" });
+    const links = screen.getAllByRole("link", { name: /^Open equipment/ });
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
       "?equipment=QC-002#equipment",
-    );
-    expect(screen.getByRole("link", { name: "Open equipment QC-001" })).toHaveAttribute(
-      "href",
       "?equipment=QC-001#equipment",
-    );
-    expect(screen.getByText("TM-001")).toBeInTheDocument();
-    expect(screen.getByText("TM-002")).toBeInTheDocument();
-    expect(screen.getByText("ACTIVE")).toBeInTheDocument();
-    expect(screen.getByText("DOWN")).toBeInTheDocument();
-    expect(screen.getByText("94.4%")).toBeInTheDocument();
-    expect(screen.getByText("40 min")).toBeInTheDocument();
-    expect(screen.getByText("80 min")).toBeInTheDocument();
+    ]);
+    for (const value of ["TM-001", "TM-002", "ACTIVE", "DOWN", "94.4%", "40 min", "80 min"]) {
+      expect(pulse).toHaveTextContent(value);
+    }
   });
 
   it.each([
@@ -71,6 +64,7 @@ describe("OverviewEquipmentPulse", () => {
     render(<OverviewEquipmentPulse dataset={dataset as EquipmentDatasetState | undefined} />);
 
     expect(screen.getByRole("status")).toHaveTextContent(message);
+    expect(screen.getByRole("status").tagName).toBe("OUTPUT");
     expect(screen.queryByRole("list", { name: "Equipment pulse records" })).not.toBeInTheDocument();
   });
 });
