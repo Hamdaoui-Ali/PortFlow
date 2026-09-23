@@ -1,7 +1,7 @@
 # PF-121 Implementation Plan — Consistent Filter Recovery
 
-**Worktree:** `.worktrees/pf-121-filter-recovery`  
-**Branch:** `codex/pf-121-filter-recovery`  
+**Worktree:** `.worktrees/pf-121-filter-recovery`
+**Branch:** `codex/pf-121-filter-recovery`
 **Base:** `origin/main` after PF-120 merge (`a17f144`)
 
 ## Architecture

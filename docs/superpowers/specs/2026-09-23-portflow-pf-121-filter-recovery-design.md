@@ -1,7 +1,7 @@
 # PF-121 Design Specification — Consistent Filter Recovery
 
-**Status:** Ready for implementation  
-**Date:** 2026-09-23  
+**Status:** Ready for implementation
+**Date:** 2026-09-23
 **Parent slice:** PF-120 published snapshot filter scope
 
 ## Problem
