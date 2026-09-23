@@ -24,7 +24,15 @@ describe("OverviewEquipmentPulse", () => {
         dataset={{
           status: "ready",
           records: [
-            { ...equipmentRecord, equipment_id: "QC-002", available: false, current_state: "DOWN" },
+            {
+              ...equipmentRecord,
+              availability: 0.8,
+              available: false,
+              current_state: "DOWN",
+              downtime_minutes: 40,
+              equipment_id: "QC-002",
+              terminal_id: "TM-002",
+            },
             equipmentRecord,
           ],
         }}
@@ -45,6 +53,7 @@ describe("OverviewEquipmentPulse", () => {
       "?equipment=QC-001#equipment",
     );
     expect(screen.getByText("TM-001")).toBeInTheDocument();
+    expect(screen.getByText("TM-002")).toBeInTheDocument();
     expect(screen.getByText("ACTIVE")).toBeInTheDocument();
     expect(screen.getByText("DOWN")).toBeInTheDocument();
     expect(screen.getByText("94.4%")).toBeInTheDocument();
