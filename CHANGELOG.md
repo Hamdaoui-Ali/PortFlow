@@ -1,5 +1,19 @@
 # Changelog
 
+## PF-122 Shareable investigation links - 2026-09-23
+
+Operators can now copy the exact URL-backed PortFlow view from the global
+filter band.
+
+- `Copy view link` preserves the current route, query parameters, filters,
+  sorting, and detail context.
+- Success and failure feedback uses an accessible output region without moving
+  focus.
+- Clipboard failures keep the browser address bar as the actionable fallback.
+
+The feature remains client-side and adds no backend, persistence, analytics, or
+public snapshot schema changes.
+
 ## PF-118 Overview incident pulse - 2026-09-23
 
 Overview now exposes a compact, snapshot-backed incident pulse beside the

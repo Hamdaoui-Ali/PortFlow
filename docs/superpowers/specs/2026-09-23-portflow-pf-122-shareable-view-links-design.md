@@ -38,10 +38,11 @@ request permissions, persist user data, or introduce a backend share service.
 
 ## Interaction and accessibility
 
-The action is a native button with the visible label `Copy view link` and a link
-icon that is decorative. The outcome is rendered in an `output` element with a
-polite live region so assistive technology receives feedback without moving
-focus. The output is empty while idle and uses short, actionable copy for the
+The action is a native button with the visible label `Copy view link` and a
+decorative shell icon. The outcome is rendered in an `output` element; its
+polite live attribute is present only after a success or failure message so
+assistive technology receives feedback without adding an idle competing live
+region. The output is empty while idle and uses short, actionable copy for the
 failure state. The action remains usable at the existing 320px responsive
 breakpoint.
 
@@ -52,7 +53,7 @@ implementation reads the URL only inside the click handler and delegates the
 Clipboard API call to a small injectable function. Tests inject deterministic
 URL and clipboard functions, avoiding permissions and platform-specific
 clipboard behavior. `AppShell` renders the component beside the existing filter
-summary; CSS keeps the action secondary, wraps its feedback, and preserves the
+summary; CSS keeps the action compact, wraps its feedback, and preserves the
 current mobile grid.
 
 ## Verification
@@ -64,4 +65,3 @@ current mobile grid.
   Lighthouse, and the repository R2 gate remain green.
 - Manual Edge verification checks a deep equipment or incident URL and confirms
   that the copied value retains its query string and hash.
-

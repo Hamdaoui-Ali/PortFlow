@@ -14,7 +14,9 @@
 
 - Copy only on an explicit button activation; never write to the clipboard on load or navigation.
 - Preserve the complete `window.location.href`, including pathname, search, and hash.
-- Use an `output` live region for polite success and failure feedback.
+- Use an `output` element for feedback and apply its polite live attribute only
+  after a success or failure message exists, avoiding a competing idle live
+  region in the application shell.
 - Keep the static-site, no-backend, no-persistence boundary unchanged.
 - Preserve the existing 320px responsive breakpoint and visible focus treatment.
 - Do not introduce a new dependency or notification framework.
@@ -46,7 +48,7 @@
   Confirm that every spec requirement has a task, that no task changes the
   snapshot schema, and that each review-focus condition has a test owner.
 
-- [ ] **Step 3: Commit the design artifacts**
+- [x] **Step 3: Commit the design artifacts**
 
 ```powershell
 git add docs/superpowers/specs/2026-09-23-portflow-pf-122-shareable-view-links-design.md docs/superpowers/plans/2026-09-23-portflow-pf-122-shareable-view-links.md
@@ -63,7 +65,7 @@ git commit -m "docs: define PF-122 shareable view links"
 - Produces `ShareViewLink` with optional `getUrl?: () => string` and
   `writeClipboard?: (value: string) => Promise<void>` test seams.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```tsx
 it("copies the complete current view URL and announces success", async () => {
@@ -106,7 +108,7 @@ it("reads the URL at activation time", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test to verify it fails**
+- [x] **Step 2: Run the focused test to verify it fails**
 
 Run: `npm --prefix web test -- --run src/app/ShareViewLink.test.tsx --maxWorkers=1`
 
@@ -114,18 +116,18 @@ Expected: FAIL because `ShareViewLink` does not exist yet.
 
 - [ ] **Step 3: Implement the minimal component**
 
-  Render a native button with the `Link2` icon, call the injected URL and
+  Render a native button with a decorative shell icon, call the injected URL and
   clipboard functions inside the click handler, catch rejected or unavailable
   clipboard access, and expose the exact messages through an empty-when-idle
   `<output aria-live="polite">` element.
 
-- [ ] **Step 4: Run the focused tests to verify they pass**
+- [x] **Step 4: Run the focused tests to verify they pass**
 
 Run: `npm --prefix web test -- --run src/app/ShareViewLink.test.tsx --maxWorkers=1`
 
 Expected: PASS for the URL, success, failure, and activation-time cases.
 
-- [ ] **Step 5: Commit the component contract**
+- [x] **Step 5: Commit the component contract**
 
 ```powershell
 git add web/src/app/ShareViewLink.tsx web/src/app/ShareViewLink.test.tsx
@@ -143,38 +145,38 @@ git commit -m "feat: add shareable view link action"
 - Consumes `ShareViewLink` from Task 2.
 - Produces the same shell and URL behavior with an additional share action.
 
-- [ ] **Step 1: Add a shell placement assertion**
+- [x] **Step 1: Add a shell placement assertion**
 
   Extend the existing ready-shell test to assert that
   `screen.getByRole("button", { name: "Copy view link" })` is present beside
   the global filter controls, without invoking the browser clipboard.
 
-- [ ] **Step 2: Run the shell test to verify the placement assertion fails**
+- [x] **Step 2: Run the shell test to verify the placement assertion fails**
 
 Run: `npm --prefix web test -- --run src/app/AppShell.test.tsx --maxWorkers=1`
 
 Expected: FAIL because `AppShell` does not render the action yet.
 
-- [ ] **Step 3: Render the component in the existing filter band**
+- [x] **Step 3: Render the component in the existing filter band**
 
   Add a small `.filter-actions` wrapper around the existing filter summary and
   `ShareViewLink`. Keep the published scope note separate so its current
   semantics and layout remain unchanged.
 
-- [ ] **Step 4: Add responsive styles**
+- [x] **Step 4: Add responsive styles**
 
-  Style the action as a secondary outlined control using `--cobalt`,
-  `--border`, `--surface`, and `--focus`. Give the feedback a stable inline
-  area, let the action wrapper wrap on narrow widths, and set its mobile grid
-  placement to span the filter band without widening the page.
+  Style the action as a compact high-contrast control using the existing
+  button tokens and `--focus`. Keep feedback in the filter band, let the
+  action and feedback wrap on narrow widths, and keep the mobile grid from
+  widening the page.
 
-- [ ] **Step 5: Run shell and accessibility-focused tests**
+- [x] **Step 5: Run shell and accessibility-focused tests**
 
 Run: `npm --prefix web test -- --run src/app/AppShell.test.tsx e2e/accessibility.spec.tsx --maxWorkers=1`
 
 Expected: PASS with the new control visible and no new axe violations.
 
-- [ ] **Step 6: Commit shell integration and styles**
+- [x] **Step 6: Commit shell integration and styles**
 
 ```powershell
 git add web/src/app/AppShell.tsx web/src/app/AppShell.test.tsx web/src/styles.css
@@ -191,18 +193,18 @@ git commit -m "feat: place share link action in filter band"
 - Documents PF-122 as complete only after the implementation and verification
   commands pass.
 
-- [ ] **Step 1: Add the PF-122 completion checkpoint**
+- [x] **Step 1: Add the PF-122 completion checkpoint**
 
   Update the current next action from the stale PF-121 review checkpoint to
   PF-122 complete, record the implementation commit identifiers, and state that
   clipboard failure keeps the browser address bar as the fallback.
 
-- [ ] **Step 2: Add the changelog entry**
+- [x] **Step 2: Add the changelog entry**
 
   Record the user-visible copy-link action, its accessibility feedback, and the
   no-backend boundary.
 
-- [ ] **Step 3: Run frontend verification**
+- [x] **Step 3: Run frontend verification**
 
 Run:
 
@@ -216,7 +218,7 @@ npm --prefix web run lighthouse
 
 Expected: all tests, typecheck, build, budgets, and three Lighthouse runs pass.
 
-- [ ] **Step 4: Run repository verification**
+- [x] **Step 4: Run repository verification**
 
 Run: `./scripts/verify_r2.ps1`
 
@@ -236,4 +238,3 @@ Run: `git diff --check; git status --short; git log --oneline -6`
 
 Expected: no whitespace errors, no uncommitted source changes, and the branch
 contains the independent PF-122 commits.
-
