@@ -57,7 +57,8 @@ describe("OverviewEquipmentPulse", () => {
     expect(screen.getByText("ACTIVE")).toBeInTheDocument();
     expect(screen.getByText("DOWN")).toBeInTheDocument();
     expect(screen.getByText("94.4%")).toBeInTheDocument();
-    expect(screen.getAllByText("80 min")).toHaveLength(2);
+    expect(screen.getByText("40 min")).toBeInTheDocument();
+    expect(screen.getByText("80 min")).toBeInTheDocument();
   });
 
   it.each([

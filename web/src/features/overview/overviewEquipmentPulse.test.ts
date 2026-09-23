@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { EquipmentDatasetState, EquipmentRecordV1 } from "../../data/schema";
-import { deriveOverviewEquipmentPulse } from "./overviewEquipmentPulse";
+import { deriveOverviewEquipmentPulse } from "./overviewEquipmentPulseData";
 
 const baseRecord: EquipmentRecordV1 = {
   alarm_count: 0,

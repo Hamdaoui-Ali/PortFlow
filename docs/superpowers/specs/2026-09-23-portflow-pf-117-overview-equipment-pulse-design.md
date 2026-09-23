@@ -74,7 +74,7 @@ a discriminated view model.
 
 ## Component boundaries
 
-- `web/src/features/overview/overviewEquipmentPulse.ts`: pure derivation and
+- `web/src/features/overview/overviewEquipmentPulseData.ts`: pure derivation and
   safe formatting helpers; no React or browser APIs.
 - `web/src/features/overview/OverviewEquipmentPulse.tsx`: accessible panel,
   status messages, metrics, and native equipment links.

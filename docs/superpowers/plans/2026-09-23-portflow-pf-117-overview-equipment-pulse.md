@@ -42,7 +42,7 @@ Commit the failing tests only.
 
 ## Task 3 - Implement the pure ranking helper
 
-Add `overviewEquipmentPulse.ts` with a discriminated result type and
+Add `overviewEquipmentPulseData.ts` with a discriminated result type and
 `deriveOverviewEquipmentPulse(dataset)`. Copy before sorting, keep null values
 last for numeric comparisons, and return at most three original records.
 
