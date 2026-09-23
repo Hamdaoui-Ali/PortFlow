@@ -26,9 +26,10 @@ describe("FilterRecoveryState", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "These filters do not match the published snapshot.",
     );
-    expect(screen.getByText("Published scope:")).toBeInTheDocument();
-    expect(screen.getByText("Casablanca Terminal")).toBeInTheDocument();
-    expect(screen.getByText("02 Sept 2026, 00:00-23:55 UTC")).toBeInTheDocument();
+    const scopeSummary = screen.getByText(/Published scope:/);
+    expect(scopeSummary).toHaveTextContent("Published scope:");
+    expect(scopeSummary).toHaveTextContent("Casablanca Terminal");
+    expect(scopeSummary).toHaveTextContent("02 Sept 2026, 00:00-23:55 UTC");
   });
 
   it.each(["equipment", "incidents"] as const)(
