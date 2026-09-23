@@ -44,6 +44,8 @@ describe("AppShell", () => {
       "Published scope Casablanca Terminal 02 Sept 2026, 00:00–23:55 UTC",
     );
 
+    expect(screen.getByRole("button", { name: "Copy view link" })).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("button", { name: "Reset filters in test" }));
 
     expect(window.location.search).toBe("");

@@ -57,7 +57,13 @@ a { color: inherit; }
 .filter-control { display: grid; min-width: 210px; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 700; }
 .filter-control > span { display: flex; align-items: center; gap: 6px; }
 select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 7px; cursor: pointer; }
-.filter-summary { display: flex; align-items: center; gap: 4px; margin: 0 0 12px 8px; color: var(--muted); font-size: 12px; }
+.filter-actions { display: flex; min-width: 0; flex: 1; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-bottom: 12px; }
+.filter-summary { display: flex; align-items: center; gap: 4px; margin: 0 0 0 8px; color: var(--muted); font-size: 12px; }
+.share-view-link { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px; }
+.share-view-link-button { display: inline-flex; min-height: 44px; align-items: center; gap: 7px; padding: 0 12px; color: var(--cobalt); background: var(--surface); border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 700; }
+.share-view-link-button:hover { color: var(--teal-ink); border-color: var(--teal-ink); }
+.share-view-link-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.share-view-link-status { min-height: 18px; color: var(--muted); font-size: 11px; line-height: 1.4; }
 .filter-scope { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 12px 8px; color: var(--muted); font-size: 12px; line-height: 1.4; }
 .filter-scope > strong { color: var(--ink); }
 .content { padding: 52px clamp(24px, 4vw, 52px) 64px; }
@@ -368,7 +374,8 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .snapshot-freshness { justify-content: flex-start; }
   .filter-band { display: grid; grid-template-columns: 1fr 1fr; align-items: start; padding: 0 20px 18px; }
   .filter-control { min-width: 0; }
-  .filter-summary { grid-column: 1 / -1; margin: 2px 0 0; }
+  .filter-actions { grid-column: 1 / -1; margin-top: 2px; }
+  .filter-summary { margin: 0; }
   .filter-scope { grid-column: 1 / -1; margin: 0; }
   .content { padding: 40px 20px 104px; }
   .kpi-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -443,6 +450,7 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
   .kpi-item + .kpi-item { border-top: 1px solid var(--border); }
   .trend-bar-track { max-width: 100%; }
   .filter-band { grid-template-columns: 1fr; }
+  .filter-actions { grid-column: auto; }
   .filter-summary { grid-column: auto; }
   .filter-scope { grid-column: auto; }
   .equipment-table { min-width: 440px; }
