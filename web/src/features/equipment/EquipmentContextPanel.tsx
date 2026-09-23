@@ -5,6 +5,7 @@ import type {
   EquipmentIncidentView,
 } from "./equipmentContext";
 import { formatIncidentOpenedAt } from "../incidents/incidentData";
+import { IncidentRecordItem } from "../incidents/IncidentRecordItem";
 
 interface EquipmentContextProps {
   activity: EquipmentActivityView;
@@ -50,22 +51,12 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
         {incidents.status === "ready" ? (
           <ul className="equipment-incident-list" aria-labelledby="equipment-incidents-title">
             {incidents.records.map((incident) => (
-              <li className="equipment-incident-item" key={incident.incident_id}>
-                <div className="equipment-incident-heading">
-                  <a
-                    className="equipment-incident-link"
-                    href={incidentHref(incident.incident_id)}
-                  >
-                    {incident.incident_id}
-                  </a>
-                  <span className={`severity-pill severity-${incident.severity.toLowerCase()}`}>
-                    {incident.severity}
-                  </span>
-                </div>
-                <strong>{incident.root_cause}</strong>
-                <span>{incident.status === "OPEN" ? "Open" : "Resolved"}</span>
-                <time dateTime={incident.opened_at}>{formatIncidentOpenedAt(incident.opened_at)}</time>
-              </li>
+              <IncidentRecordItem
+                key={incident.incident_id}
+                record={incident}
+                linkLabel={incident.incident_id}
+                statusLabel={incident.status === "OPEN" ? "Open" : "Resolved"}
+              />
             ))}
           </ul>
         ) : (
@@ -78,11 +69,6 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
 
 function ContextMessage({ message }: { message: string }) {
   return <p className="equipment-context-message" role="status">{message}</p>;
-}
-
-function incidentHref(incidentId: string): string {
-  const params = new URLSearchParams({ incident: incidentId });
-  return `?${params.toString()}#incidents`;
 }
 
 function activityMessage(status: Exclude<EquipmentActivityStatus, "ready">): string {

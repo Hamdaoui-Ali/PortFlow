@@ -4,7 +4,7 @@ export type IncidentSeverity = "all" | "MINOR" | "MAJOR" | "CRITICAL";
 export type IncidentSortColumn = "incident_id" | "opened_at" | "severity" | "status" | "duration_minutes";
 export type SortDirection = "asc" | "desc";
 
-const severityRank: Record<Exclude<IncidentSeverity, "all">, number> = {
+export const incidentSeverityRank: Record<Exclude<IncidentSeverity, "all">, number> = {
   MINOR: 1,
   MAJOR: 2,
   CRITICAL: 3,
@@ -15,10 +15,6 @@ const utcDateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
   timeStyle: "short",
   timeZone: "UTC",
 });
-
-export function incidentSeverityRank(severity: Exclude<IncidentSeverity, "all">): number {
-  return severityRank[severity];
-}
 
 export function formatIncidentOpenedAt(value: string): string {
   return utcDateTimeFormatter.format(new Date(value));
@@ -55,10 +51,10 @@ export function sortIncidents(
     .sort((left, right) => {
       const leftValue = column === "duration_minutes"
         ? incidentDurationMinutes(left.record)
-        : column === "severity" ? severityRank[left.record.severity] : left.record[column];
+        : column === "severity" ? incidentSeverityRank[left.record.severity] : left.record[column];
       const rightValue = column === "duration_minutes"
         ? incidentDurationMinutes(right.record)
-        : column === "severity" ? severityRank[right.record.severity] : right.record[column];
+        : column === "severity" ? incidentSeverityRank[right.record.severity] : right.record[column];
       if (leftValue === rightValue) return left.index - right.index;
       if (leftValue === null) return 1;
       if (rightValue === null) return -1;

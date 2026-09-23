@@ -26,7 +26,7 @@ function comparePulsePriority(left: IncidentRecordV1, right: IncidentRecordV1): 
   const openFirst = Number(right.status === "OPEN") - Number(left.status === "OPEN");
   if (openFirst !== 0) return openFirst;
 
-  const severity = incidentSeverityRank(right.severity) - incidentSeverityRank(left.severity);
+  const severity = incidentSeverityRank[right.severity] - incidentSeverityRank[left.severity];
   if (severity !== 0) return severity;
 
   const openedAt = Date.parse(right.opened_at) - Date.parse(left.opened_at);
