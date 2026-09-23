@@ -1,46 +1,25 @@
 import type { ReactNode } from "react";
 
-import { FilterRecoveryState } from "../../app/FilterRecoveryState";
-import { matchesSnapshotFilterScope } from "../../app/filterScope";
 import type { SnapshotV1 } from "../../data/schema";
-import type { SnapshotFilterScope } from "../../app/filterScope";
 import { AvailabilityCard } from "./AvailabilityCard";
 import { AvailabilityTrend } from "./AvailabilityTrend";
 import { OverviewEquipmentPulse } from "./OverviewEquipmentPulse";
 import { OverviewIncidentPulse } from "./OverviewIncidentPulse";
 import { OverviewKpiRail } from "./OverviewKpiRail";
-import type { AppFilters } from "../../app/AppShell";
 
 interface OverviewPageProps {
   readonly snapshot: SnapshotV1;
   readonly equipmentDataset: SnapshotV1["equipment"];
   readonly incidentDataset: SnapshotV1["incidents"];
-  readonly filters: AppFilters;
   readonly staleNotice: ReactNode;
-  readonly filterScope: SnapshotFilterScope;
-  readonly onResetFilters: () => void;
 }
 
 export function OverviewPage({
   snapshot,
   equipmentDataset,
   incidentDataset,
-  filters,
   staleNotice,
-  filterScope,
-  onResetFilters,
 }: OverviewPageProps) {
-  if (!matchesSnapshotFilterScope(filters.terminal, filters.range, filterScope)) {
-    return <>
-      {staleNotice}
-      <FilterRecoveryState
-        filterScope={filterScope}
-        onResetFilters={onResetFilters}
-        resource="overview"
-      />
-    </>;
-  }
-
   return (
     <>
       {staleNotice}

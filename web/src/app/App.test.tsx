@@ -361,6 +361,17 @@ describe("App", () => {
     expect(screen.queryByText("Hourly equipment availability")).not.toBeInTheDocument();
   });
 
+  it.each([
+    ["equipment", "Equipment unavailable for selected filters", { equipment: { status: "absent" as const } }],
+    ["incidents", "Incidents unavailable for selected filters", { incidents: { status: "absent" as const } }],
+  ] as const)("shows filter recovery before the %s dataset state", async (route, heading, dataset) => {
+    window.history.replaceState({}, "", `/?terminal=TM-002&range=7d#${route}`);
+    render(<App loadData={() => Promise.resolve({ ...snapshot, ...dataset })} />);
+
+    expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reset filters to published scope" })).toBeInTheDocument();
+  });
+
   it("renders the Live Demo for the live-demo hash route", async () => {
     window.history.replaceState({}, "", "/#live-demo");
     render(<App loadData={() => Promise.resolve({

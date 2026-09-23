@@ -10,7 +10,8 @@ import { EquipmentPage } from "../features/equipment/EquipmentPage";
 import { IncidentPage } from "../features/incidents/IncidentPage";
 import { LiveDemoPage } from "../features/replay/LiveDemoPage";
 import { OverviewPage } from "../features/overview/OverviewPage";
-import { deriveSnapshotFilterScope } from "./filterScope";
+import { FilterRecoveryState, type FilterRecoveryResource } from "./FilterRecoveryState";
+import { deriveSnapshotFilterScope, matchesSnapshotFilterScope } from "./filterScope";
 import { AppShell, useAppFilters, type AppFilters, type SnapshotHeaderStatus } from "./AppShell";
 
 interface AppProps {
@@ -182,6 +183,20 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
       <p>{failureDescription(snapshotState.kind)} New data will appear when the published snapshot recovers.</p>
     </div>
   ) : null;
+  const recoveryResource = filterRecoveryResourceForRoute(route);
+
+  if (recoveryResource && !matchesSnapshotFilterScope(filters.terminal, filters.range, filterScope)) {
+    return (
+      <>
+        {staleNotice}
+        <FilterRecoveryState
+          filterScope={filterScope}
+          onResetFilters={resetFilters}
+          resource={recoveryResource}
+        />
+      </>
+    );
+  }
 
   if (route === "equipment") {
     return (
@@ -192,8 +207,6 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
           replayEvents={snapshot.event_replay}
           incidentDataset={snapshot.incidents}
           filters={filters}
-          filterScope={filterScope}
-          onResetFilters={resetFilters}
         />
       </>
     );
@@ -207,8 +220,6 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
           dataset={snapshot.incidents ?? { status: "absent" }}
           equipmentDataset={snapshot.equipment}
           filters={filters}
-          filterScope={filterScope}
-          onResetFilters={resetFilters}
         />
       </>
     );
@@ -238,12 +249,16 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
       snapshot={snapshot}
       equipmentDataset={snapshot.equipment}
       incidentDataset={snapshot.incidents}
-      filters={filters}
       staleNotice={staleNotice}
-      filterScope={filterScope}
-      onResetFilters={resetFilters}
     />
   );
+}
+
+function filterRecoveryResourceForRoute(route: AppRoute): FilterRecoveryResource | undefined {
+  if (route === "overview") return "overview";
+  if (route === "equipment") return "equipment";
+  if (route === "incidents") return "incidents";
+  return undefined;
 }
 
 function readRoute(hash = window.location.hash): AppRoute {

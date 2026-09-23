@@ -1,7 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { FilterRecoveryState } from "../../app/FilterRecoveryState";
-import { matchesSnapshotFilterScope, type SnapshotFilterScope } from "../../app/filterScope";
 import type { AppFilters } from "../../app/AppShell";
 import type {
   EquipmentDatasetState,
@@ -20,8 +18,6 @@ import {
 interface EquipmentPageProps {
   readonly dataset: EquipmentDatasetState;
   readonly filters: AppFilters;
-  readonly filterScope: SnapshotFilterScope;
-  readonly onResetFilters: () => void;
   readonly replayEvents?: ReplayEventV1[];
   readonly incidentDataset?: IncidentDatasetState;
 }
@@ -31,8 +27,6 @@ const equipmentUrlKeys = ["search", "sort", "direction", "equipment"] as const;
 export function EquipmentPage({
   dataset,
   filters,
-  filterScope,
-  onResetFilters,
   replayEvents,
   incidentDataset,
 }: EquipmentPageProps) {
@@ -64,16 +58,6 @@ export function EquipmentPage({
 
   if (dataset.status !== "ready") {
     return <EquipmentDatasetMessage status={dataset.status} />;
-  }
-
-  if (!matchesSnapshotFilterScope(filters.terminal, filters.range, filterScope)) {
-    return (
-      <FilterRecoveryState
-        filterScope={filterScope}
-        onResetFilters={onResetFilters}
-        resource="equipment"
-      />
-    );
   }
 
   const selectedRecord = urlState.equipmentId

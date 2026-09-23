@@ -1,7 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { FilterRecoveryState } from "../../app/FilterRecoveryState";
-import { matchesSnapshotFilterScope, type SnapshotFilterScope } from "../../app/filterScope";
 import type { AppFilters } from "../../app/AppShell";
 import type { EquipmentDatasetState, IncidentDatasetState } from "../../data/schema";
 import { IncidentDetail } from "./IncidentDetail";
@@ -21,8 +19,6 @@ interface IncidentPageProps {
   readonly dataset: IncidentDatasetState;
   readonly equipmentDataset?: EquipmentDatasetState;
   readonly filters: AppFilters;
-  readonly filterScope: SnapshotFilterScope;
-  readonly onResetFilters: () => void;
 }
 
 const incidentUrlKeys = ["search", "severity", "sort", "direction", "incident"] as const;
@@ -31,8 +27,6 @@ export function IncidentPage({
   dataset,
   equipmentDataset,
   filters,
-  filterScope,
-  onResetFilters,
 }: IncidentPageProps) {
   const [urlState, setUrlState] = useState(() => readIncidentUrlState(window.location.search));
   const returnFocusId = useRef<string | null>(null);
@@ -59,16 +53,6 @@ export function IncidentPage({
   }, [urlState.incidentId]);
 
   if (dataset.status !== "ready") return <IncidentDatasetMessage status={dataset.status} />;
-  if (!matchesSnapshotFilterScope(filters.terminal, filters.range, filterScope)) {
-    return (
-      <FilterRecoveryState
-        filterScope={filterScope}
-        onResetFilters={onResetFilters}
-        resource="incidents"
-      />
-    );
-  }
-
   const selectedRecord = urlState.incidentId ? dataset.records.find((record) => record.incident_id === urlState.incidentId) : undefined;
   const update = (next: IncidentUrlState, mode: "push" | "replace") => { writeIncidentLocation(next, mode); setUrlState(next); };
   const back = () => {
