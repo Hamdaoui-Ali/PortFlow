@@ -228,6 +228,7 @@ function AppContent({ route, snapshotState }: { route: AppRoute; snapshotState: 
     <OverviewPage
       snapshot={snapshot}
       equipmentDataset={snapshot.equipment}
+      incidentDataset={snapshot.incidents}
       filters={filters}
       staleNotice={staleNotice}
     />

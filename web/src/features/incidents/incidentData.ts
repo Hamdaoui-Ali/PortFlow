@@ -4,11 +4,21 @@ export type IncidentSeverity = "all" | "MINOR" | "MAJOR" | "CRITICAL";
 export type IncidentSortColumn = "incident_id" | "opened_at" | "severity" | "status" | "duration_minutes";
 export type SortDirection = "asc" | "desc";
 
-const severityRank: Record<Exclude<IncidentSeverity, "all">, number> = {
+export const incidentSeverityRank: Record<Exclude<IncidentSeverity, "all">, number> = {
   MINOR: 1,
   MAJOR: 2,
   CRITICAL: 3,
 };
+
+const utcDateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "UTC",
+});
+
+export function formatIncidentOpenedAt(value: string): string {
+  return utcDateTimeFormatter.format(new Date(value));
+}
 
 export function incidentDurationMinutes(record: IncidentRecordV1): number | null {
   if (!record.resolved_at) return null;
@@ -39,23 +49,46 @@ export function sortIncidents(
   return records
     .map((record, index) => ({ record, index }))
     .sort((left, right) => {
-      const leftValue = column === "duration_minutes"
-        ? incidentDurationMinutes(left.record)
-        : column === "severity" ? severityRank[left.record.severity] : left.record[column];
-      const rightValue = column === "duration_minutes"
-        ? incidentDurationMinutes(right.record)
-        : column === "severity" ? severityRank[right.record.severity] : right.record[column];
+      const leftValue = incidentSortValue(left.record, column);
+      const rightValue = incidentSortValue(right.record, column);
       if (leftValue === rightValue) return left.index - right.index;
       if (leftValue === null) return 1;
       if (rightValue === null) return -1;
-      const comparison = column === "opened_at"
-        ? Date.parse(String(leftValue)) - Date.parse(String(rightValue))
-        : typeof leftValue === "number" && typeof rightValue === "number"
-          ? leftValue - rightValue
-          : String(leftValue).localeCompare(String(rightValue));
+      const comparison = compareIncidentValues(leftValue, rightValue, column);
       return direction === "asc" ? comparison : -comparison;
     })
     .map(({ record }) => record);
+}
+
+type IncidentSortValue = string | number | null;
+
+function incidentSortValue(record: IncidentRecordV1, column: IncidentSortColumn): IncidentSortValue {
+  switch (column) {
+    case "duration_minutes":
+      return incidentDurationMinutes(record);
+    case "severity":
+      return incidentSeverityRank[record.severity];
+    case "incident_id":
+      return record.incident_id;
+    case "opened_at":
+      return record.opened_at;
+    case "status":
+      return record.status;
+  }
+}
+
+function compareIncidentValues(
+  leftValue: Exclude<IncidentSortValue, null>,
+  rightValue: Exclude<IncidentSortValue, null>,
+  column: IncidentSortColumn,
+): number {
+  if (column === "opened_at") {
+    return Date.parse(String(leftValue)) - Date.parse(String(rightValue));
+  }
+  if (typeof leftValue === "number" && typeof rightValue === "number") {
+    return leftValue - rightValue;
+  }
+  return String(leftValue).localeCompare(String(rightValue));
 }
 
 export function getIncidentMetrics(records: IncidentRecordV1[]) {

@@ -29,8 +29,9 @@ documented pull-request and green-CI branch-protection rule for `main` is
 configured, with force pushes and deletions disabled. PF-110, PF-111, PF-112,
 PF-113, and PF-114 are also complete through merged post-V1 pull requests.
 PF-116 is complete through its merged incident detail context pull requests.
-PF-117 is the current post-V1 review checkpoint: review and merge the Overview
-equipment pulse PR before selecting or starting the next specification.
+PF-117 is complete through merged PR #23 (`0984979`). PF-118 is the current
+post-V1 review checkpoint: review and merge the Overview incident pulse PR
+before selecting or starting the next specification.
 
 ## Completed checkpoints
 
@@ -672,13 +673,26 @@ These items are P2 and cannot block V1:
 
 ## PF-117 implementation checkpoint
 
-- PF-117: **In review** — Overview equipment pulse derived from the existing
+- PF-117: **Complete** — Overview equipment pulse derived from the existing
   equipment snapshot. The design and plan are recorded in `1f6b0ce`; the
-  implementation currently consists of `8dfb0fd`, `2105f43`, `251b47c`,
-  `cee1bf7`, `b8d5c18`, `d4d2b84`, `03c68c5`, `9715299`, and `d52253f`.
+  implementation consists of `8dfb0fd`, `2105f43`, `251b47c`, `cee1bf7`,
+  `b8d5c18`, `d4d2b84`, `03c68c5`, `9715299`, `d52253f`, `c77b80f`, and
+  merged PR commit `0984979`.
   The slice preserves the static snapshot boundary, ranks unavailable or
   lower-availability records deterministically, and links into the existing
-  Equipment detail route; merge remains the completion gate.
+  Equipment detail route.
+
+## PF-118 implementation checkpoint
+
+- PF-118: **In review** — Overview incident pulse derived from the existing
+  incident snapshot. The design is recorded in
+  `docs/superpowers/specs/2026-09-23-portflow-pf-118-overview-incident-pulse-design.md`
+  and the plan in
+  `docs/superpowers/plans/2026-09-23-portflow-pf-118-overview-incident-pulse.md`.
+  The implementation uses deterministic open/severity/time/ID ranking, explicit
+  optional-dataset states, native links to incident detail, and responsive
+  styling without changing the public snapshot contract.
+
 
 ## Specification coverage
 

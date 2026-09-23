@@ -4,17 +4,13 @@ import type {
   EquipmentIncidentStatus,
   EquipmentIncidentView,
 } from "./equipmentContext";
+import { formatIncidentOpenedAt } from "../incidents/incidentData";
+import { IncidentRecordItem } from "../incidents/IncidentRecordItem";
 
 interface EquipmentContextProps {
   activity: EquipmentActivityView;
   incidents: EquipmentIncidentView;
 }
-
-const utcDateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-});
 
 export function EquipmentContextPanel({ activity, incidents }: EquipmentContextProps) {
   return (
@@ -30,7 +26,7 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
             {activity.events.map((event) => (
               <li className="equipment-activity-item" key={event.event_id}>
                 <time dateTime={event.event_timestamp}>
-                  {formatTimestamp(event.event_timestamp)}
+                  {formatIncidentOpenedAt(event.event_timestamp)}
                 </time>
                 <div>
                   <strong>{event.state}</strong>
@@ -55,22 +51,12 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
         {incidents.status === "ready" ? (
           <ul className="equipment-incident-list" aria-labelledby="equipment-incidents-title">
             {incidents.records.map((incident) => (
-              <li className="equipment-incident-item" key={incident.incident_id}>
-                <div className="equipment-incident-heading">
-                  <a
-                    className="equipment-incident-link"
-                    href={incidentHref(incident.incident_id)}
-                  >
-                    {incident.incident_id}
-                  </a>
-                  <span className={`severity-pill severity-${incident.severity.toLowerCase()}`}>
-                    {incident.severity}
-                  </span>
-                </div>
-                <strong>{incident.root_cause}</strong>
-                <span>{incident.status === "OPEN" ? "Open" : "Resolved"}</span>
-                <time dateTime={incident.opened_at}>{formatTimestamp(incident.opened_at)}</time>
-              </li>
+              <IncidentRecordItem
+                key={incident.incident_id}
+                record={incident}
+                linkLabel={incident.incident_id}
+                statusLabel={incident.status === "OPEN" ? "Open" : "Resolved"}
+              />
             ))}
           </ul>
         ) : (
@@ -83,15 +69,6 @@ export function EquipmentContextPanel({ activity, incidents }: EquipmentContextP
 
 function ContextMessage({ message }: { message: string }) {
   return <p className="equipment-context-message" role="status">{message}</p>;
-}
-
-function formatTimestamp(value: string): string {
-  return utcDateTimeFormatter.format(new Date(value));
-}
-
-function incidentHref(incidentId: string): string {
-  const params = new URLSearchParams({ incident: incidentId });
-  return `?${params.toString()}#incidents`;
 }
 
 function activityMessage(status: Exclude<EquipmentActivityStatus, "ready">): string {

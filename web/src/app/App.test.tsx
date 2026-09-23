@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, loadDefaultSnapshot } from "./App";
 import { snapshotCache } from "../data/cache";
+import { incidentRecords } from "../test/incidentFixtures";
 
 vi.mock("../data/loadSnapshot", () => ({
   loadSnapshot: vi.fn(),
@@ -307,6 +308,19 @@ describe("App", () => {
       "?equipment=QC-002#equipment",
     );
     expect(screen.getByText("80.0%")).toBeInTheDocument();
+  });
+
+  it("renders the incident pulse on the Overview route", async () => {
+    render(<App loadData={() => Promise.resolve({
+      ...snapshot,
+      incidents: { status: "ready" as const, records: [incidentRecords[1]] },
+    })} />);
+
+    expect(await screen.findByRole("heading", { name: "Incident pulse" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open incident inc-000002" })).toHaveAttribute(
+      "href",
+      "?incident=inc-000002#incidents",
+    );
   });
 
   it("renders the equipment fleet for the equipment hash route", async () => {

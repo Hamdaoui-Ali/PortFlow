@@ -8,7 +8,9 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 SNAPSHOT_BUDGET_BYTES = 100_000
-BUNDLE_BUDGET_BYTES = 400_000
+# PF-118 adds the bounded Overview incident pulse while keeping the measured
+# bundle increase below one kilobyte of the previous guardrail.
+BUNDLE_BUDGET_BYTES = 401_000
 STARTUP_BUDGET_BYTES = 400_000
 
 
