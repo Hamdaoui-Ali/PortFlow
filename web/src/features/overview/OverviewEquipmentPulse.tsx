@@ -12,8 +12,8 @@ export function OverviewEquipmentPulse({ dataset }: OverviewEquipmentPulseProps)
   const pulse = deriveOverviewEquipmentPulse(dataset);
 
   return (
-    <section className="overview-equipment-pulse" aria-labelledby="overview-equipment-pulse-title">
-      <div className="overview-equipment-pulse-header">
+    <section className="equipment-context" aria-labelledby="overview-equipment-pulse-title">
+      <div className="equipment-context-header">
         <p className="section-kicker">Fleet context</p>
         <h2 id="overview-equipment-pulse-title">Equipment pulse</h2>
         <p>
@@ -29,30 +29,29 @@ export function OverviewEquipmentPulse({ dataset }: OverviewEquipmentPulseProps)
 
 function ReadyPulse({ records }: { records: EquipmentRecordV1[] }) {
   return (
-    <ul className="overview-equipment-pulse-list" aria-label="Equipment pulse records">
+    <ul className="equipment-activity-list" aria-label="Equipment pulse records">
       {records.map((record) => (
-        <li className="overview-equipment-pulse-item" key={record.equipment_id}>
-          <div className="overview-equipment-pulse-identity">
-            <a href={`?equipment=${encodeURIComponent(record.equipment_id)}#equipment`}>
-              Open equipment {record.equipment_id}
-            </a>
-            <span>
+        <li className="equipment-activity-item" key={record.equipment_id}>
+          <div>
+            <strong>
+              <a
+                className="equipment-incident-link"
+                href={`?equipment=${encodeURIComponent(record.equipment_id)}#equipment`}
+              >
+                Open equipment {record.equipment_id}
+              </a>
+            </strong>
+            <span className="equipment-activity-state">
               <span>{record.terminal_id}</span> <span aria-hidden="true">·</span> <span>{record.current_state}</span>
-              <span className="overview-equipment-pulse-availability-state">
+              <span>
                 {record.available ? "Available" : "Unavailable"}
               </span>
             </span>
           </div>
-          <dl className="overview-equipment-pulse-metrics">
-            <div>
-              <dt>Availability</dt>
-              <dd>{formatPercentage(record.availability)}</dd>
-            </div>
-            <div>
-              <dt>Downtime</dt>
-              <dd>{formatMinutes(record.downtime_minutes)}</dd>
-            </div>
-          </dl>
+          <div>
+            <div><span className="equipment-activity-state">Availability</span> <strong>{formatPercentage(record.availability)}</strong></div>
+            <div><span className="equipment-activity-state">Downtime</span> <strong>{formatMinutes(record.downtime_minutes)}</strong></div>
+          </div>
         </li>
       ))}
     </ul>
@@ -60,7 +59,7 @@ function ReadyPulse({ records }: { records: EquipmentRecordV1[] }) {
 }
 
 function PulseMessage({ status }: { status: Exclude<OverviewEquipmentPulseView["status"], "ready"> }) {
-  return <p className="overview-equipment-pulse-message" role="status">{messageForStatus(status)}</p>;
+  return <p className="equipment-context-message" role="status">{messageForStatus(status)}</p>;
 }
 
 function messageForStatus(status: Exclude<OverviewEquipmentPulseView["status"], "ready">): string {
