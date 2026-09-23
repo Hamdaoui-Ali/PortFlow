@@ -20,14 +20,18 @@ Observed results:
 - Frontend typecheck: passed.
 - Frontend production build: passed; 1,803 modules transformed.
 - Snapshot budget: 47,103 bytes / 100,000-byte limit.
-- JS/CSS bundle budget: 400,438 bytes / 401,000-byte limit.
-- Startup budget: 308,226 bytes / 400,000-byte limit.
+- JS/CSS bundle budget: 400,551 bytes / 401,000-byte limit.
+- Startup budget: 308,339 bytes / 400,000-byte limit.
 - Lighthouse: three runs completed and the quality gate passed.
 
 The public snapshot generator produced the committed manifest without a
-content diff. The bundle limit is 401,000 bytes because PF-118 adds 438 bytes
-over the former guardrail after the Overview pulse and incident-row renderers
-were shared with the existing UI.
+content diff. The bundle limit is 401,000 bytes because PF-118 remains within
+one kilobyte of the former guardrail after the Overview pulse and incident-row
+renderers were shared with the existing UI.
+
+The Sonar remediation pass also replaces nested comparator expressions with
+explicit branches, uses `startsWith` for resource messaging, and centralizes
+the repeated incident test records.
 
 ## Focused PF-118 checks
 
