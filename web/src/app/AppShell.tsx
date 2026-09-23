@@ -208,6 +208,7 @@ function SnapshotFreshnessStatus({ status }: { status: SnapshotHeaderStatus }) {
     : status.kind === "loading"
       ? Activity
       : AlertTriangle;
+  const canReviewDataHealth = status.kind !== "loading" && status.kind !== "unavailable";
 
   return (
     <p className={`snapshot-freshness snapshot-freshness-${status.kind}`} role="status" aria-label="Snapshot freshness">
@@ -218,6 +219,9 @@ function SnapshotFreshnessStatus({ status }: { status: SnapshotHeaderStatus }) {
       <span className="snapshot-freshness-message">{status.message}</span>
       {status.generatedAt ? (
         <time dateTime={status.generatedAt}>Updated {formatUtcTimestamp(status.generatedAt)}</time>
+      ) : null}
+      {canReviewDataHealth ? (
+        <a className="snapshot-freshness-link" href="#data-health">Review Data Health</a>
       ) : null}
     </p>
   );
