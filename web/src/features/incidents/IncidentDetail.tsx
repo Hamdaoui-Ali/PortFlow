@@ -35,4 +35,3 @@ export function IncidentDetail({ record, equipmentDataset, onBack }: IncidentDet
     </article>
   );
 }
-
