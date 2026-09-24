@@ -101,6 +101,9 @@ select { width: 100%; min-height: 44px; padding: 0 12px; color: var(--ink); back
 .kpi-item-amber .kpi-label, .kpi-item-amber .kpi-value { color: #b87900; }
 .kpi-value { margin: 14px 0 6px; color: var(--ink); font-size: clamp(25px, 3vw, 36px); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
 .kpi-detail { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
+.kpi-action { display: inline-flex; min-height: 44px; align-items: center; margin-top: 4px; color: var(--cobalt); font-size: 12px; font-weight: 700; text-underline-offset: 3px; }
+.kpi-action:hover { color: var(--teal-ink); }
+.kpi-action:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 .equipment-context-header h2 { margin: 0; color: var(--ink); font-size: 20px; letter-spacing: -.02em; }
 .overview-analysis { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); gap: 40px; max-width: 1180px; margin: 44px 0; padding: 0 0 28px; border-bottom: 1px solid var(--border); }
 .section-kicker { margin: 0 0 8px; color: var(--cobalt); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
