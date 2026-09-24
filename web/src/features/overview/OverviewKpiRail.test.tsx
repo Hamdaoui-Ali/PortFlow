@@ -19,11 +19,11 @@ describe("OverviewKpiRail", () => {
   it("offers native drill-down links for equipment and incident KPIs", () => {
     render(<OverviewKpiRail overview={overview} />);
 
-    expect(screen.getByRole("link", { name: "Open equipment fleet" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Open equipment" })).toHaveAttribute(
       "href",
       "#equipment",
     );
-    expect(screen.getByRole("link", { name: "Open incident register" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Open incidents" })).toHaveAttribute(
       "href",
       "#incidents",
     );
