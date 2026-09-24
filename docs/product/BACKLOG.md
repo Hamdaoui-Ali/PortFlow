@@ -32,9 +32,10 @@ PF-116 is complete through its merged incident detail context pull requests.
 PF-117 is complete through merged PR #23 (`0984979`). PF-118 is complete
 through merged PR #24 (`a2e0580`). PF-119 is complete through merged PR #25
 (`8cd636d`). PF-120 is complete through merged PR #26 (`a17f144`). PF-121 is
-the current post-V1 review checkpoint: review and merge the consistent
-cross-route filter recovery slice before selecting or starting the next
-specification.
+complete through merged PR #27 (`85deb74`) and quality follow-up PR #28
+(`55b6335`). PF-122 is the current post-V1 review checkpoint: the shareable
+view-link implementation is complete on `codex/pf-122-shareable-view-links`; review
+and merge it before selecting or starting the next specification.
 
 ## Completed checkpoints
 
@@ -50,7 +51,8 @@ specification.
 - **PF-029 Local data workspace and navigation reliability:** `f5312ad`, `7325f4d`, `85e17dc`, `24b4b21`, `9f19551`, `827d8d7`, and `d310109`; deterministic menu routing, a loopback-only local API, schema-allowlisted transactional JSON imports, bounded database waits, Data Health controls, a Vite proxy, and a complete local runbook are delivered. Unit, static, frontend, build, Pages-path, and browser checks pass. The real PostgreSQL integration check is included but could not run in this environment because Docker Desktop's Linux engine was unavailable.
 - **PF-030 V1 release gate:** `4156222` and merged release commit `c735701`; local quality gates, public HTTP 200 checks, public route checks, responsive/accessibility evidence, reduced-motion emulation, and GitHub Actions Pages publication all pass.
 - **PF-120 Published snapshot filter scope:** merged PR #26 (`a17f144`); validated terminal and UTC period disclosure, Overview recovery for unsupported global filters, and keyboard focus restoration after reset.
-- **PF-121 Consistent filter recovery:** design `1a41214`, scope contract `a13efe1`, shared recovery `c81841b`, route wiring `6fd9a0c`, and measured bundle guardrail `25f38ed`; the current branch extends the published-scope recovery state to Equipment and Incidents and awaits review.
+- **PF-121 Consistent filter recovery:** merged PR #27 (`85deb74`) and quality follow-up PR #28 (`55b6335`); the published-scope recovery state is shared across Overview, Equipment, and Incidents with focus restoration and measured bundle guardrails.
+- **PF-122 Shareable investigation links:** design and plan `40b4e83`, clipboard component `217cb48`, shell integration `9e8e5d2`, quality refactor `5b02308`, deferred live announcements `34d4218`, and budget-safe integration `6ee4b63`; the exact URL-backed view can be copied from the global filter band with accessible success/failure feedback and an address-bar fallback.
 - **PF-101 local Redpanda streaming:** design `06c0570`, plan `a205df8`, implementation commits `96ad360`, `c65bb37`, `c89de5a`, `c08411e`, `236a277`, `e0e8ca7`, and `511c52f`; canonical telemetry publishing, manual-commit consumption, deterministic Bronze writes, an opt-in Compose profile, broker-optional integration coverage, and separate CI verification are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The PF-031 branch-protection rule is documented separately.
 - **PF-102 stream safety:** design `9a5dfca`, plan `b5bcd6a`, implementation commits `edc7b6b`, `1367a53`, `b3f304a`, `bad4b87`, `b33f3d3`, and `1508582`; durable SQLite event state, exact-duplicate suppression, bounded lateness, canonical dead-letter envelopes, safe commit ordering, runner wiring, and broker-optional round-trip coverage are delivered. The real broker check remains environment-dependent when Docker Desktop's Linux engine is unavailable. The PF-031 branch-protection rule is documented separately.
 - **PF-103 local orchestration:** design `5508ab0`, plan `5bfaefe`, implementation commits `1d59781`, `502317b`, `63a0063`, and `c56113f`; optional local Dagster consumer orchestration, canonical Dagster run IDs, SQLite run lifecycle metadata, manual execution documentation, full Python verification (`142 passed, 2 skipped`), and both Redpanda round-trip checks are delivered. Producer orchestration, schedules, retries, hosted Dagster, and a public streaming UI remain out of scope. The PF-031 branch-protection rule is documented separately.

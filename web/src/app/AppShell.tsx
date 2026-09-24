@@ -14,6 +14,7 @@ import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef, 
 
 import { APP_NAME } from "./constants";
 import type { SnapshotFilterScope } from "./filterScope";
+import { ShareViewLink } from "./ShareViewLink";
 
 const navItems = [
   { label: "Overview", href: "#overview", icon: Grid2X2 },
@@ -206,7 +207,10 @@ export function AppShell({ children, onNavigate, snapshotStatus, filterScope }: 
                 {rangeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
             </label>
-            <p className="filter-summary">Filters apply across operational views <ChevronRight size={15} aria-hidden="true" /></p>
+            <div className="filter-actions">
+              <p className="filter-summary">Filters apply across operational views <ChevronRight size={15} aria-hidden="true" /></p>
+              <ShareViewLink />
+            </div>
             {filterScope ? (
               <p className="filter-scope" role="note" aria-label="Published snapshot scope">
                 <span>Published scope </span>
