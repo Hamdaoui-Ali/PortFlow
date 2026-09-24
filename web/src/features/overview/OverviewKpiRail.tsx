@@ -6,23 +6,23 @@ import {
   Gauge,
 } from "lucide-react";
 
-import type { OverviewV1 } from "../../data/schema";
 import { KpiDefinition } from "../../components/KpiDefinition";
-import type { KpiId } from "../../content/kpis";
+import { KPI_DEFINITIONS, type KpiId } from "../../content/kpis";
+import type { OverviewV1 } from "../../data/schema";
 import { formatMinutes, formatPercentage } from "../equipment/equipmentMetrics";
 
 interface OverviewKpiRailProps {
-  overview: OverviewV1;
+  readonly overview: OverviewV1;
 }
 
-type Kpi = {
-  id: KpiId;
-  label: string;
-  value: string;
-  detail: string;
-  icon: typeof Activity;
-  tone: "teal" | "cobalt" | "amber";
-};
+type Kpi = readonly [
+  id: KpiId,
+  value: string,
+  detail: string,
+  icon: typeof Activity,
+  tone: "teal" | "cobalt" | "amber",
+  action?: "equipment" | "incidents",
+];
 
 function formatNumber(value: number | null | undefined, suffix = ""): string {
   return value === null || value === undefined ? "Unavailable" : `${value}${suffix}`;
@@ -30,55 +30,35 @@ function formatNumber(value: number | null | undefined, suffix = ""): string {
 
 export function OverviewKpiRail({ overview }: OverviewKpiRailProps) {
   const kpis: Kpi[] = [
-    {
-      id: "throughput",
-      label: "Throughput",
-      value: formatNumber(overview.throughput, " moves"),
-      detail: "Completed movements",
-      icon: Container,
-      tone: "cobalt",
-    },
-    {
-      id: "availability",
-      label: "Equipment availability",
-      value: formatPercentage(overview.availability.value),
-      detail: "Available ÷ scheduled intervals",
-      icon: Gauge,
-      tone: "teal",
-    },
-    {
-      id: "average-dwell",
-      label: "Average dwell time",
-      value: formatMinutes(overview.average_dwell_minutes),
-      detail: "Mean completed stay",
-      icon: Clock3,
-      tone: "cobalt",
-    },
-    {
-      id: "mttr",
-      label: "MTTR",
-      value: formatMinutes(overview.mttr_minutes),
-      detail: "Mean repair duration",
-      icon: Activity,
-      tone: "amber",
-    },
-    {
-      id: "active-incidents",
-      label: "Active incidents",
-      value: formatNumber(overview.active_incidents),
-      detail: "Open at period end",
-      icon: AlertCircle,
-      tone: "amber",
-    },
+    ["throughput", formatNumber(overview.throughput, " moves"), "Completed movements", Container, "cobalt"],
+    [
+      "availability",
+      formatPercentage(overview.availability.value),
+      "Available ÷ scheduled intervals",
+      Gauge,
+      "teal",
+      "equipment",
+    ],
+    ["average-dwell", formatMinutes(overview.average_dwell_minutes), "Mean completed stay", Clock3, "cobalt"],
+    ["mttr", formatMinutes(overview.mttr_minutes), "Mean repair duration", Activity, "amber"],
+    [
+      "active-incidents",
+      formatNumber(overview.active_incidents),
+      "Open at period end",
+      AlertCircle,
+      "amber",
+      "incidents",
+    ],
   ];
 
   return (
     <section className="kpi-rail" aria-label="Overview KPIs">
-      {kpis.map(({ id, label, value, detail, icon: Icon, tone }) => (
-        <div className={`kpi-item kpi-item-${tone}`} key={label}>
-          <div className="kpi-label"><Icon size={17} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span><KpiDefinition kpiId={id} /></div>
+      {kpis.map(([id, value, detail, Icon, tone, action]) => (
+        <div className={`kpi-item kpi-item-${tone}`} key={id}>
+          <div className="kpi-label"><Icon size={17} strokeWidth={1.8} aria-hidden="true" /><span>{KPI_DEFINITIONS[id].label}</span><KpiDefinition kpiId={id} /></div>
           <p className="kpi-value">{value}</p>
           <p className="kpi-detail">{detail}</p>
+          {action ? <a className="snapshot-freshness-link kpi-link" href={`#${action}`}>Open {action}</a> : null}
         </div>
       ))}
     </section>

@@ -33,9 +33,10 @@ PF-117 is complete through merged PR #23 (`0984979`). PF-118 is complete
 through merged PR #24 (`a2e0580`). PF-119 is complete through merged PR #25
 (`8cd636d`). PF-120 is complete through merged PR #26 (`a17f144`). PF-121 is
 complete through merged PR #27 (`85deb74`) and quality follow-up PR #28
-(`55b6335`). PF-122 is the current post-V1 review checkpoint: the shareable
-view-link implementation is complete on `codex/pf-122-shareable-view-links`; review
-and merge it before selecting or starting the next specification.
+(`55b6335`). PF-122 is complete through merged PR #29 (`8157306`). PF-123 is
+the current post-V1 review checkpoint: the Overview KPI drill-down links are
+complete on `codex/pf-123-kpi-drilldowns`; review and merge it before selecting
+or starting the next specification.
 
 ## Completed checkpoints
 
@@ -710,7 +711,8 @@ These items are P2 and cannot block V1:
 
 ## PF-120 implementation checkpoint
 
-- PF-120: **In review** - published snapshot filter scope disclosure and
+- PF-120: **Complete** - merged PR #26 (`a17f144`) delivered published
+  snapshot filter scope disclosure and
   one-step recovery for unsupported global filter combinations. The design is
   recorded in
   `docs/superpowers/specs/2026-09-23-portflow-pf-120-filter-scope-design.md`
@@ -719,6 +721,14 @@ These items are P2 and cannot block V1:
   implementation derives display labels from the validated snapshot, keeps
   the filter URL contract intact, and adds responsive, keyboard-accessible
   reset behavior without changing the public snapshot schema.
+
+## PF-123 implementation checkpoint
+
+- PF-123: **In review** - Overview KPI drill-down links for the equipment
+  availability and active incident signals. The implementation uses native
+  hash anchors into the existing Equipment and Incidents routes, preserves
+  query parameters for shareable views, reuses the existing snapshot-backed
+  data boundary, and keeps the measured bundle below the 404,000-byte limit.
 
 
 ## Specification coverage

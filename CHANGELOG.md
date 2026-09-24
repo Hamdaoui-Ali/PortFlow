@@ -1,5 +1,17 @@
 # Changelog
 
+## PF-123 Overview KPI drill-downs - 2026-09-24
+
+The Overview KPI rail now offers direct paths into the two operational detail
+views that explain its most actionable signals.
+
+- `Open equipment` links equipment availability to the existing Equipment view.
+- `Open incidents` links active incidents to the existing Incidents view.
+- Native hash links preserve the current query parameters and shareable view
+  behavior, with no data, API, route, or dependency changes.
+- The link treatment reuses the approved focus and color tokens and remains
+  inside the existing bundle, startup, and snapshot budgets.
+
 ## PF-122 Shareable investigation links - 2026-09-23
 
 Operators can now copy the exact URL-backed PortFlow view from the global
